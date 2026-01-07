@@ -1084,7 +1084,7 @@
                 <p class="cta-subtitle">
                     Join the waitlist for exclusive launch pricing and be the first to know when doors open.
                 </p>
-                <form class="signup-form" action="https://formspree.io/f/your-form-id" method="POST" id="waitlist-form">
+                <form class="signup-form" action="https://formspree.io/f/xpqwgorg" method="POST" id="waitlist-form">
                     <input type="email" name="email" placeholder="Enter your email" required>
                     <button type="submit">Join Now</button>
                 </form>
