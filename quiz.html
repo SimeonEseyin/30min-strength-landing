@@ -194,6 +194,13 @@
             margin-bottom: 32px;
         }
 
+        .step-sub-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
         /* Image Container */
         .step-image {
             width: 100%;
@@ -864,7 +871,7 @@
     <main class="quiz-container">
         <!-- Step 1: Kids Age -->
         <div class="step active" data-step="1">
-            <h2 class="step-question">How old are your kids?</h2>
+            <h2 class="step-question">PERSONALIZED WORKOUT PLAN. <br> How old are your kids?</h2>
             <p class="step-subtitle">This helps us understand your schedule</p>
             
             <div class="step-image">
@@ -893,6 +900,7 @@
                     <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
                 </div>
             </div>
+            <p class="step-sub-subtitle">By selecting an option and continuing you agree to our <a href="terms.html">Terms of Service</a> | <a href="privacy.html">Privacy Policy</a>. Please review before continuing</p>
         </div>
 
         <!-- Step 2: Interstitial - Social Proof -->
@@ -1139,7 +1147,8 @@
         <div class="step" data-step="11">
             <h2 class="step-question">Enter your email to get your personalized plan</h2>
             <p class="step-subtitle">We'll save your results and notify you at launch</p>
-            
+<!--            <form class="signup-form" id="waitlist-form" name="waitlist" method="POST" data-netlify="true" netlify-honeypot="bot-field">-->
+
             <div class="input-container">
                 <input type="email" class="text-input" id="emailInput" placeholder="your@email.com" required>
                 <p class="input-hint">We respect your privacy. No spam, ever.</p>
@@ -1150,6 +1159,23 @@
                 <span>Your data will be processed in accordance with our Privacy Policy. We'll only email you about the program launch.</span>
             </div>
         </div>
+
+<!--        <div class="quiz-step" data-step="5">-->
+<!--            <div class="quiz-result-badge">✓ You Qualify</div>-->
+<!--            <h2 class="section-title">The 30-Minute Strength System is built for you.</h2>-->
+<!--            <p class="cta-subtitle">Based on your answers, this program fits your schedule and goals perfectly. Enter your email to lock in early access + founding member pricing.</p>-->
+<!--            <form class="signup-form" id="waitlist-form" name="waitlist" method="POST" data-netlify="true" netlify-honeypot="bot-field">-->
+<!--                <input type="hidden" name="form-name" value="waitlist">-->
+<!--                <input type="hidden" name="kids_age" id="hidden-kids-age">-->
+<!--                <input type="hidden" name="time" id="hidden-time">-->
+<!--                <input type="hidden" name="challenge" id="hidden-challenge">-->
+<!--                <input type="hidden" name="goal" id="hidden-goal">-->
+<!--                <p style="display:none"><input name="bot-field"></p>-->
+<!--                <input type="email" id="email-input" name="email" placeholder="Enter your email" required>-->
+<!--                <button type="submit">Get Early Access</button>-->
+<!--            </form>-->
+<!--            <p class="form-note">No spam. Unsubscribe anytime.</p>-->
+<!--        </div>-->
 
         <!-- Step 12: Name -->
         <div class="step" data-step="12">
@@ -1281,8 +1307,8 @@
     </footer>
 
     <!-- Hidden Netlify Form -->
-    <form name="waitlist2" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="hidden-form" id="netlifyForm">
-        <input type="hidden" name="form-name" value="waitlist2">
+    <form name="waitlist" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="hidden-form" id="waitlist-form">
+        <input type="hidden" name="form-name" value="waitlist">
         <input type="hidden" name="bot-field">
         <input type="hidden" name="email" id="formEmail">
         <input type="hidden" name="name" id="formName">

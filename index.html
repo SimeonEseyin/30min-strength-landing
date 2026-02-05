@@ -1109,7 +1109,7 @@
         <div class="container">
             <div class="header-inner">
                 <a href="#" class="logo">DEV<span>DAD</span></a>
-                <a href="#signup" class="nav-cta">Take the Quiz</a>
+                <a href="quiz.html" class="nav-cta">Take the Quiz</a>
             </div>
         </div>
     </header>
@@ -1126,7 +1126,7 @@
                     <p class="hero-subtitle">
                         A 12-week progressive strength program built for software engineers with <strong>infant twins, sleep deprivation, and zero time to waste.</strong>
                     </p>
-                    <a href="#signup" class="hero-cta">
+                    <a href="quiz.html" class="hero-cta">
                         See If You Qualify
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -1137,7 +1137,7 @@
                     <div class="hero-video-container">
                         <video 
                             id="hero-video"
-                            src="site-videos/copy_7FE59533-79EC-4092-8E3D-68AE131D7719.MOV" 
+                            src="site-videos/copy_7FE59533-79EC-4092-8E3D-68AE131D7719.MOV"
                             muted 
                             loop 
                             playsinline
@@ -1325,88 +1325,16 @@
     <section class="cta" id="signup">
         <div class="container">
             <div class="cta-content">
-                <div class="quiz-container" id="quiz-container">
-                    <!-- Step 0: Intro -->
-                    <div class="quiz-step active" data-step="0">
-                        <div class="section-label">60-Second Quiz</div>
-                        <h2 class="section-title">See if you qualify for early access.</h2>
-                        <p class="cta-subtitle">Answer 4 quick questions to see if The 30-Minute Strength System is right for you.</p>
-                        <button class="quiz-start-btn" onclick="nextStep()">Take the Quiz →</button>
-                    </div>
-
-                    <!-- Step 1: Kids age -->
-                    <div class="quiz-step" data-step="1">
-                        <div class="quiz-progress">Question 1 of 4</div>
-                        <h3 class="quiz-question">How old are your kids?</h3>
-                        <div class="quiz-options">
-                            <button class="quiz-option" onclick="selectOption(this, 'kids_age', '0-6 months')">0-6 months</button>
-                            <button class="quiz-option" onclick="selectOption(this, 'kids_age', '6-12 months')">6-12 months</button>
-                            <button class="quiz-option" onclick="selectOption(this, 'kids_age', '1-2 years')">1-2 years</button>
-                            <button class="quiz-option" onclick="selectOption(this, 'kids_age', '2+ years')">2+ years</button>
-                        </div>
-                    </div>
-
-                    <!-- Step 2: Time available -->
-                    <div class="quiz-step" data-step="2">
-                        <div class="quiz-progress">Question 2 of 4</div>
-                        <h3 class="quiz-question">How much time can you realistically work out?</h3>
-                        <div class="quiz-options">
-                            <button class="quiz-option" onclick="selectOption(this, 'time', '15 min')">15 minutes</button>
-                            <button class="quiz-option" onclick="selectOption(this, 'time', '30 min')">30 minutes</button>
-                            <button class="quiz-option" onclick="selectOption(this, 'time', '45 min')">45 minutes</button>
-                            <button class="quiz-option" onclick="selectOption(this, 'time', '1 hour+')">1 hour+</button>
-                        </div>
-                    </div>
-
-                    <!-- Step 3: Biggest challenge -->
-                    <div class="quiz-step" data-step="3">
-                        <div class="quiz-progress">Question 3 of 4</div>
-                        <h3 class="quiz-question">What's your biggest challenge?</h3>
-                        <div class="quiz-options">
-                            <button class="quiz-option" onclick="selectOption(this, 'challenge', 'No time')">No time</button>
-                            <button class="quiz-option" onclick="selectOption(this, 'challenge', 'No energy')">No energy</button>
-                            <button class="quiz-option" onclick="selectOption(this, 'challenge', 'No motivation')">No motivation</button>
-                            <button class="quiz-option" onclick="selectOption(this, 'challenge', 'Dont know what to do')">Don't know what to do</button>
-                        </div>
-                    </div>
-
-                    <!-- Step 4: Goal -->
-                    <div class="quiz-step" data-step="4">
-                        <div class="quiz-progress">Question 4 of 4</div>
-                        <h3 class="quiz-question">What's your main goal?</h3>
-                        <div class="quiz-options">
-                            <button class="quiz-option" onclick="selectOption(this, 'goal', 'Build strength')">Build strength</button>
-                            <button class="quiz-option" onclick="selectOption(this, 'goal', 'Lose fat')">Lose fat</button>
-                            <button class="quiz-option" onclick="selectOption(this, 'goal', 'Stay consistent')">Stay consistent</button>
-                            <button class="quiz-option" onclick="selectOption(this, 'goal', 'All of the above')">All of the above</button>
-                        </div>
-                    </div>
-
-                    <!-- Step 5: Result + Email -->
-                    <div class="quiz-step" data-step="5">
-                        <div class="quiz-result-badge">✓ You Qualify</div>
-                        <h2 class="section-title">The 30-Minute Strength System is built for you.</h2>
-                        <p class="cta-subtitle">Based on your answers, this program fits your schedule and goals perfectly. Enter your email to lock in early access + founding member pricing.</p>
-                        <form class="signup-form" id="waitlist-form" name="waitlist" method="POST" data-netlify="true" netlify-honeypot="bot-field">
-                            <input type="hidden" name="form-name" value="waitlist">
-                            <input type="hidden" name="kids_age" id="hidden-kids-age">
-                            <input type="hidden" name="time" id="hidden-time">
-                            <input type="hidden" name="challenge" id="hidden-challenge">
-                            <input type="hidden" name="goal" id="hidden-goal">
-                            <p style="display:none"><input name="bot-field"></p>
-                            <input type="email" id="email-input" name="email" placeholder="Enter your email" required>
-                            <button type="submit">Get Early Access</button>
-                        </form>
-                        <p class="form-note">No spam. Unsubscribe anytime.</p>
-                    </div>
-
-                    <!-- Step 6: Success -->
-                    <div class="quiz-step" data-step="6">
-                        <div class="quiz-result-badge success">🎉 You're In!</div>
-                        <h2 class="section-title">Welcome to the movement.</h2>
-                        <p class="cta-subtitle">Check your inbox for confirmation. You'll be the first to know when doors open—plus you just locked in founding member pricing.</p>
-                    </div>
-                </div>
+                <div class="section-label">Limited Spots</div>
+                <h2 class="section-title">Get your personalized strength plan.</h2>
+                <p class="cta-subtitle">
+                    Take a 2-minute quiz to see if the program is right for you — and lock in founding member pricing.
+                </p>
+                <a href="quiz.html" class="hero-cta" style="display: inline-flex; margin-bottom: 24px;">
+                    Take the Quiz
+                    <svg>...</svg>
+                </a>
+                <p class="form-note">No spam. Unsubscribe anytime.</p>
             </div>
         </div>
     </section>
