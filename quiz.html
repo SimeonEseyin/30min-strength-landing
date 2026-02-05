@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Your Perfect Plan | The 30-Minute Strength System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:wght@400;500;600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #000000;
+            --bg-secondary: #000000;
+            --bg-card: #181818;
+            --bg-card-hover: #222222;
+            --bg-selected: #e8e4db;
+            --text-primary: #e8e4db;
+            --text-secondary: #a09a90;
+            --text-muted: #706b62;
+            --text-dark: #000000;
+            --accent: #f97316;
+            --accent-hover: #fb923c;
+            --accent-light: #fb923c;
+            --accent-glow: rgba(249, 115, 22, 0.4);
+            --success: #22c55e;
+            --border: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #000000;
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: #000000;
+            border-bottom: 1px solid #1a1a1a;
+            padding: 12px 20px;
+        }
+
+        .header-content {
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+            visibility: hidden;
+        }
+
+        .back-btn.visible {
+            visibility: visible;
+        }
+
+        .back-btn:hover {
+            opacity: 1;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 20px;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            z-index: 99;
+            background: #000000;
+            padding: 16px 20px;
+        }
+
+        .progress-info {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .progress-bar {
+            display: flex;
+            gap: 6px;
+        }
+
+        .progress-segment {
+            flex: 1;
+            height: 4px;
+            background: #3a3a3a;
+            border-radius: 2px;
+            transition: background 0.3s ease;
+        }
+
+        .progress-segment.active {
+            background: var(--accent);
+        }
+
+        .progress-segment.completed {
+            background: var(--accent);
+        }
+
+        /* Main Content */
+        .quiz-container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 140px 20px 120px;
+            min-height: 100vh;
+        }
+
+        /* Step Styles */
+        .step {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-question {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 400;
+            line-height: 1.3;
+            margin-bottom: 12px;
+            text-align: center;
+            letter-spacing: 0.01em;
+            color: var(--text-primary);
+        }
+
+        .step-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        /* Image Container */
+        .step-image {
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto 32px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #1a1a1a;
+            aspect-ratio: 4/3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .step-image svg {
+            width: 80%;
+            height: 80%;
+            opacity: 0.6;
+        }
+
+        /* Option Cards */
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .options-grid.two-col {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .option-card {
+            background: var(--bg-card);
+            border: none;
+            border-radius: 20px;
+            padding: 20px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .option-card:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .option-card.selected {
+            background: var(--bg-selected);
+        }
+
+        .option-card.selected .option-text {
+            color: var(--text-dark);
+        }
+
+        .option-card.selected .option-check {
+            background: #706b62;
+            border-color: #706b62;
+        }
+
+        .option-card.selected .option-check svg {
+            opacity: 1;
+            fill: var(--bg-selected);
+        }
+
+        .option-text {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+            transition: color 0.2s;
+        }
+
+        .option-check {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #4a4a4a;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .option-check svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--text-primary);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        /* Multi-select checkbox style */
+        .option-card.multi .option-check {
+            border-radius: 8px;
+        }
+
+        /* Interstitial Styles */
+        .interstitial {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .interstitial-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .interstitial-icon svg {
+            width: 40px;
+            height: 40px;
+            fill: #000000;
+        }
+
+        .interstitial-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 400;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            letter-spacing: 0.01em;
+            color: var(--text-primary);
+        }
+
+        .interstitial-title .highlight {
+            color: var(--accent);
+        }
+
+        .interstitial-text {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .social-proof-badges {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-top: 32px;
+        }
+
+        .badge {
+            text-align: center;
+        }
+
+        .badge-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .badge-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Feature List */
+        .feature-list {
+            text-align: left;
+            margin: 24px 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .feature-item:last-child {
+            border-bottom: none;
+        }
+
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .feature-icon svg {
+            width: 14px;
+            height: 14px;
+            fill: #000000;
+        }
+
+        .feature-text {
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+
+        /* Input Styles */
+        .input-container {
+            margin-bottom: 24px;
+        }
+
+        .text-input {
+            width: 100%;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 20px;
+            font-size: 18px;
+            font-family: 'Source Sans 3', sans-serif;
+            color: var(--text-primary);
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .text-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .input-hint {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        /* Loading Screen */
+        .loading-container {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 32px;
+            position: relative;
+        }
+
+        .loading-circle {
+            width: 100%;
+            height: 100%;
+            border: 4px solid #262626;
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .loading-text {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .loading-subtext {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .loading-steps {
+            margin-top: 40px;
+            text-align: left;
+        }
+
+        .loading-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            opacity: 0.4;
+            transition: opacity 0.3s;
+        }
+
+        .loading-step.active {
+            opacity: 1;
+        }
+
+        .loading-step.completed {
+            opacity: 1;
+        }
+
+        .loading-step-icon {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-step.completed .loading-step-icon {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .loading-step.completed .loading-step-icon svg {
+            display: block;
+        }
+
+        .loading-step-icon svg {
+            width: 12px;
+            height: 12px;
+            fill: white;
+            display: none;
+        }
+
+        /* Results Screen */
+        .results-container {
+            text-align: center;
+        }
+
+        .results-greeting {
+            font-size: 18px;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .results-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 400;
+            line-height: 1.3;
+            margin-bottom: 32px;
+            letter-spacing: 0.01em;
+            color: var(--text-primary);
+        }
+
+        .results-chart {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .chart-visual {
+            height: 120px;
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .chart-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: linear-gradient(to right, 
+                #ef4444 0%, 
+                #f97316 20%, 
+                #eab308 40%, 
+                #84cc16 60%, 
+                #22c55e 80%, 
+                #10b981 100%
+            );
+            clip-path: polygon(0 100%, 10% 85%, 30% 60%, 50% 40%, 70% 25%, 90% 15%, 100% 10%, 100% 100%);
+            border-radius: 8px;
+            opacity: 0.8;
+        }
+
+        .chart-point {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border: 3px solid var(--bg-primary);
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .chart-point.now {
+            bottom: 15%;
+            left: 5%;
+        }
+
+        .chart-point.goal {
+            top: 10%;
+            right: 5%;
+        }
+
+        .chart-label {
+            position: absolute;
+            background: var(--bg-secondary);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .chart-label.now {
+            bottom: 25%;
+            left: 0;
+        }
+
+        .chart-label.goal {
+            top: 20%;
+            right: 0;
+        }
+
+        .chart-weeks {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .chart-disclaimer {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 12px;
+            font-style: italic;
+        }
+
+        .results-benefits {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+
+        .benefit-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .benefit-row:last-child {
+            border-bottom: none;
+        }
+
+        .benefit-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--accent);
+        }
+
+        .benefit-text {
+            font-size: 14px;
+        }
+
+        /* Footer CTA */
+        .footer-cta {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #000000;
+            border-top: 1px solid #1a1a1a;
+            padding: 16px 20px;
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
+        }
+
+        .footer-content {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .cta-btn {
+            width: 100%;
+            background: #d4cfc4;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 16px;
+            padding: 20px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Source Sans 3', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .cta-btn:hover {
+            background: #e5e0d5;
+        }
+
+        .cta-btn:active {
+            transform: scale(0.98);
+        }
+
+        .cta-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .skip-btn {
+            display: block;
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            padding: 12px;
+            cursor: pointer;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .skip-btn:hover {
+            color: var(--text-primary);
+        }
+
+        /* Privacy note */
+        .privacy-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 12px;
+        }
+
+        .privacy-note svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* Success screen */
+        .success-container {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 24px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success-icon svg {
+            width: 50px;
+            height: 50px;
+            fill: #000000;
+        }
+
+        .success-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 400;
+            margin-bottom: 16px;
+            letter-spacing: 0.01em;
+            color: var(--text-primary);
+        }
+
+        .success-text {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        .success-details {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: left;
+        }
+
+        .success-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .success-detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Hidden form */
+        .hidden-form {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 380px) {
+            .step-question {
+                font-size: 28px;
+            }
+            
+            .interstitial-title {
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <button class="back-btn" id="backBtn" aria-label="Go back">←</button>
+            <div class="logo">DEV<span>DAD</span></div>
+            <button class="menu-btn" aria-label="Menu">☰</button>
+        </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-info">
+            <div class="progress-label" id="progressLabel">Getting Started</div>
+            <div class="progress-bar" id="progressBar">
+                <!-- Segments will be generated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Quiz Container -->
+    <main class="quiz-container">
+        <!-- Step 1: Kids Age -->
+        <div class="step active" data-step="1">
+            <h2 class="step-question">How old are your kids?</h2>
+            <p class="step-subtitle">This helps us understand your schedule</p>
+            
+            <div class="step-image">
+                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="35" r="18" fill="#f97316"/>
+                    <circle cx="35" cy="68" r="11" fill="#fb923c"/>
+                    <circle cx="65" cy="68" r="11" fill="#fb923c"/>
+                </svg>
+            </div>
+            
+            <div class="options-grid two-col" data-field="kids_age">
+                <div class="option-card" data-value="0-6 months">
+                    <span class="option-text">0-6 months</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="6-12 months">
+                    <span class="option-text">6-12 months</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="1-2 years">
+                    <span class="option-text">1-2 years</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="2+ years">
+                    <span class="option-text">2+ years</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Interstitial - Social Proof -->
+        <div class="step" data-step="2" data-type="interstitial">
+            <div class="interstitial">
+                <div class="interstitial-icon">
+                    <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                </div>
+                <h2 class="interstitial-title">Over <span class="highlight" id="dadCount">2,400</span> dads have joined</h2>
+                <p class="interstitial-text">Engineer fathers just like you are building strength in 30 minutes or less, even with newborns at home.</p>
+                
+                <div class="social-proof-badges">
+                    <div class="badge">
+                        <div class="badge-number">94%</div>
+                        <div class="badge-label">Complete Rate</div>
+                    </div>
+                    <div class="badge">
+                        <div class="badge-number">30</div>
+                        <div class="badge-label">Min or Less</div>
+                    </div>
+                    <div class="badge">
+                        <div class="badge-number">4.9</div>
+                        <div class="badge-label">Avg Rating</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Main Goal -->
+        <div class="step" data-step="3">
+            <h2 class="step-question">What's your main fitness goal?</h2>
+            <p class="step-subtitle">We'll customize your plan accordingly</p>
+            
+            <div class="options-grid" data-field="goal">
+                <div class="option-card" data-value="Build muscle">
+                    <span class="option-text">Build muscle & strength</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="Lose fat">
+                    <span class="option-text">Lose fat & get lean</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="Stay consistent">
+                    <span class="option-text">Finally stay consistent</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="All of the above">
+                    <span class="option-text">All of the above</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Available Time -->
+        <div class="step" data-step="4">
+            <h2 class="step-question">How much time can you realistically workout?</h2>
+            <p class="step-subtitle">Be honest — we'll work with what you have</p>
+            
+            <div class="options-grid two-col" data-field="time">
+                <div class="option-card" data-value="15 minutes">
+                    <span class="option-text">15 min</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="30 minutes">
+                    <span class="option-text">30 min</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="45 minutes">
+                    <span class="option-text">45 min</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="60 minutes">
+                    <span class="option-text">60 min</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5: Interstitial - 30-Min Promise -->
+        <div class="step" data-step="5" data-type="interstitial">
+            <div class="interstitial">
+                <div class="interstitial-icon">
+                    <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                </div>
+                <h2 class="interstitial-title">Built for <span class="highlight">30-minute</span> blocks</h2>
+                <p class="interstitial-text">Every workout is designed to fit between nap times, before the family wakes up, or during lunch breaks.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        </div>
+                        <span class="feature-text">No commute to the gym required</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        </div>
+                        <span class="feature-text">Workouts adapt to interruptions</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        </div>
+                        <span class="feature-text">Science-backed efficiency</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 6: Sleep -->
+        <div class="step" data-step="6">
+            <h2 class="step-question">How much sleep do you usually get?</h2>
+            <p class="step-subtitle">This affects workout intensity recommendations</p>
+            
+            <div class="options-grid two-col" data-field="sleep">
+                <div class="option-card" data-value="Less than 5 hours">
+                    <span class="option-text">Less than 5h</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="5-6 hours">
+                    <span class="option-text">5-6 hours</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="7-8 hours">
+                    <span class="option-text">7-8 hours</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="More than 8 hours">
+                    <span class="option-text">More than 8h</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 7: Workout Location -->
+        <div class="step" data-step="7">
+            <h2 class="step-question">Where do you prefer to workout?</h2>
+            <p class="step-subtitle">We'll customize equipment recommendations</p>
+            
+            <div class="options-grid" data-field="location">
+                <div class="option-card" data-value="Home only">
+                    <span class="option-text">Home only</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="Gym only">
+                    <span class="option-text">Commercial gym</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="Both">
+                    <span class="option-text">Both home & gym</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 8: Equipment -->
+        <div class="step" data-step="8">
+            <h2 class="step-question">What equipment do you have access to?</h2>
+            <p class="step-subtitle">Select all that apply</p>
+            
+            <div class="options-grid" data-field="equipment" data-multi="true">
+                <div class="option-card multi" data-value="Dumbbells">
+                    <span class="option-text">Dumbbells</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card multi" data-value="Barbell">
+                    <span class="option-text">Barbell & plates</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card multi" data-value="Pull-up bar">
+                    <span class="option-text">Pull-up bar</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card multi" data-value="Kettlebells">
+                    <span class="option-text">Kettlebells</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card multi" data-value="Bodyweight only">
+                    <span class="option-text">Bodyweight only</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 9: Biggest Challenge -->
+        <div class="step" data-step="9">
+            <h2 class="step-question">What's your biggest challenge?</h2>
+            <p class="step-subtitle">We'll address this head-on in your plan</p>
+            
+            <div class="options-grid" data-field="challenge">
+                <div class="option-card" data-value="No time">
+                    <span class="option-text">Not enough time</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="No energy">
+                    <span class="option-text">Too exhausted from parenting</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="No motivation">
+                    <span class="option-text">Can't stay motivated</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="Don't know what to do">
+                    <span class="option-text">Don't know what to do</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 10: Interstitial - Dad-Specific -->
+        <div class="step" data-step="10" data-type="interstitial">
+            <div class="interstitial">
+                <div class="interstitial-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                </div>
+                <h2 class="interstitial-title">This program was built by a <span class="highlight">dad</span>, for dads</h2>
+                <p class="interstitial-text">After becoming a father of twins while working as an engineer, I rebuilt my strength using only 30-minute workouts during nap times.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        </div>
+                        <span class="feature-text">Workouts designed around chaos</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        </div>
+                        <span class="feature-text">Sleep-deprivation adjustments built in</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        </div>
+                        <span class="feature-text">Community of engineer dads</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 11: Email -->
+        <div class="step" data-step="11">
+            <h2 class="step-question">Enter your email to get your personalized plan</h2>
+            <p class="step-subtitle">We'll save your results and notify you at launch</p>
+            
+            <div class="input-container">
+                <input type="email" class="text-input" id="emailInput" placeholder="your@email.com" required>
+                <p class="input-hint">We respect your privacy. No spam, ever.</p>
+            </div>
+            
+            <div class="privacy-note">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                <span>Your data will be processed in accordance with our Privacy Policy. We'll only email you about the program launch.</span>
+            </div>
+        </div>
+
+        <!-- Step 12: Name -->
+        <div class="step" data-step="12">
+            <h2 class="step-question">What's your first name?</h2>
+            <p class="step-subtitle">So we can personalize your experience</p>
+            
+            <div class="input-container">
+                <input type="text" class="text-input" id="nameInput" placeholder="Your first name">
+            </div>
+        </div>
+
+        <!-- Step 13: Loading -->
+        <div class="step" data-step="13" data-type="loading">
+            <div class="loading-container">
+                <div class="loading-spinner">
+                    <div class="loading-circle"></div>
+                    <span class="loading-percentage" id="loadingPercent">0%</span>
+                </div>
+                <p class="loading-text">Analyzing your answers...</p>
+                <p class="loading-subtext">Creating your personalized plan</p>
+                
+                <div class="loading-steps">
+                    <div class="loading-step" id="loadStep1">
+                        <div class="loading-step-icon">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        </div>
+                        <span>Analyzing your schedule</span>
+                    </div>
+                    <div class="loading-step" id="loadStep2">
+                        <div class="loading-step-icon">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        </div>
+                        <span>Matching equipment availability</span>
+                    </div>
+                    <div class="loading-step" id="loadStep3">
+                        <div class="loading-step-icon">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        </div>
+                        <span>Building your workout plan</span>
+                    </div>
+                    <div class="loading-step" id="loadStep4">
+                        <div class="loading-step-icon">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        </div>
+                        <span>Finalizing recommendations</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 14: Results -->
+        <div class="step" data-step="14" data-type="results">
+            <div class="results-container">
+                <p class="results-greeting" id="resultsGreeting">Hey there,</p>
+                <h2 class="results-title">Your personalized <span style="color: var(--accent);">Dad Strength Plan</span> is ready!</h2>
+                
+                <div class="results-chart">
+                    <p class="chart-title">Your projected strength gains</p>
+                    <div class="chart-visual">
+                        <div class="chart-line"></div>
+                        <div class="chart-point now"></div>
+                        <div class="chart-point goal"></div>
+                        <span class="chart-label now">Now</span>
+                        <span class="chart-label goal">Week 4</span>
+                    </div>
+                    <div class="chart-weeks">
+                        <span>Week 1</span>
+                        <span>Week 2</span>
+                        <span>Week 3</span>
+                        <span>Week 4</span>
+                    </div>
+                    <p class="chart-disclaimer">*Chart is for illustrative purposes only. Results vary.</p>
+                </div>
+
+                <div class="results-benefits">
+                    <div class="benefit-row">
+                        <svg class="benefit-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        <span class="benefit-text">Perfect for beginners</span>
+                    </div>
+                    <div class="benefit-row">
+                        <svg class="benefit-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        <span class="benefit-text">Customized to your <span id="timeResult">30</span>-minute blocks</span>
+                    </div>
+                    <div class="benefit-row">
+                        <svg class="benefit-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        <span class="benefit-text">Goal: <span id="goalResult">Build muscle & strength</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 15: Success / Thank You -->
+        <div class="step" data-step="15" data-type="success">
+            <div class="success-container">
+                <div class="success-icon">
+                    <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                </div>
+                <h2 class="success-title">You're on the list! 🎉</h2>
+                <p class="success-text">We'll email you when The 30-Minute Strength System launches in February 2026.</p>
+                
+                <div class="success-details">
+                    <div class="success-detail-row">
+                        <span class="detail-label">Your goal</span>
+                        <span class="detail-value" id="summaryGoal">Build muscle</span>
+                    </div>
+                    <div class="success-detail-row">
+                        <span class="detail-label">Available time</span>
+                        <span class="detail-value" id="summaryTime">30 minutes</span>
+                    </div>
+                    <div class="success-detail-row">
+                        <span class="detail-label">Kids age</span>
+                        <span class="detail-value" id="summaryKids">0-6 months</span>
+                    </div>
+                    <div class="success-detail-row">
+                        <span class="detail-label">Launch price</span>
+                        <span class="detail-value">$87 <span style="color: var(--text-secondary); text-decoration: line-through; font-size: 12px;">$147</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer CTA -->
+    <footer class="footer-cta">
+        <div class="footer-content">
+            <button class="cta-btn" id="ctaBtn">CONTINUE</button>
+            <button class="skip-btn" id="skipBtn" style="display: none;">SKIP THIS QUESTION</button>
+        </div>
+    </footer>
+
+    <!-- Hidden Netlify Form -->
+    <form name="waitlist2" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="hidden-form" id="netlifyForm">
+        <input type="hidden" name="form-name" value="waitlist2">
+        <input type="hidden" name="bot-field">
+        <input type="hidden" name="email" id="formEmail">
+        <input type="hidden" name="name" id="formName">
+        <input type="hidden" name="kids_age" id="formKidsAge">
+        <input type="hidden" name="goal" id="formGoal">
+        <input type="hidden" name="time" id="formTime">
+        <input type="hidden" name="sleep" id="formSleep">
+        <input type="hidden" name="location" id="formLocation">
+        <input type="hidden" name="equipment" id="formEquipment">
+        <input type="hidden" name="challenge" id="formChallenge">
+    </form>
+
+    <!-- Hidden iframe for form submission -->
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+
+    <script>
+        // Quiz State
+        const state = {
+            currentStep: 1,
+            totalSteps: 15,
+            answers: {},
+            questionSteps: [1, 3, 4, 6, 7, 8, 9, 11, 12], // Steps that count for progress
+        };
+
+        // Progress labels for different sections
+        const progressLabels = {
+            1: 'Your Situation',
+            2: 'Your Situation',
+            3: 'Your Goals',
+            4: 'Your Goals',
+            5: 'Your Goals',
+            6: 'Lifestyle',
+            7: 'Lifestyle',
+            8: 'Lifestyle',
+            9: 'Challenges',
+            10: 'Challenges',
+            11: 'Almost Done',
+            12: 'Almost Done',
+            13: 'Creating Plan',
+            14: 'Your Plan',
+            15: 'Complete'
+        };
+
+        // DOM Elements
+        const progressBar = document.getElementById('progressBar');
+        const progressLabel = document.getElementById('progressLabel');
+        const backBtn = document.getElementById('backBtn');
+        const ctaBtn = document.getElementById('ctaBtn');
+        const skipBtn = document.getElementById('skipBtn');
+        const steps = document.querySelectorAll('.step');
+
+        // Initialize progress bar segments
+        function initProgressBar() {
+            progressBar.innerHTML = '';
+            for (let i = 0; i < state.questionSteps.length; i++) {
+                const segment = document.createElement('div');
+                segment.className = 'progress-segment';
+                progressBar.appendChild(segment);
+            }
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const segments = progressBar.querySelectorAll('.progress-segment');
+            const currentQuestionIndex = state.questionSteps.indexOf(state.currentStep);
+            
+            segments.forEach((segment, i) => {
+                segment.classList.remove('active', 'completed');
+                if (i < currentQuestionIndex) {
+                    segment.classList.add('completed');
+                } else if (i === currentQuestionIndex) {
+                    segment.classList.add('active');
+                }
+            });
+
+            // Update label
+            progressLabel.textContent = progressLabels[state.currentStep] || '';
+        }
+
+        // Show step
+        function showStep(stepNum) {
+            steps.forEach(step => {
+                step.classList.remove('active');
+                if (parseInt(step.dataset.step) === stepNum) {
+                    step.classList.add('active');
+                }
+            });
+
+            state.currentStep = stepNum;
+            updateProgress();
+
+            // Back button visibility
+            if (stepNum > 1 && stepNum < 13) {
+                backBtn.classList.add('visible');
+            } else {
+                backBtn.classList.remove('visible');
+            }
+
+            // CTA button text
+            const stepEl = document.querySelector(`[data-step="${stepNum}"]`);
+            const stepType = stepEl?.dataset.type;
+
+            if (stepType === 'loading') {
+                ctaBtn.style.display = 'none';
+                skipBtn.style.display = 'none';
+                runLoadingAnimation();
+            } else if (stepType === 'results') {
+                ctaBtn.style.display = 'block';
+                ctaBtn.textContent = 'JOIN WAITLIST';
+                skipBtn.style.display = 'none';
+                updateResultsPage();
+            } else if (stepType === 'success') {
+                ctaBtn.style.display = 'none';
+                skipBtn.style.display = 'none';
+            } else if (stepNum === 11) {
+                ctaBtn.textContent = 'GET MY PLAN';
+                ctaBtn.style.display = 'block';
+                skipBtn.style.display = 'none';
+            } else if (stepNum === 12) {
+                ctaBtn.textContent = 'CONTINUE';
+                ctaBtn.style.display = 'block';
+                skipBtn.style.display = 'block';
+            } else {
+                ctaBtn.textContent = 'CONTINUE';
+                ctaBtn.style.display = 'block';
+                skipBtn.style.display = 'none';
+            }
+
+            // Update CTA disabled state
+            updateCtaState();
+        }
+
+        // Update CTA button state
+        function updateCtaState() {
+            const stepEl = document.querySelector(`[data-step="${state.currentStep}"]`);
+            const stepType = stepEl?.dataset.type;
+
+            if (stepType === 'interstitial') {
+                ctaBtn.disabled = false;
+                return;
+            }
+
+            if (state.currentStep === 11) {
+                const email = document.getElementById('emailInput').value;
+                ctaBtn.disabled = !email || !email.includes('@');
+                return;
+            }
+
+            if (state.currentStep === 12) {
+                ctaBtn.disabled = false;
+                return;
+            }
+
+            // Check if answer exists for this step
+            const optionsGrid = stepEl?.querySelector('.options-grid');
+            if (optionsGrid) {
+                const field = optionsGrid.dataset.field;
+                const isMulti = optionsGrid.dataset.multi === 'true';
+                
+                if (isMulti) {
+                    ctaBtn.disabled = !state.answers[field] || state.answers[field].length === 0;
+                } else {
+                    ctaBtn.disabled = !state.answers[field];
+                }
+            } else {
+                ctaBtn.disabled = false;
+            }
+        }
+
+        // Handle option selection
+        function handleOptionClick(card) {
+            const grid = card.closest('.options-grid');
+            const field = grid.dataset.field;
+            const isMulti = grid.dataset.multi === 'true';
+            const value = card.dataset.value;
+
+            if (isMulti) {
+                card.classList.toggle('selected');
+                
+                if (!state.answers[field]) {
+                    state.answers[field] = [];
+                }
+                
+                if (card.classList.contains('selected')) {
+                    state.answers[field].push(value);
+                } else {
+                    state.answers[field] = state.answers[field].filter(v => v !== value);
+                }
+            } else {
+                // Single select
+                grid.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                state.answers[field] = value;
+
+                // Auto-advance after selection (with delay)
+                setTimeout(() => {
+                    if (state.currentStep < state.totalSteps) {
+                        showStep(state.currentStep + 1);
+                    }
+                }, 300);
+            }
+
+            updateCtaState();
+        }
+
+        // Loading animation
+        function runLoadingAnimation() {
+            const percentEl = document.getElementById('loadingPercent');
+            const steps = ['loadStep1', 'loadStep2', 'loadStep3', 'loadStep4'];
+            let progress = 0;
+
+            const interval = setInterval(() => {
+                progress += 2;
+                percentEl.textContent = `${Math.min(progress, 100)}%`;
+
+                // Activate steps
+                if (progress >= 20) document.getElementById('loadStep1').classList.add('active', 'completed');
+                if (progress >= 45) document.getElementById('loadStep2').classList.add('active', 'completed');
+                if (progress >= 70) document.getElementById('loadStep3').classList.add('active', 'completed');
+                if (progress >= 95) document.getElementById('loadStep4').classList.add('active', 'completed');
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        showStep(14);
+                    }, 500);
+                }
+            }, 50);
+        }
+
+        // Update results page with answers
+        function updateResultsPage() {
+            const name = state.answers.name || '';
+            const greeting = name ? `${name},` : 'Hey there,';
+            document.getElementById('resultsGreeting').textContent = greeting;
+
+            const timeMatch = state.answers.time?.match(/\d+/);
+            if (timeMatch) {
+                document.getElementById('timeResult').textContent = timeMatch[0];
+            }
+
+            if (state.answers.goal) {
+                document.getElementById('goalResult').textContent = state.answers.goal;
+            }
+        }
+
+        // Update success page
+        function updateSuccessPage() {
+            document.getElementById('summaryGoal').textContent = state.answers.goal || 'Build muscle';
+            document.getElementById('summaryTime').textContent = state.answers.time || '30 minutes';
+            document.getElementById('summaryKids').textContent = state.answers.kids_age || 'Not specified';
+        }
+
+        // Submit form to Netlify
+        function submitForm() {
+            // Populate hidden form fields
+            document.getElementById('formEmail').value = state.answers.email || '';
+            document.getElementById('formName').value = state.answers.name || '';
+            document.getElementById('formKidsAge').value = state.answers.kids_age || '';
+            document.getElementById('formGoal').value = state.answers.goal || '';
+            document.getElementById('formTime').value = state.answers.time || '';
+            document.getElementById('formSleep').value = state.answers.sleep || '';
+            document.getElementById('formLocation').value = state.answers.location || '';
+            document.getElementById('formEquipment').value = Array.isArray(state.answers.equipment) 
+                ? state.answers.equipment.join(', ') 
+                : state.answers.equipment || '';
+            document.getElementById('formChallenge').value = state.answers.challenge || '';
+
+            // Submit form
+            const form = document.getElementById('netlifyForm');
+            const formData = new FormData(form);
+
+            fetch('/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(formData).toString()
+            })
+            .then(() => {
+                console.log('Form submitted successfully');
+            })
+            .catch(error => {
+                console.error('Form submission error:', error);
+            });
+        }
+
+        // Event Listeners
+        document.querySelectorAll('.option-card').forEach(card => {
+            card.addEventListener('click', () => handleOptionClick(card));
+        });
+
+        document.getElementById('emailInput').addEventListener('input', (e) => {
+            state.answers.email = e.target.value;
+            updateCtaState();
+        });
+
+        document.getElementById('nameInput').addEventListener('input', (e) => {
+            state.answers.name = e.target.value;
+        });
+
+        backBtn.addEventListener('click', () => {
+            if (state.currentStep > 1) {
+                showStep(state.currentStep - 1);
+            }
+        });
+
+        ctaBtn.addEventListener('click', () => {
+            const stepEl = document.querySelector(`[data-step="${state.currentStep}"]`);
+            const stepType = stepEl?.dataset.type;
+
+            if (stepType === 'results') {
+                // Submit form and show success
+                submitForm();
+                updateSuccessPage();
+                showStep(15);
+                return;
+            }
+
+            if (state.currentStep < state.totalSteps) {
+                showStep(state.currentStep + 1);
+            }
+        });
+
+        skipBtn.addEventListener('click', () => {
+            if (state.currentStep < state.totalSteps) {
+                showStep(state.currentStep + 1);
+            }
+        });
+
+        // Initialize
+        initProgressBar();
+        updateProgress();
+        updateCtaState();
+    </script>
+</body>
+</html>
