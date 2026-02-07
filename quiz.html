@@ -1669,22 +1669,50 @@
 
         function submitForm() {
             return new Promise((resolve, reject) => {
-                // Populate hidden form fields
-                document.getElementById('formEmail').value = state.answers.email || '';
-                document.getElementById('formName').value = state.answers.name || '';
-                document.getElementById('formKidsAge').value = state.answers.kids_age || '';
-                document.getElementById('formGoal').value = state.answers.goal || '';
-                document.getElementById('formTime').value = state.answers.time || '';
-                document.getElementById('formSleep').value = state.answers.sleep || '';
-                document.getElementById('formLocation').value = state.answers.location || '';
-                document.getElementById('formEquipment').value = Array.isArray(state.answers.equipment)
-                    ? state.answers.equipment.join(', ')
-                    : state.answers.equipment || '';
-                document.getElementById('formChallenge').value = state.answers.challenge || '';
+                // Debug: log all answers
+                console.log('All answers:', JSON.stringify(state.answers, null, 2));
 
-                // Submit form
-                const form = document.getElementById('netlifyForm');
-                const formData = new FormData(form);
+<!--                -->
+<!--                // Populate hidden form fields-->
+<!--                document.getElementById('formEmail').value = state.answers.email || '';-->
+<!--                document.getElementById('formName').value = state.answers.name || '';-->
+<!--                document.getElementById('formKidsAge').value = state.answers.kids_age || '';-->
+<!--                document.getElementById('formGoal').value = state.answers.goal || '';-->
+<!--                document.getElementById('formTime').value = state.answers.time || '';-->
+<!--                document.getElementById('formSleep').value = state.answers.sleep || '';-->
+<!--                document.getElementById('formLocation').value = state.answers.location || '';-->
+<!--                document.getElementById('formEquipment').value = Array.isArray(state.answers.equipment)-->
+<!--                    ? state.answers.equipment.join(', ')-->
+<!--                    : state.answers.equipment || '';-->
+<!--                document.getElementById('formChallenge').value = state.answers.challenge || '';-->
+
+<!--                // Submit form-->
+<!--                const form = document.getElementById('netlifyForm');-->
+                // Build form data manually to ensure all fields are included
+                const formData = {
+                    'form-name': 'waitlist',
+                    'email': state.answers.email || '',
+                    'name': state.answers.name || '',
+                    'kids_age': state.answers.kids_age || '',
+                    'goal': state.answers.goal || '',
+                    'time': state.answers.time || '',
+                    'sleep': state.answers.sleep || '',
+                    'location': state.answers.location || '',
+                    'equipment': Array.isArray(state.answers.equipment)
+                        ? state.answers.equipment.join(', ')
+                        : state.answers.equipment || '',
+                    'challenge': state.answers.challenge || ''
+                };
+
+                // Debug: log what we're sending
+                console.log('Submitting form data:', formData);
+
+                // Encode form data
+                const formBody = Object.keys(formData)
+                    .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(formData[key]))
+                    .join('&');
+
+                console.log('Encoded body:', formBody);
 
                 fetch('/', {
                     method: 'POST',
