@@ -1795,7 +1795,7 @@
                         updateSuccessPage();
                         showStep(15);
                     })
-                    .catch((error) {
+                    .catch((error) => {
                         // Error - remove loading state, user can try again
                         ctaBtn.classList.remove('loading');
                         ctaBtn.textContent = 'JOIN WAITLIST';
