@@ -1725,7 +1725,7 @@
                         showToast('🎉 Successfully joined the waitlist!');
                         resolve();
                     } else {
-                        throw new Error('Submission failed');
+                        throw new Error('Submission failed with status: ' + response.status);
                     }
                 })
                 .catch(error => {
@@ -1746,7 +1746,16 @@
             updateCtaState();
         });
 
+        document.getElementById('emailInput').addEventListener('change', (e) => {
+            state.answers.email = e.target.value;
+            updateCtaState();
+        });
+
         document.getElementById('nameInput').addEventListener('input', (e) => {
+            state.answers.name = e.target.value;
+        });
+
+        document.getElementById('nameInput').addEventListener('change', (e) => {
             state.answers.name = e.target.value;
         });
 
@@ -1760,11 +1769,37 @@
             const stepEl = document.querySelector(`[data-step="${state.currentStep}"]`);
             const stepType = stepEl?.dataset.type;
 
+            // Capture email on step 11 before advancing
+            if (state.currentStep === 11) {
+                const emailValue = document.getElementById('emailInput').value;
+                state.answers.email = emailValue;
+                console.log('Captured email:', emailValue);
+            }
+
+            // Capture name on step 12 before advancing
+            if (state.currentStep === 12) {
+                const nameValue = document.getElementById('nameInput').value;
+                state.answers.name = nameValue;
+                console.log('Captured name:', nameValue);
+            }
+
             if (stepType === 'results') {
-                // Submit form and show success
-                submitForm();
-                updateSuccessPage();
-                showStep(15);
+                // Show loading state
+                ctaBtn.classList.add('loading');
+                ctaBtn.textContent = 'JOINING';
+
+                try {
+                    // Submit form and wait for response
+                    await submitForm();
+
+                    // Success - show success page
+                    updateSuccessPage();
+                    showStep(15);
+                } catch (error) {
+                    // Error - remove loading state, user can try again
+                    ctaBtn.classList.remove('loading');
+                    ctaBtn.textContent = 'JOIN WAITLIST';
+                }
                 return;
             }
 
