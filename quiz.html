@@ -165,6 +165,99 @@
             display: block;
         }
 
+        .step.has-bg {
+            position: relative;
+            margin: -140px -20px -120px;
+            padding: 140px 20px 120px;
+            min-height: 100vh;
+            display: none;
+        }
+
+        .step.has-bg.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .step.has-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-size: cover;
+            background-position: center 80%;
+            background-repeat: no-repeat;
+            z-index: -2;
+        }
+
+        .step.has-bg::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom,
+                rgba(0,0,0,0.7) 0%,
+                rgba(0,0,0,0.5) 30%,
+                rgba(0,0,0,0.6) 70%,
+                rgba(0,0,0,0.9) 100%
+            );
+            z-index: -1;
+        }
+
+        .step.bg-fitness::before {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background-image: url(./site-images/squat.JPG);
+            background-size: contain;
+            background-position: center 80%;
+        }
+
+        .step.bg-dad::before {
+            background: linear-gradient(135deg, #2d132c 0%, #1a1a2e 50%, #16213e 100%);
+            background-image: url(./site-images/man.JPG);
+            background-size: contain;
+            background-position: center 60%;
+        }
+
+        .step.bg-gym::before {
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #2d2d2d 100%);
+            background-image: url(./site-images/side-lounge.JPG);
+            background-size: contain;
+            background-position: 10% 10%;
+        }
+
+        .step.bg-home::before {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background-image: url(./site-images/bg-dad.JPG);
+        }
+
+        .step.bg-strength::before {
+            background: linear-gradient(135deg, #232526 0%, #414345 100%);
+            background-image: url(./site-images/bg-dad.JPG);
+        }
+
+        .step.bg-time::before {
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            background-image: url(./site-images/bg-dad.JPG);
+        }
+
+        .step.sleep-image {
+            width: 100%;
+            max-width: 260px;
+            height: 280px;
+            margin: 0 auto 24px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: linear-gradient(180deg, #1a1a1a 0%, #000000 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -177,6 +270,17 @@
         }
 
         .step-question {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 400;
+            line-height: 1.3;
+            margin-bottom: 12px;
+            text-align: center;
+            letter-spacing: 0.01em;
+            color: var(--text-primary);
+        }
+
+        .step-question-kids-age {
             font-family: 'Playfair Display', serif;
             font-size: 28px;
             font-weight: 400;
@@ -225,6 +329,7 @@
         .options-grid {
             display: grid;
             gap: 12px;
+            justify-content: space-between;
         }
 
         .options-grid.two-col {
@@ -870,18 +975,9 @@
     <!-- Main Quiz Container -->
     <main class="quiz-container">
         <!-- Step 1: Kids Age -->
-        <div class="step active" data-step="1">
-            <h2 class="step-question">PERSONALIZED WORKOUT PLAN. <br> How old are your kids?</h2>
+        <div class="step has-bg bg-dad active" data-step="1">
+            <h2 class="step-question-kids-age">PERSONALIZED WORKOUT PLAN. <br> HOW OLD ARE YOUR KIDS?</h2>
             <p class="step-subtitle">This helps us understand your schedule</p>
-            
-            <div class="step-image">
-                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="50" cy="35" r="18" fill="#f97316"/>
-                    <circle cx="35" cy="68" r="11" fill="#fb923c"/>
-                    <circle cx="65" cy="68" r="11" fill="#fb923c"/>
-                </svg>
-            </div>
-            
             <div class="options-grid two-col" data-field="kids_age">
                 <div class="option-card" data-value="0-6 months">
                     <span class="option-text">0-6 months</span>
@@ -930,7 +1026,7 @@
         </div>
 
         <!-- Step 3: Main Goal -->
-        <div class="step" data-step="3">
+        <div class="step has-bg bg-fitness" data-step="3">
             <h2 class="step-question">What's your main fitness goal?</h2>
             <p class="step-subtitle">We'll customize your plan accordingly</p>
             
@@ -1015,7 +1111,11 @@
         <div class="step" data-step="6">
             <h2 class="step-question">How much sleep do you usually get?</h2>
             <p class="step-subtitle">This affects workout intensity recommendations</p>
-            
+
+            <div class="step sleep-image">
+                <img src="./site-images/sleep.JPG" alt="Fitness">
+            </div>
+
             <div class="options-grid two-col" data-field="sleep">
                 <div class="option-card" data-value="Less than 5 hours">
                     <span class="option-text">Less than 5h</span>
@@ -1037,8 +1137,8 @@
         </div>
 
         <!-- Step 7: Workout Location -->
-        <div class="step" data-step="7">
-            <h2 class="step-question">Where do you prefer to workout?</h2>
+        <div class="step has-bg bg-gym" data-step="7">
+            <h2 class="step-question">Where do you prefer to work out?</h2>
             <p class="step-subtitle">We'll customize equipment recommendations</p>
             
             <div class="options-grid" data-field="location">
@@ -1160,23 +1260,6 @@
             </div>
         </div>
 
-<!--        <div class="quiz-step" data-step="5">-->
-<!--            <div class="quiz-result-badge">✓ You Qualify</div>-->
-<!--            <h2 class="section-title">The 30-Minute Strength System is built for you.</h2>-->
-<!--            <p class="cta-subtitle">Based on your answers, this program fits your schedule and goals perfectly. Enter your email to lock in early access + founding member pricing.</p>-->
-<!--            <form class="signup-form" id="waitlist-form" name="waitlist" method="POST" data-netlify="true" netlify-honeypot="bot-field">-->
-<!--                <input type="hidden" name="form-name" value="waitlist">-->
-<!--                <input type="hidden" name="kids_age" id="hidden-kids-age">-->
-<!--                <input type="hidden" name="time" id="hidden-time">-->
-<!--                <input type="hidden" name="challenge" id="hidden-challenge">-->
-<!--                <input type="hidden" name="goal" id="hidden-goal">-->
-<!--                <p style="display:none"><input name="bot-field"></p>-->
-<!--                <input type="email" id="email-input" name="email" placeholder="Enter your email" required>-->
-<!--                <button type="submit">Get Early Access</button>-->
-<!--            </form>-->
-<!--            <p class="form-note">No spam. Unsubscribe anytime.</p>-->
-<!--        </div>-->
-
         <!-- Step 12: Name -->
         <div class="step" data-step="12">
             <h2 class="step-question">What's your first name?</h2>
@@ -1291,8 +1374,7 @@
                     </div>
                     <div class="success-detail-row">
                         <span class="detail-label">Launch price</span>
-                        <span class="detail-value">$87 <span style="color: var(--text-secondary); text-decoration: line-through; font-size: 12px;">$147</span></span>
-                    </div>
+                        <span class="detail-value">$87 <span style="color: var(--text-secondary); text-decoration: line-through; font-size: 12px;">$147</span></span>                    </div>
                 </div>
             </div>
         </div>
@@ -1305,6 +1387,12 @@
             <button class="skip-btn" id="skipBtn" style="display: none;">SKIP THIS QUESTION</button>
         </div>
     </footer>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        <span id="toastMessage">Successfully joined waitlist!</span>
+    </div>
 
     <!-- Hidden Netlify Form -->
     <form name="waitlist" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="hidden-form" id="waitlist-form">
@@ -1335,8 +1423,8 @@
 
         // Progress labels for different sections
         const progressLabels = {
-            1: 'Your Situation',
-            2: 'Your Situation',
+            1: 'Your Profile',
+            2: 'Your Profile',
             3: 'Your Goals',
             4: 'Your Goals',
             5: 'Your Goals',
@@ -1463,7 +1551,7 @@
             }
 
             // Check if answer exists for this step
-            const optionsGrid = stepEl?.querySelector('.options-grid');
+            const optionsGrid = stepEl?.querySelector('.options-grid,.options-grid');
             if (optionsGrid) {
                 const field = optionsGrid.dataset.field;
                 const isMulti = optionsGrid.dataset.multi === 'true';
@@ -1480,7 +1568,7 @@
 
         // Handle option selection
         function handleOptionClick(card) {
-            const grid = card.closest('.options-grid');
+            const grid = card.closest('.options-grid, .options-grid-kids-age');
             const field = grid.dataset.field;
             const isMulti = grid.dataset.multi === 'true';
             const value = card.dataset.value;
@@ -1563,34 +1651,62 @@
         }
 
         // Submit form to Netlify
+        // Show toast notification
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toastMessage.textContent = message;
+            toast.classList.remove('error');
+            if (isError) {
+                toast.classList.add('error');
+            }
+
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
         function submitForm() {
-            // Populate hidden form fields
-            document.getElementById('formEmail').value = state.answers.email || '';
-            document.getElementById('formName').value = state.answers.name || '';
-            document.getElementById('formKidsAge').value = state.answers.kids_age || '';
-            document.getElementById('formGoal').value = state.answers.goal || '';
-            document.getElementById('formTime').value = state.answers.time || '';
-            document.getElementById('formSleep').value = state.answers.sleep || '';
-            document.getElementById('formLocation').value = state.answers.location || '';
-            document.getElementById('formEquipment').value = Array.isArray(state.answers.equipment) 
-                ? state.answers.equipment.join(', ') 
-                : state.answers.equipment || '';
-            document.getElementById('formChallenge').value = state.answers.challenge || '';
+            return new Promise((resolve, reject) => {
+                // Populate hidden form fields
+                document.getElementById('formEmail').value = state.answers.email || '';
+                document.getElementById('formName').value = state.answers.name || '';
+                document.getElementById('formKidsAge').value = state.answers.kids_age || '';
+                document.getElementById('formGoal').value = state.answers.goal || '';
+                document.getElementById('formTime').value = state.answers.time || '';
+                document.getElementById('formSleep').value = state.answers.sleep || '';
+                document.getElementById('formLocation').value = state.answers.location || '';
+                document.getElementById('formEquipment').value = Array.isArray(state.answers.equipment)
+                    ? state.answers.equipment.join(', ')
+                    : state.answers.equipment || '';
+                document.getElementById('formChallenge').value = state.answers.challenge || '';
 
-            // Submit form
-            const form = document.getElementById('netlifyForm');
-            const formData = new FormData(form);
+                // Submit form
+                const form = document.getElementById('netlifyForm');
+                const formData = new FormData(form);
 
-            fetch('/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams(formData).toString()
-            })
-            .then(() => {
-                console.log('Form submitted successfully');
-            })
-            .catch(error => {
-                console.error('Form submission error:', error);
+                fetch('/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(formData).toString()
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Form submitted successfully');
+                        showToast('🎉 Successfully joined the waitlist!');
+                        resolve();
+                    } else {
+                        throw new Error('Submission failed');
+                    }
+                })
+                .catch(error => {
+                    console.error('Form submission error:', error);
+                    showToast('Something went wrong. Please try again.', true);
+                    reject(error);
+                });
             });
         }
 
