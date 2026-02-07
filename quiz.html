@@ -85,6 +85,8 @@
             font-size: 20px;
             font-weight: 400;
             letter-spacing: 0.05em;
+            text-decoration: none;
+            color: var(--text-primary);
         }
 
         .logo span {
@@ -211,8 +213,8 @@
         .step.bg-fitness::before {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             background-image: url(./site-images/squat.JPG);
-            background-size: contain;
-            background-position: center 80%;
+            background-size: cover;
+            background-position: left;
         }
 
         .step.bg-dad::before {
@@ -286,6 +288,31 @@
             font-weight: 400;
             line-height: 1.3;
             margin-bottom: 12px;
+            margin-top: -100px;
+            text-align: center;
+            letter-spacing: 0.01em;
+            color: var(--text-primary);
+        }
+
+        .step-question-fitness {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 400;
+            line-height: 1.3;
+            margin-bottom: 12px;
+            margin-top: -120px;
+            text-align: center;
+            letter-spacing: 0.01em;
+            color: var(--text-primary);
+        }
+
+        .step-question-gym {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 400;
+            line-height: 1.3;
+            margin-bottom: 12px;
+            margin-top: -180px;
             text-align: center;
             letter-spacing: 0.01em;
             color: var(--text-primary);
@@ -957,7 +984,7 @@
     <header class="header">
         <div class="header-content">
             <button class="back-btn" id="backBtn" aria-label="Go back">←</button>
-            <div class="logo">DEV<span>DAD</span></div>
+            <a href="index.html" class="logo">DEV<span>DAD</span></a>
             <button class="menu-btn" aria-label="Menu">☰</button>
         </div>
     </header>
@@ -1005,7 +1032,7 @@
                 <div class="interstitial-icon">
                     <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
                 </div>
-                <h2 class="interstitial-title">Over <span class="highlight" id="dadCount">2,400</span> dads have joined</h2>
+                <h2 class="interstitial-title">Over <span class="highlight" id="dadCount">1,000</span> dads have joined</h2>
                 <p class="interstitial-text">Engineer fathers just like you are building strength in 30 minutes or less, even with newborns at home.</p>
                 
                 <div class="social-proof-badges">
@@ -1027,7 +1054,7 @@
 
         <!-- Step 3: Main Goal -->
         <div class="step has-bg bg-fitness" data-step="3">
-            <h2 class="step-question">What's your main fitness goal?</h2>
+            <h2 class="step-question-fitness">What's your main fitness goal?</h2>
             <p class="step-subtitle">We'll customize your plan accordingly</p>
             
             <div class="options-grid" data-field="goal">
@@ -1138,7 +1165,7 @@
 
         <!-- Step 7: Workout Location -->
         <div class="step has-bg bg-gym" data-step="7">
-            <h2 class="step-question">Where do you prefer to work out?</h2>
+            <h2 class="step-question-gym">Where do you prefer to work out?</h2>
             <p class="step-subtitle">We'll customize equipment recommendations</p>
             
             <div class="options-grid" data-field="location">
