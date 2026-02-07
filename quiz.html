@@ -1788,18 +1788,18 @@
                 ctaBtn.classList.add('loading');
                 ctaBtn.textContent = 'JOINING';
 
-                try {
-                    // Submit form and wait for response
-                    await submitForm();
-
-                    // Success - show success page
-                    updateSuccessPage();
-                    showStep(15);
-                } catch (error) {
-                    // Error - remove loading state, user can try again
-                    ctaBtn.classList.remove('loading');
-                    ctaBtn.textContent = 'JOIN WAITLIST';
-                }
+                // Submit form and wait for response
+                submitForm()
+                    .then(() => {
+                        // Success - show success page
+                        updateSuccessPage();
+                        showStep(15);
+                    })
+                    } catch (error) {
+                        // Error - remove loading state, user can try again
+                        ctaBtn.classList.remove('loading');
+                        ctaBtn.textContent = 'JOIN WAITLIST';
+                    });
                 return;
             }
 
