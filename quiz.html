@@ -213,22 +213,25 @@
         .step.bg-fitness::before {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             background-image: url(./site-images/squat.JPG);
-            background-size: cover;
+            background-size: contain;
             background-position: left;
+            background-repeat: no-repeat;
         }
 
         .step.bg-dad::before {
             background: linear-gradient(135deg, #2d132c 0%, #1a1a2e 50%, #16213e 100%);
             background-image: url(./site-images/man.JPG);
             background-size: contain;
-            background-position: center 60%;
+            background-position: left;
+            background-repeat: no-repeat;
         }
 
         .step.bg-gym::before {
             background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #2d2d2d 100%);
             background-image: url(./site-images/side-lounge.JPG);
             background-size: contain;
-            background-position: 10% 10%;
+            background-position: left;
+            background-repeat: no-repeat;
         }
 
         .step.bg-home::before {
@@ -1189,7 +1192,7 @@
             <h2 class="step-question">What equipment do you have access to?</h2>
             <p class="step-subtitle">Select all that apply</p>
             
-            <div class="options-grid" data-field="equipment" data-multi="true">
+            <div class="options-grid two-col" data-field="equipment" data-multi="true">
                 <div class="option-card multi" data-value="Dumbbells">
                     <span class="option-text">Dumbbells</span>
                     <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
@@ -1206,6 +1209,10 @@
                     <span class="option-text">Kettlebells</span>
                     <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
                 </div>
+                <div class="option-card multi" data-value="Resistance bands">
+                    <span class="option-text">Resistance bands</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
                 <div class="option-card multi" data-value="Bodyweight only">
                     <span class="option-text">Bodyweight only</span>
                     <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
@@ -1218,7 +1225,7 @@
             <h2 class="step-question">What's your biggest challenge?</h2>
             <p class="step-subtitle">We'll address this head-on in your plan</p>
             
-            <div class="options-grid" data-field="challenge">
+            <div class="options-grid two-col" data-field="challenge">
                 <div class="option-card" data-value="No time">
                     <span class="option-text">Not enough time</span>
                     <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
@@ -1399,7 +1406,7 @@
                     </div>
                     <div class="success-detail-row">
                         <span class="detail-label">Launch price</span>
-                        <span class="detail-value">$87 <span style="color: var(--text-secondary); text-decoration: line-through; font-size: 12px;">$147</span></span>                    </div>
+                        <span class="detail-value">$47 <span style="color: var(--text-secondary); text-decoration: line-through; font-size: 12px;">$147</span></span>                    </div>
                 </div>
             </div>
         </div>
