@@ -1247,8 +1247,6 @@
         <div class="step" data-step="11">
             <h2 class="step-question">Enter your email to get your personalized plan</h2>
             <p class="step-subtitle">We'll save your results and notify you at launch</p>
-<!--            <form class="signup-form" id="waitlist-form" name="waitlist" method="POST" data-netlify="true" netlify-honeypot="bot-field">-->
-
             <div class="input-container">
                 <input type="email" class="text-input" id="emailInput" placeholder="your@email.com" required>
                 <p class="input-hint">We respect your privacy. No spam, ever.</p>
@@ -1395,7 +1393,7 @@
     </div>
 
     <!-- Hidden Netlify Form -->
-    <form name="waitlist" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="hidden-form" id="waitlist-form">
+    <form name="waitlist" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="hidden-form" id="waitlist-form" netlify>
         <input type="hidden" name="form-name" value="waitlist">
         <input type="hidden" name="bot-field">
         <input type="hidden" name="email" id="formEmail">
