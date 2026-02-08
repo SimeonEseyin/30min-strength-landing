@@ -156,6 +156,20 @@
       font-weight: 600;
       font-family: 'Courier New', monospace;
     }
+
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9; /* responsive */
+      overflow: hidden;
+    }
+
+    .video-wrapper video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* 🔑 fills container */
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -167,7 +181,7 @@
     // Mock exercise data
     const exercises = {
       day1: [
-        { id: 1, name: 'Goblet Squat', duration: '0:45', sets: '3 sets × 12 reps', image: '🏋️' },
+        { id: 1, name: 'Goblet Squat', duration: '0:45', sets: '3 sets × 12 reps', video: './site-videos/video-demo.MOV' },
         { id: 2, name: 'Dumbbell Shoulder Press', duration: '0:40', sets: '3 sets × 10 reps', image: '💪' },
         { id: 3, name: 'Dumbbell Floor Press', duration: '0:40', sets: '3 sets × 12 reps', image: '🏋️' },
         { id: 4, name: 'Lateral Raise', duration: '0:35', sets: '3 sets × 15 reps', image: '💪' },
@@ -282,7 +296,7 @@
               </div>
             </div>
 
-            <button className="btn-primary mb-3" onClick={() => setScreen('home')}>
+            <button className="nav-cta mb-3" onClick={() => setScreen('home')}>
               Get The System - $87
             </button>
 
@@ -467,13 +481,21 @@
             <button onClick={() => setScreen('home')} className="absolute top-6 left-6 text-3xl z-10">×</button>
             
             {/* Exercise Demo */}
-            <div className="h-96 flex items-center justify-center text-8xl" style={{background: '#2C5F8D'}}>
-              {exercise.image}
+            <div className="h-96 flex items-center justify-center text-8xl video-wrapper video" style={{background: '#0a0a0a'}}>
+              <video
+                src={exercise.video}
+                controls
+                loop
+                muted
+                playsInline
+                preload="metadata"
+                width="100%"
+              />
             </div>
 
             {/* Exercise Info */}
             <div className="p-6">
-              <div className="dev-badge mb-3" style={{background: '#2C5F8D', color: 'white'}}>
+              <div className="dev-badge mb-3" style={{background: '#252525', color: '#fb923c'}}>
                 Exercise {currentExercise + 1} of {dayExercises.length}
               </div>
               <h2 className="text-2xl font-bold mb-2">{exercise.name}</h2>
@@ -532,7 +554,7 @@
       const CompleteScreen = () => (
         <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
           <div className="text-6xl mb-6">{'{ 💪 }'}</div>
-          <h2 className="text-3xl font-bold mb-3" style={{color: '#2C5F8D'}}>Day {currentDay} Complete!</h2>
+          <h2 className="text-3xl font-bold mb-3"  style={{color: '#f97316'}}>Day {currentDay} Complete!</h2>
           <p className="text-gray-600 mb-8">Strength earned. System working.</p>
           
           <div className="card w-full max-w-md mb-6">
