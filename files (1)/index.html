@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The 30-Minute Strength System | For Engineer Dads Who Refuse to Let Go</title>
+    <meta name="description" content="A 12-week progressive strength program built for software engineers with infant twins, sleep deprivation, and zero time to waste.">
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#f97316">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="96x96" href="/icons/favicon-96x96.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="DevDad">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="DevDad Strength">
+    <meta name="msapplication-TileImage" content="/icons/icon-144.png">
+    <meta name="msapplication-config" content="/browserconfig.xml">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #a3a3a3;
+            --text-muted: #737373;
+            --accent: #f97316;
+            --accent-hover: #fb923c;
+            --accent-glow: rgba(249, 115, 22, 0.4);
+            --border: #262626;
+            --success: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Noise texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            padding: 24px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: linear-gradient(to bottom, var(--bg-primary) 0%, transparent 100%);
+        }
+
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 0.05em;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .nav-cta {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 10px 24px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .nav-cta:hover {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 120px 0 80px;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60%;
+            height: 100%;
+            background: radial-gradient(ellipse at 70% 30%, var(--accent-glow) 0%, transparent 60%);
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--accent);
+            margin-bottom: 24px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .hero-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            line-height: 0.95;
+            letter-spacing: -0.02em;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.6s ease-out 0.1s both;
+        }
+
+        .hero-title span {
+            color: var(--accent);
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            max-width: 480px;
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+
+        .hero-subtitle strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            padding: 18px 36px;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease-out 0.3s both;
+        }
+
+        .hero-cta:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px var(--accent-glow);
+        }
+
+        .hero-cta svg {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .hero-cta:hover svg {
+            transform: translateX(4px);
+        }
+
+        .hero-visual {
+            position: relative;
+            animation: fadeIn 1s ease-out 0.4s both;
+        }
+
+        .hero-video-container {
+            aspect-ratio: 4/5;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .hero-video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hero-image-placeholder {
+            aspect-ratio: 4/5;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-image-placeholder::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--accent-glow) 0%, transparent 50%);
+            opacity: 0.1;
+        }
+
+        .placeholder-icon {
+            width: 64px;
+            height: 64px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .placeholder-text {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 4px;
+        }
+
+        /* Problem Section */
+        .problem {
+            padding: 120px 0;
+            background: var(--bg-secondary);
+            position: relative;
+        }
+
+        .problem::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--border), transparent);
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            line-height: 1;
+            margin-bottom: 48px;
+        }
+
+        .problem-hero {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 60px;
+            align-items: center;
+            margin-bottom: 60px;
+        }
+
+        .problem-image {
+            position: relative;
+        }
+
+        .problem-image img {
+            width: 100%;
+            height: auto;
+            border: 1px solid var(--border);
+        }
+
+        .problem-intro .section-title {
+            margin-bottom: 24px;
+        }
+
+        .problem-lead {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+
+        .problem-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 32px;
+            transition: all 0.3s ease;
+        }
+
+        .problem-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+        }
+
+        .problem-icon {
+            width: 48px;
+            height: 48px;
+            color: var(--accent);
+            margin-bottom: 20px;
+        }
+
+        .problem-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .problem-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Solution Section */
+        .solution {
+            padding: 120px 0;
+        }
+
+        .solution-content-full {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .solution-content-full .section-title {
+            margin-bottom: 24px;
+        }
+
+        .solution-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .solution-image-placeholder {
+            aspect-ratio: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .solution-content .section-title {
+            margin-bottom: 24px;
+        }
+
+        .solution-description {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+            margin-bottom: 32px;
+        }
+
+        .solution-features {
+            list-style: none;
+        }
+
+        .solution-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .solution-features li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-check {
+            width: 24px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .feature-check svg {
+            width: 14px;
+            height: 14px;
+            color: var(--bg-primary);
+        }
+
+        .feature-text strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .feature-text span {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* What You Get Section */
+        .includes {
+            padding: 120px 0;
+            background: var(--bg-secondary);
+        }
+
+        .includes-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-top: 48px;
+        }
+
+        .include-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 40px;
+            display: flex;
+            gap: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .include-card:hover {
+            border-color: var(--accent);
+        }
+
+        .include-number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            color: var(--accent);
+            line-height: 1;
+            opacity: 0.5;
+        }
+
+        .include-content h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .include-content p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Testimonial / Social Proof */
+        .social-proof {
+            padding: 120px 0;
+        }
+
+        .testimonial-card {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 60px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .testimonial-card::before {
+            content: '"';
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 12rem;
+            color: var(--accent);
+            opacity: 0.1;
+            position: absolute;
+            top: -20px;
+            left: 40px;
+            line-height: 1;
+        }
+
+        .testimonial-text {
+            font-size: 1.5rem;
+            font-weight: 400;
+            line-height: 1.6;
+            margin-bottom: 32px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .author-avatar {
+            width: 56px;
+            height: 56px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .author-avatar svg {
+            width: 28px;
+            height: 28px;
+            color: var(--text-muted);
+        }
+
+        .author-info {
+            text-align: left;
+        }
+
+        .author-name {
+            font-weight: 700;
+        }
+
+        .author-title {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 120px 0;
+            background: var(--bg-secondary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .cta-content {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta .section-title {
+            margin-bottom: 16px;
+        }
+
+        .cta-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+            margin-bottom: 40px;
+        }
+
+        .signup-form {
+            display: flex;
+            gap: 12px;
+            max-width: 480px;
+            margin: 0 auto 24px;
+        }
+
+        .signup-form input {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 18px 24px;
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .signup-form input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .signup-form input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .signup-form button {
+            background: var(--accent);
+            border: none;
+            color: var(--bg-primary);
+            padding: 18px 32px;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .signup-form button:hover {
+            background: var(--accent-hover);
+        }
+
+        .signup-form {
+            display: flex;
+            gap: 12px;
+            max-width: 480px;
+            margin: 0 auto 24px;
+        }
+
+        .signup-form input {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 18px 24px;
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .signup-form input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .signup-form input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .signup-form button {
+            background: var(--accent);
+            border: none;
+            color: var(--bg-primary);
+            padding: 18px 32px;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .signup-form button:hover {
+            background: var(--accent-hover);
+        }
+
+        .success-message {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid #22c55e;
+            padding: 24px;
+            text-align: center;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        .success-message h3 {
+            color: #22c55e;
+            margin-bottom: 8px;
+        }
+
+        .form-note {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Quiz Styles */
+        .quiz-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .quiz-step {
+            display: none;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        .quiz-step.active {
+            display: block;
+        }
+
+        .quiz-start-btn {
+            background: var(--accent);
+            border: none;
+            color: var(--bg-primary);
+            padding: 18px 36px;
+            font-size: 1.125rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 16px;
+        }
+
+        .quiz-start-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px var(--accent-glow);
+        }
+
+        .quiz-progress {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .quiz-question {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 32px;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .quiz-option {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 18px 24px;
+            font-size: 1rem;
+            font-family: inherit;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quiz-option:hover {
+            border-color: var(--accent);
+            background: rgba(249, 115, 22, 0.1);
+        }
+
+        .quiz-option.selected {
+            border-color: var(--accent);
+            background: rgba(249, 115, 22, 0.2);
+        }
+
+        .quiz-result-badge {
+            display: inline-block;
+            background: rgba(249, 115, 22, 0.2);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 8px 20px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 24px;
+        }
+
+        .quiz-result-badge.success {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: #22c55e;
+            color: #22c55e;
+        }
+
+        .success-message {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--success);
+            padding: 24px;
+            text-align: center;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        .success-message h3 {
+            color: var(--success);
+            margin-bottom: 8px;
+        }
+
+        /* About Section */
+        .about {
+            padding: 120px 0;
+        }
+
+        .about-content-full {
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .about-content-full .section-title {
+            margin-bottom: 24px;
+        }
+
+        .about-content-full .about-credentials {
+            justify-content: center;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+        .about-image-placeholder {
+            aspect-ratio: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .about-content .section-title {
+            margin-bottom: 24px;
+        }
+
+        .about-text {
+            color: var(--text-secondary);
+            font-size: 1.0625rem;
+            margin-bottom: 16px;
+        }
+
+        .about-text strong {
+            color: var(--text-primary);
+        }
+
+        .about-credentials {
+            display: flex;
+            gap: 32px;
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+        }
+
+        .credential {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .credential svg {
+            width: 24px;
+            height: 24px;
+            color: var(--accent);
+        }
+
+        .credential span {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .footer-copy {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+                gap: 48px;
+            }
+
+            .hero-visual {
+                order: 1;
+            }
+
+            .hero-video-container {
+                aspect-ratio: 16/9;
+                max-height: 400px;
+            }
+
+            .hero-image-placeholder {
+                aspect-ratio: 16/9;
+                max-height: 400px;
+            }
+
+            .problem-hero {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .problem-image {
+                max-width: 350px;
+                margin: 0 auto;
+            }
+
+            .problem-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .solution-grid {
+                grid-template-columns: 1fr;
+                gap: 48px;
+            }
+
+            .solution-image-placeholder {
+                order: -1;
+                aspect-ratio: 16/9;
+            }
+
+            .includes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .about-image-placeholder {
+                max-width: 300px;
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .header-inner {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .hero {
+                padding: 100px 0 60px;
+            }
+
+            .hero-stats {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .signup-form {
+                flex-direction: column;
+            }
+
+            .signup-form button {
+                width: 100%;
+            }
+
+            .testimonial-card {
+                padding: 40px 24px;
+            }
+
+            .testimonial-text {
+                font-size: 1.25rem;
+            }
+
+            .about-credentials {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .footer-inner {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-inner">
+                <a href="index.html" class="logo">DEV<span>DAD</span></a>
+                <nav style="display: flex; gap: 16px; align-items: center;">
+                    <a href="devdad-landing.html" style="color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">Pricing</a>
+                    <a href="quiz.html" class="nav-cta">Take the Quiz</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-grid">
+                <div class="hero-content">
+                    <div class="hero-badge">For Dads</div>
+                    <h1 class="hero-title">
+                        The <span>30-Minute</span> Strength System
+                    </h1>
+                    <p class="hero-subtitle">
+                        A 12-week progressive strength program built for software engineers with <strong>infant twins, sleep deprivation, and zero time to waste.</strong>
+                    </p>
+                    <a href="quiz.html" class="hero-cta">
+                        See If You Qualify
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                    </a>
+                    <p style="margin-top: 16px; font-size: 14px; color: var(--text-muted);">
+                        Already know you're in? <a href="devdad-landing.html" style="color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent); padding-bottom: 2px; transition: all 0.2s;" onmouseover="this.style.color='var(--accent-hover)'; this.style.borderColor='var(--accent-hover)'" onmouseout="this.style.color='var(--accent)'; this.style.borderColor='var(--accent)'">Skip to pricing →</a>
+                    </p>
+                </div>
+                <div class="hero-visual">
+                    <div class="problem-image">
+                        <img src="site-images/pushup.JPG" alt="Dev Dad exhausted with baby - this is real life">
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <div class="stat-value">30</div>
+                            <div class="stat-label">Minutes Max</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">12</div>
+                            <div class="stat-label">Week Program</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">3x</div>
+                            <div class="stat-label">Per Week</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="problem">
+        <div class="container">
+            <div class="problem-hero">
+                <div class="problem-image">
+                    <img src="site-images/1.jpg" alt="Dev Dad exhausted with baby - this is real life">
+                </div>
+                <div class="problem-intro">
+                    <div class="section-label">The Reality</div>
+                    <h2 class="section-title">You know the drill.</h2>
+                    <p class="problem-lead">Before you can even think about the gym, you've got a baby who needs you. Sleep is a distant memory. And that 90-minute workout you used to do? Not happening.</p>
+                </div>
+            </div>
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <svg class="problem-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3>Zero Time</h3>
+                    <p>Between deployments, standups, and midnight feedings, your gym time evaporated. The 90-minute workouts you used to do? Not happening.</p>
+                </div>
+                <div class="problem-card">
+                    <svg class="problem-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+                    </svg>
+                    <h3>Sleep Deprived</h3>
+                    <p>Running on 4 hours of fragmented sleep. Your energy is shot. Traditional high-volume programs would break you right now.</p>
+                </div>
+                <div class="problem-card">
+                    <svg class="problem-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3>Generic Programs Fail</h3>
+                    <p>Cookie-cutter fitness plans assume you have time, energy, and recovery capacity you simply don't have as a new dad.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section class="solution">
+        <div class="container">
+            <div class="solution-content-full">
+                <div class="section-label">The Solution</div>
+                <h2 class="section-title">Built for your reality.</h2>
+                <p class="solution-description">
+                    This isn't another influencer program. It's a system designed by a software engineer dad with infant twins who refused to let fitness go.
+                </p>
+                <ul class="solution-features">
+                        <li>
+                            <div class="feature-check">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                            </div>
+                            <div class="feature-text">
+                                <strong>30 minutes or less, every workout</strong>
+                                <span>Compound movements, strategic supersets, zero fluff. Get in, get strong, get back to your family.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="feature-check">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                            </div>
+                            <div class="feature-text">
+                                <strong>Sleep-adjusted intensity</strong>
+                                <span>Built-in autoregulation. Bad night? The program adapts. No guilt, just progress.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="feature-check">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                            </div>
+                            <div class="feature-text">
+                                <strong>Home or gym—your choice</strong>
+                                <span>Minimal equipment options mean you can train in your garage while the baby naps.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="feature-check">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                            </div>
+                            <div class="feature-text">
+                                <strong>Progressive overload that actually progresses</strong>
+                                <span>Smart periodization that accounts for the chaos of new dad life.</span>
+                            </div>
+                        </li>
+                    </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- What You Get Section -->
+    <section class="includes">
+        <div class="container">
+            <div class="section-label">What's Included</div>
+            <h2 class="section-title">Everything you need. Nothing you don't.</h2>
+            <div class="includes-grid">
+                <div class="include-card">
+                    <div class="include-number">01</div>
+                    <div class="include-content">
+                        <h3>12-Week Progressive Program</h3>
+                        <p>Structured phases that build strength systematically while respecting your recovery limitations.</p>
+                    </div>
+                </div>
+                <div class="include-card">
+                    <div class="include-number">02</div>
+                    <div class="include-content">
+                        <h3>Video Exercise Library</h3>
+                        <p>Clear demonstrations of every movement. No guessing, no confusion, just execute.</p>
+                    </div>
+                </div>
+                <div class="include-card">
+                    <div class="include-number">03</div>
+                    <div class="include-content">
+                        <h3>Sleep-Adjusted Protocols</h3>
+                        <p>Guidelines for modifying workouts based on how wrecked you are that day.</p>
+                    </div>
+                </div>
+                <div class="include-card">
+                    <div class="include-number">04</div>
+                    <div class="include-content">
+                        <h3>Quick-Start Nutrition Guide</h3>
+                        <p>Simple, sustainable eating strategies. No meal prep marathons, no complicated macros.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Proof -->
+    <section class="social-proof">
+        <div class="container">
+            <div class="testimonial-card">
+                <p class="testimonial-text">
+                    "I thought staying fit after the twins was impossible. This program proved me wrong. 30 minutes, three times a week—and I'm stronger than I was before they were born."
+                </p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                        </svg>
+                    </div>
+                    <div class="author-info">
+                        <div class="author-name">Simeon</div>
+                        <div class="author-title">Software Engineer & Dad</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quiz Section -->
+    <section class="cta" id="signup">
+        <div class="container">
+            <div class="cta-content">
+                <div class="section-label">Limited Spots</div>
+                <h2 class="section-title">Get your personalized strength plan.</h2>
+                <p class="cta-subtitle">
+                    Take a 2-minute quiz to see if the program is right for you — and lock in founding member pricing.
+                </p>
+                <a href="quiz.html" class="hero-cta" style="display: inline-flex; margin-bottom: 24px;">
+                    Take the Quiz
+                    <svg>...</svg>
+                </a>
+                <p class="form-note">No spam. Unsubscribe anytime.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about">
+        <div class="container">
+            <div class="about-content-full">
+                <div class="section-label">About DevDad</div>
+                <h2 class="section-title">Built by a dad who gets it.</h2>
+                <p class="about-text">
+                    I'm a software engineer and a dad to infant twins. When my kids arrived, every fitness program I tried assumed I had time and energy I simply didn't have.
+                </p>
+                <p class="about-text">
+                    So I built my own system. One that works within the chaos, not despite it. This program is what I wish existed when I was desperately trying to maintain some semblance of fitness while running on 4 hours of sleep.
+                </p>
+                <p class="about-text">
+                    <strong>If I can do it with twins, you can do it too.</strong>
+                </p>
+                <div class="about-credentials">
+                        <div class="credential">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+                            </svg>
+                            <span>Software Engineer</span>
+                        </div>
+                        <div class="credential">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                            </svg>
+                            <span>Dad of Twins</span>
+                        </div>
+                        <div class="credential">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                            </svg>
+                            <span>Fitness Enthusiast</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-links">
+                    <a href="https://instagram.com/fer_eseyin" target="_blank">Instagram</a>
+                    <a href="https://tiktok.com/@fer_eseyin" target="_blank">TikTok</a>
+                    <a href="privacy.html">Privacy Policy</a>
+                    <a href="terms.html">Terms of Service</a>
+                </div>
+                <div class="footer-copy">
+                    © 2025 Dev Dad. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Hero video - play on view and hover
+        const heroVideo = document.getElementById('hero-video');
+        
+        if (heroVideo) {
+            // Intersection Observer - play when in view
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        heroVideo.play();
+                    } else {
+                        heroVideo.pause();
+                    }
+                });
+            }, { threshold: 0.3 });
+            
+            observer.observe(heroVideo);
+            
+            // Also play on hover
+            heroVideo.parentElement.addEventListener('mouseenter', () => {
+                heroVideo.play();
+            });
+            
+            heroVideo.parentElement.addEventListener('mouseleave', () => {
+                // Only pause if not in view
+                const rect = heroVideo.getBoundingClientRect();
+                const inView = rect.top < window.innerHeight && rect.bottom > 0;
+                if (!inView) {
+                    heroVideo.pause();
+                }
+            });
+        }
+
+        // Quiz functionality
+        let currentStep = 0;
+        const quizData = {};
+        
+        function nextStep() {
+            const steps = document.querySelectorAll('.quiz-step');
+            steps[currentStep].classList.remove('active');
+            currentStep++;
+            steps[currentStep].classList.add('active');
+        }
+        
+        function selectOption(button, field, value) {
+            // Store the answer
+            quizData[field] = value;
+            
+            // Visual feedback
+            const options = button.parentElement.querySelectorAll('.quiz-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            button.classList.add('selected');
+            
+            // Update hidden form field
+            const hiddenField = document.getElementById('hidden-' + field.replace('_', '-'));
+            if (hiddenField) {
+                hiddenField.value = value;
+            }
+            
+            // Auto-advance after short delay
+            setTimeout(() => {
+                nextStep();
+            }, 300);
+        }
+
+        // Form handling with Netlify Forms (AJAX - stays on page)
+        const form = document.getElementById('waitlist-form');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(formData).toString()
+                });
+                
+                if (response.ok) {
+                    // Show success step
+                    const steps = document.querySelectorAll('.quiz-step');
+                    steps[5].classList.remove('active');
+                    steps[6].classList.add('active');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                // Still show success (form likely submitted)
+                const steps = document.querySelectorAll('.quiz-step');
+                steps[5].classList.remove('active');
+                steps[6].classList.add('active');
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+    <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(reg => console.log('✅ SW registered'))
+          .catch(err => console.log('❌ SW failed', err));
+      });
+    }
+    </script>
+
+    <script>
+    window.addEventListener('appinstalled', (evt) => {
+      // Track install event
+      gtag('event', 'pwa_install', {
+        'event_category': 'engagement',
+        'event_label': 'PWA Installed'
+      });
+    });
+    </script>
+</body>
+</html>

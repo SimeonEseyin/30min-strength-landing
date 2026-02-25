@@ -599,6 +599,7 @@
         weightHistory: [] // {date, weight}
       });
 
+      const [selectedExercise, setSelectedExercise] = useState(null);
       const totalWeeks = 12;
       const currentPhase = currentWeek <= 4 ? 'Foundation' : currentWeek <= 8 ? 'Build' : 'Peak';
       // Phase 1-2: 5 workouts/week × 8 weeks = 40
@@ -1728,6 +1729,7 @@
           {screen === 'settings' && <SettingsScreen />}
           {screen === 'help' && <HelpCenterScreen />}
           {screen === 'weight' && <WeightTrackingScreen />}
+          {screen === 'exercise-detail' && <ExerciseDetailScreen />}
         </div>
       );
 
@@ -1892,7 +1894,15 @@
                   {/* Exercise List */}
                   <div className="section-label">EXERCISES</div>
                   {currentDayExercises.map((ex, idx) => (
-                    <div key={ex.id} className="exercise-card">
+                    <div
+                      key={ex.id}
+                      className="exercise-card"
+                      onClick={() => {
+                        setSelectedExercise(ex);
+                        setScreen('exercise-detail');
+                      }}
+                      style={{cursor: 'pointer'}}
+                    >
                       <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-2xl">
                         {ex.image}
                       </div>
@@ -1900,7 +1910,7 @@
                         <h4 className="font-semibold">{ex.name}</h4>
                         <p className="text-sm text-gray-600">{ex.sets}</p>
                       </div>
-                      <button className="text-gray-400">ℹ️</button>
+                      <button className="text-gray-400">›</button>
                     </div>
                   ))}
                 </>
@@ -2215,34 +2225,21 @@
               <h2 className="text-2xl font-bold mb-2">{exercise.name}</h2>
               <p className="text-gray-400 mb-4">{exercise.sets}</p>
 
-              {/* Debug Panel - Remove after testing */}
-              <div className="rounded-lg p-3 mb-4 text-xs font-mono" style={{background: '#1a1a1a', border: '1px solid #333'}}>
-                <div className="text-gray-400 mb-2">🐛 DEBUG INFO (remove in production)</div>
-                <div className="grid grid-cols-2 gap-2 text-left">
-                  <div>exerciseTimeLeft: <span className="text-orange-400">{exerciseTimeLeft}</span></div>
-                  <div>actualTimeElapsed: <span className="text-blue-400">{actualTimeElapsed}</span></div>
-                  <div>isTimerRunning: <span className={isTimerRunning ? 'text-green-400' : 'text-red-400'}>{String(isTimerRunning)}</span></div>
-                  <div>isStopwatchRunning: <span className={isStopwatchRunning ? 'text-green-400' : 'text-red-400'}>{String(isStopwatchRunning)}</span></div>
-                </div>
-              </div>
-
               {/* Dual Timer Section */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-2 gap-3 mb-4">
                 {/* Countdown Timer (Planned) */}
-                <div className="rounded-lg p-4 text-center" style={{background: '#252525'}}>
-                  <div className="text-xs text-gray-400 mb-2">PLANNED TIME</div>
-                  <div 
-                    className={`text-4xl font-bold mb-2 ${isTimerRunning ? 'timer-running' : ''}`}
+                <div className="rounded-lg p-3 text-center" style={{background: '#252525'}}>
+                  <div className="text-xs text-gray-400 mb-1">PLANNED</div>
+                  <div
+                    className={`text-3xl font-bold mb-1 ${isTimerRunning ? 'timer-running' : ''}`}
                     style={{color: exerciseTimeLeft === 0 ? '#22c55e' : '#fb923c'}}
                     key={exerciseTimeLeft}
                   >
                     {formatTime(exerciseTimeLeft)}
                   </div>
-                  <div className="text-xs text-gray-400 mb-1">Countdown</div>
-                  <div className="text-xs text-gray-500">{isTimerRunning ? '⏵ Running' : '⏸ Paused'}</div>
                   
                   {/* Individual countdown controls */}
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 mt-2">
                     <button
                       className="flex-1 py-1 px-2 rounded text-xs font-semibold"
                       style={{background: isTimerRunning ? '#ef4444' : '#22c55e', color: 'white'}}
@@ -2273,20 +2270,18 @@
                 </div>
 
                 {/* Stopwatch (Actual) */}
-                <div className="rounded-lg p-4 text-center" style={{background: '#252525'}}>
-                  <div className="text-xs text-gray-400 mb-2">ACTUAL TIME</div>
-                  <div 
-                    className={`text-4xl font-bold mb-2 ${isStopwatchRunning ? 'timer-running' : ''}`}
+                <div className="rounded-lg p-3 text-center" style={{background: '#252525'}}>
+                  <div className="text-xs text-gray-400 mb-1">ACTUAL</div>
+                  <div
+                    className={`text-3xl font-bold mb-1 ${isStopwatchRunning ? 'timer-running' : ''}`}
                     style={{color: '#3b82f6'}}
                     key={actualTimeElapsed}
                   >
                     {formatTime(actualTimeElapsed)}
                   </div>
-                  <div className="text-xs text-gray-400 mb-1">Stopwatch</div>
-                  <div className="text-xs text-gray-500">{isStopwatchRunning ? '⏵ Running' : '⏸ Paused'}</div>
                   
                   {/* Individual stopwatch controls */}
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 mt-2">
                     <button
                       className="flex-1 py-1 px-2 rounded text-xs font-semibold"
                       style={{background: isStopwatchRunning ? '#ef4444' : '#22c55e', color: 'white'}}
@@ -3679,6 +3674,105 @@
                   })}
                 </div>
               )}
+            </div>
+          </div>
+        );
+      }
+    function ExerciseDetailScreen() {
+        if (!selectedExercise) {
+          return (
+            <div className="min-h-screen">
+              <div className="bg-white p-6 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setScreen('home')} className="text-2xl">←</button>
+                  <h1 className="text-2xl font-bold" style={{color: '#2C5F8D'}}>Exercise Details</h1>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="card text-center py-8">
+                  <div className="text-5xl mb-3">❌</div>
+                  <div className="font-semibold mb-1">No exercise selected</div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div className="min-h-screen pb-6">
+            <div className="bg-white p-6 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <button onClick={() => setScreen('home')} className="text-2xl">←</button>
+                <h1 className="text-2xl font-bold" style={{color: '#2C5F8D'}}>Exercise Details</h1>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {/* Exercise Header */}
+              <div className="card mb-6 text-center">
+                <div className="text-6xl mb-4">{selectedExercise.image}</div>
+                <h2 className="text-2xl font-bold mb-2">{selectedExercise.name}</h2>
+                <div className="dev-badge">{selectedExercise.sets}</div>
+              </div>
+
+              {/* Instructions - only show if exists */}
+              {selectedExercise.instructions && selectedExercise.instructions.length > 0 && (
+                <>
+                  <div className="section-label">HOW TO PERFORM</div>
+                  <div className="card mb-6">
+                    {selectedExercise.instructions.map((instruction, idx) => (
+                      <div key={idx} className="flex gap-3">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm" style={{background: '#E8F0F7', color: '#2C5F8D'}}>
+                            {idx + 1}
+                          </div>
+                          <div className="flex-1 pt-1">
+                            <p className="text-gray-700">{instruction}</p>
+                          </div>
+                        </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Mistakes - only show if exists */}
+              {selectedExercise.mistakes && selectedExercise.mistakes.length > 0 && (
+                <>
+                  <div className="section-label">AVOID THESE MISTAKES</div>
+                  <div className="card mb-6">
+                    {selectedExercise.mistakes.map((mistake, idx) => (
+                      <div key={idx} className="flex gap-3 mb-3 last:mb-0">
+                        <span className="text-red-500 text-lg">✗</span>
+                        <p className="text-gray-700 flex-1">{mistake}</p>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <button
+                  className="nav-cta"
+                  onClick={() => {
+                    setScreen('workout');
+                    setWorkoutStarted(true);
+                    // Find this exercise's index in current day exercises
+                    const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
+                    const currentDayExercises = workoutInfo ? exercises[workoutInfo.exerciseDay] || exercises.day1 : exercises.day1;
+                    const exerciseIndex = currentDayExercises.findIndex(ex => ex.id === selectedExercise.id);
+                    setCurrentExercise(exerciseIndex >= 0 ? exerciseIndex : 0);
+                  }}
+                >
+                  Start This Exercise
+                </button>
+
+                <button
+                  className="btn-secondary"
+                  onClick={() => setScreen('home')}
+                >
+                  Back to Workout List
+                </button>
+              </div>
             </div>
           </div>
         );
