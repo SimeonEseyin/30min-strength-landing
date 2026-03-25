@@ -5,12 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The 30-Minute Strength System | For Engineer Dads Who Refuse to Let Go</title>
     <meta name="description" content="A 12-week progressive strength program built for software engineers with infant twins, sleep deprivation, and zero time to waste.">
-    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#f97316">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="96x96" href="/icons/favicon-96x96.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="DevDad">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="DevDad Strength">
+    <meta name="msapplication-TileImage" content="/icons/icon-144.png">
+    <meta name="msapplication-config" content="/browserconfig.xml">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-    
+
     <style>
         :root {
             --bg-primary: #0a0a0a;
@@ -1104,294 +1115,302 @@
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="container">
-            <div class="header-inner">
-                <a href="#" class="logo">DEV<span>DAD</span></a>
-                <a href="quiz.html" class="nav-cta">Take the Quiz</a>
-            </div>
+<!-- Header -->
+<header>
+    <div class="container">
+        <div class="header-inner">
+            <a href="index.html" class="logo">DEV<span>DAD</span></a>
+            <nav style="display: flex; gap: 16px; align-items: center;">
+                <a href="devdad-landing.html" style="color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">Pricing</a>
+                <a href="devdad-landing.html" class="nav-cta">Get Access</a>
+            </nav>
         </div>
-    </header>
+    </div>
+</header>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <div class="hero-grid">
-                <div class="hero-content">
-                    <div class="hero-badge">For Dads</div>
-                    <h1 class="hero-title">
-                        The <span>30-Minute</span> Strength System
-                    </h1>
-                    <p class="hero-subtitle">
-                        A 12-week progressive strength program built for software engineers with <strong>infant twins, sleep deprivation, and zero time to waste.</strong>
-                    </p>
-                    <a href="quiz.html" class="hero-cta">
-                        See If You Qualify
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        </svg>
-                    </a>
-                </div>
-                <div class="hero-visual">
-                    <div class="problem-image">
-                        <img src="site-images/pushup.JPG" alt="Dev Dad exhausted with baby - this is real life">
-                    </div>
-                    <div class="hero-stats">
-                        <div class="stat">
-                            <div class="stat-value">30</div>
-                            <div class="stat-label">Minutes Max</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value">12</div>
-                            <div class="stat-label">Week Program</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value">3x</div>
-                            <div class="stat-label">Per Week</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Problem Section -->
-    <section class="problem">
-        <div class="container">
-            <div class="problem-hero">
-                <div class="problem-image">
-                    <img src="site-images/1.jpg" alt="Dev Dad exhausted with baby - this is real life">
-                </div>
-                <div class="problem-intro">
-                    <div class="section-label">The Reality</div>
-                    <h2 class="section-title">You know the drill.</h2>
-                    <p class="problem-lead">Before you can even think about the gym, you've got a baby who needs you. Sleep is a distant memory. And that 90-minute workout you used to do? Not happening.</p>
-                </div>
-            </div>
-            <div class="problem-grid">
-                <div class="problem-card">
-                    <svg class="problem-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <h3>Zero Time</h3>
-                    <p>Between deployments, standups, and midnight feedings, your gym time evaporated. The 90-minute workouts you used to do? Not happening.</p>
-                </div>
-                <div class="problem-card">
-                    <svg class="problem-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-                    </svg>
-                    <h3>Sleep Deprived</h3>
-                    <p>Running on 4 hours of fragmented sleep. Your energy is shot. Traditional high-volume programs would break you right now.</p>
-                </div>
-                <div class="problem-card">
-                    <svg class="problem-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <h3>Generic Programs Fail</h3>
-                    <p>Cookie-cutter fitness plans assume you have time, energy, and recovery capacity you simply don't have as a new dad.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Solution Section -->
-    <section class="solution">
-        <div class="container">
-            <div class="solution-content-full">
-                <div class="section-label">The Solution</div>
-                <h2 class="section-title">Built for your reality.</h2>
-                <p class="solution-description">
-                    This isn't another influencer program. It's a system designed by a software engineer dad with infant twins who refused to let fitness go.
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-grid">
+            <div class="hero-content">
+                <div class="hero-badge">For Dads</div>
+                <h1 class="hero-title">
+                    The <span>30-Minute</span> Strength System
+                </h1>
+                <p class="hero-subtitle">
+                    A 12-week progressive strength program built for software engineers with <strong>infant twins, sleep deprivation, and zero time to waste.</strong>
                 </p>
-                <ul class="solution-features">
-                        <li>
-                            <div class="feature-check">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                </svg>
-                            </div>
-                            <div class="feature-text">
-                                <strong>30 minutes or less, every workout</strong>
-                                <span>Compound movements, strategic supersets, zero fluff. Get in, get strong, get back to your family.</span>
-                            </div>
-                        </li>
-                        <li>
-                            <div class="feature-check">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                </svg>
-                            </div>
-                            <div class="feature-text">
-                                <strong>Sleep-adjusted intensity</strong>
-                                <span>Built-in autoregulation. Bad night? The program adapts. No guilt, just progress.</span>
-                            </div>
-                        </li>
-                        <li>
-                            <div class="feature-check">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                </svg>
-                            </div>
-                            <div class="feature-text">
-                                <strong>Home or gym—your choice</strong>
-                                <span>Minimal equipment options mean you can train in your garage while the baby naps.</span>
-                            </div>
-                        </li>
-                        <li>
-                            <div class="feature-check">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                </svg>
-                            </div>
-                            <div class="feature-text">
-                                <strong>Progressive overload that actually progresses</strong>
-                                <span>Smart periodization that accounts for the chaos of new dad life.</span>
-                            </div>
-                        </li>
-                    </ul>
-            </div>
-        </div>
-    </section>
-
-    <!-- What You Get Section -->
-    <section class="includes">
-        <div class="container">
-            <div class="section-label">What's Included</div>
-            <h2 class="section-title">Everything you need. Nothing you don't.</h2>
-            <div class="includes-grid">
-                <div class="include-card">
-                    <div class="include-number">01</div>
-                    <div class="include-content">
-                        <h3>12-Week Progressive Program</h3>
-                        <p>Structured phases that build strength systematically while respecting your recovery limitations.</p>
-                    </div>
-                </div>
-                <div class="include-card">
-                    <div class="include-number">02</div>
-                    <div class="include-content">
-                        <h3>Video Exercise Library</h3>
-                        <p>Clear demonstrations of every movement. No guessing, no confusion, just execute.</p>
-                    </div>
-                </div>
-                <div class="include-card">
-                    <div class="include-number">03</div>
-                    <div class="include-content">
-                        <h3>Sleep-Adjusted Protocols</h3>
-                        <p>Guidelines for modifying workouts based on how wrecked you are that day.</p>
-                    </div>
-                </div>
-                <div class="include-card">
-                    <div class="include-number">04</div>
-                    <div class="include-content">
-                        <h3>Quick-Start Nutrition Guide</h3>
-                        <p>Simple, sustainable eating strategies. No meal prep marathons, no complicated macros.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Social Proof -->
-    <section class="social-proof">
-        <div class="container">
-            <div class="testimonial-card">
-                <p class="testimonial-text">
-                    "I thought staying fit after the twins was impossible. This program proved me wrong. 30 minutes, three times a week—and I'm stronger than I was before they were born."
-                </p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                        </svg>
-                    </div>
-                    <div class="author-info">
-                        <div class="author-name">Simeon</div>
-                        <div class="author-title">Software Engineer & Dad</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Quiz Section -->
-    <section class="cta" id="signup">
-        <div class="container">
-            <div class="cta-content">
-                <div class="section-label">Limited Spots</div>
-                <h2 class="section-title">Get your personalized strength plan.</h2>
-                <p class="cta-subtitle">
-                    Take a 2-minute quiz to see if the program is right for you — and lock in founding member pricing.
-                </p>
-                <a href="quiz.html" class="hero-cta" style="display: inline-flex; margin-bottom: 24px;">
-                    Take the Quiz
-                    <svg>...</svg>
+                <a href="devdad-landing.html" class="hero-cta">
+                    Get Instant Access — $97
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
                 </a>
-                <p class="form-note">No spam. Unsubscribe anytime.</p>
             </div>
-        </div>
-    </section>
-
-    <!-- About Section -->
-    <section class="about">
-        <div class="container">
-            <div class="about-content-full">
-                <div class="section-label">About DevDad</div>
-                <h2 class="section-title">Built by a dad who gets it.</h2>
-                <p class="about-text">
-                    I'm a software engineer and a dad to infant twins. When my kids arrived, every fitness program I tried assumed I had time and energy I simply didn't have.
-                </p>
-                <p class="about-text">
-                    So I built my own system. One that works within the chaos, not despite it. This program is what I wish existed when I was desperately trying to maintain some semblance of fitness while running on 4 hours of sleep.
-                </p>
-                <p class="about-text">
-                    <strong>If I can do it with twins, you can do it too.</strong>
-                </p>
-                <div class="about-credentials">
-                        <div class="credential">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
-                            </svg>
-                            <span>Software Engineer</span>
-                        </div>
-                        <div class="credential">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-                            </svg>
-                            <span>Dad of Twins</span>
-                        </div>
-                        <div class="credential">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-                            </svg>
-                            <span>Fitness Enthusiast</span>
-                        </div>
+            <div class="hero-visual">
+                <div class="hero-video-container">
+                    <video id="hero-video" autoplay muted loop playsinline poster="site-images/pushup.JPG">
+                        <source src="site-images/video-demo.MOV" type="video/mp4">
+                        <img src="site-images/pushup.JPG" alt="30-minute strength workout demo">
+                    </video>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-value">30</div>
+                        <div class="stat-label">Minutes Max</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">12</div>
+                        <div class="stat-label">Week Program</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">3x</div>
+                        <div class="stat-label">Per Week</div>
                     </div>
                 </div>
             </div>
-    </section>
+        </div>
+    </div>
+</section>
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-inner">
-                <div class="footer-links">
-                    <a href="https://instagram.com/fer_eseyin" target="_blank">Instagram</a>
-                    <a href="https://tiktok.com/@fer_eseyin" target="_blank">TikTok</a>
-                    <a href="privacy.html">Privacy Policy</a>
-                    <a href="terms.html">Terms of Service</a>
+<!-- Problem Section -->
+<section class="problem">
+    <div class="container">
+        <div class="problem-hero">
+            <div class="problem-image">
+                <img src="site-images/1.jpg" alt="Dev Dad exhausted with baby - this is real life">
+            </div>
+            <div class="problem-intro">
+                <div class="section-label">The Reality</div>
+                <h2 class="section-title">You know the drill.</h2>
+                <p class="problem-lead">Before you can even think about the gym, you've got a baby who needs you. Sleep is a distant memory. And that 90-minute workout you used to do? Not happening.</p>
+            </div>
+        </div>
+        <div class="problem-grid">
+            <div class="problem-card">
+                <svg class="problem-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3>Zero Time</h3>
+                <p>Between deployments, standups, and midnight feedings, your gym time evaporated. The 90-minute workouts you used to do? Not happening.</p>
+            </div>
+            <div class="problem-card">
+                <svg class="problem-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+                </svg>
+                <h3>Sleep Deprived</h3>
+                <p>Running on 4 hours of fragmented sleep. Your energy is shot. Traditional high-volume programs would break you right now.</p>
+            </div>
+            <div class="problem-card">
+                <svg class="problem-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3>Generic Programs Fail</h3>
+                <p>Cookie-cutter fitness plans assume you have time, energy, and recovery capacity you simply don't have as a new dad.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Solution Section -->
+<section class="solution">
+    <div class="container">
+        <div class="solution-content-full">
+            <div class="section-label">The Solution</div>
+            <h2 class="section-title">Built for your reality.</h2>
+            <p class="solution-description">
+                This isn't another influencer program. It's a system designed by a software engineer dad with infant twins who refused to let fitness go.
+            </p>
+            <ul class="solution-features">
+                <li>
+                    <div class="feature-check">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                    </div>
+                    <div class="feature-text">
+                        <strong>30 minutes or less, every workout</strong>
+                        <span>Compound movements, strategic supersets, zero fluff. Get in, get strong, get back to your family.</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="feature-check">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                    </div>
+                    <div class="feature-text">
+                        <strong>Sleep-adjusted intensity</strong>
+                        <span>Built-in autoregulation. Bad night? The program adapts. No guilt, just progress.</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="feature-check">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                    </div>
+                    <div class="feature-text">
+                        <strong>Home or gym—your choice</strong>
+                        <span>Minimal equipment options mean you can train in your garage while the baby naps.</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="feature-check">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                    </div>
+                    <div class="feature-text">
+                        <strong>Progressive overload that actually progresses</strong>
+                        <span>Smart periodization that accounts for the chaos of new dad life.</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- What You Get Section -->
+<section class="includes">
+    <div class="container">
+        <div class="section-label">What's Included</div>
+        <h2 class="section-title">Everything you need. Nothing you don't.</h2>
+        <div class="includes-grid">
+            <div class="include-card">
+                <div class="include-number">01</div>
+                <div class="include-content">
+                    <h3>12-Week Progressive Program</h3>
+                    <p>Structured phases that build strength systematically while respecting your recovery limitations.</p>
                 </div>
-                <div class="footer-copy">
-                    © 2025 Dev Dad. All rights reserved.
+            </div>
+            <div class="include-card">
+                <div class="include-number">02</div>
+                <div class="include-content">
+                    <h3>Video Exercise Library</h3>
+                    <p>Clear demonstrations of every movement. No guessing, no confusion, just execute.</p>
+                </div>
+            </div>
+            <div class="include-card">
+                <div class="include-number">03</div>
+                <div class="include-content">
+                    <h3>Sleep-Adjusted Protocols</h3>
+                    <p>Guidelines for modifying workouts based on how wrecked you are that day.</p>
+                </div>
+            </div>
+            <div class="include-card">
+                <div class="include-number">04</div>
+                <div class="include-content">
+                    <h3>Quick-Start Nutrition Guide</h3>
+                    <p>Simple, sustainable eating strategies. No meal prep marathons, no complicated macros.</p>
                 </div>
             </div>
         </div>
-    </footer>
+    </div>
+</section>
 
-    <script>
+<!-- Social Proof -->
+<section class="social-proof">
+    <div class="container">
+        <div class="testimonial-card">
+            <p class="testimonial-text">
+                "I thought staying fit after the twins was impossible. This program proved me wrong. 30 minutes, three times a week—and I'm stronger than I was before they were born."
+            </p>
+            <div class="testimonial-author">
+                <div class="author-avatar">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                    </svg>
+                </div>
+                <div class="author-info">
+                    <div class="author-name">Simeon</div>
+                    <div class="author-title">Software Engineer & Dad</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quiz Section -->
+<section class="cta" id="signup">
+    <div class="container">
+        <div class="cta-content">
+            <div class="section-label">Founding Member Pricing</div>
+            <h2 class="section-title">Start your first workout today.</h2>
+            <p class="cta-subtitle">
+                One-time payment. Lifetime access. No gym required.
+            </p>
+            <a href="devdad-landing.html" class="hero-cta" style="display: inline-flex; margin-bottom: 24px;">
+                Get Instant Access — $97
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+            </a>
+            <p class="form-note">30-day money-back guarantee. No questions asked.</p>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="about">
+    <div class="container">
+        <div class="about-content-full">
+            <div class="section-label">About DevDad</div>
+            <h2 class="section-title">Built by a dad who gets it.</h2>
+            <p class="about-text">
+                I'm a software engineer and a dad to infant twins. When my kids arrived, every fitness program I tried assumed I had time and energy I simply didn't have.
+            </p>
+            <p class="about-text">
+                So I built my own system. One that works within the chaos, not despite it. This program is what I wish existed when I was desperately trying to maintain some semblance of fitness while running on 4 hours of sleep.
+            </p>
+            <p class="about-text">
+                <strong>If I can do it with twins, you can do it too.</strong>
+            </p>
+            <div class="about-credentials">
+                <div class="credential">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+                    </svg>
+                    <span>Software Engineer</span>
+                </div>
+                <div class="credential">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                    </svg>
+                    <span>Dad of Twins</span>
+                </div>
+                <div class="credential">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                    </svg>
+                    <span>Fitness Enthusiast</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="footer-inner">
+            <div class="footer-links">
+                <a href="https://instagram.com/fer_eseyin" target="_blank">Instagram</a>
+                <a href="https://tiktok.com/@fer_eseyin" target="_blank">TikTok</a>
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="terms.html">Terms of Service</a>
+            </div>
+            <div class="footer-copy">
+                © 2026 Dev Dad. All rights reserved.
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
         // Hero video - play on view and hover
         const heroVideo = document.getElementById('hero-video');
-        
+
         if (heroVideo) {
             // Intersection Observer - play when in view
             const observer = new IntersectionObserver((entries) => {
@@ -1403,14 +1422,14 @@
                     }
                 });
             }, { threshold: 0.3 });
-            
+
             observer.observe(heroVideo);
-            
+
             // Also play on hover
             heroVideo.parentElement.addEventListener('mouseenter', () => {
                 heroVideo.play();
             });
-            
+
             heroVideo.parentElement.addEventListener('mouseleave', () => {
                 // Only pause if not in view
                 const rect = heroVideo.getBoundingClientRect();
@@ -1420,68 +1439,6 @@
                 }
             });
         }
-
-        // Quiz functionality
-        let currentStep = 0;
-        const quizData = {};
-        
-        function nextStep() {
-            const steps = document.querySelectorAll('.quiz-step');
-            steps[currentStep].classList.remove('active');
-            currentStep++;
-            steps[currentStep].classList.add('active');
-        }
-        
-        function selectOption(button, field, value) {
-            // Store the answer
-            quizData[field] = value;
-            
-            // Visual feedback
-            const options = button.parentElement.querySelectorAll('.quiz-option');
-            options.forEach(opt => opt.classList.remove('selected'));
-            button.classList.add('selected');
-            
-            // Update hidden form field
-            const hiddenField = document.getElementById('hidden-' + field.replace('_', '-'));
-            if (hiddenField) {
-                hiddenField.value = value;
-            }
-            
-            // Auto-advance after short delay
-            setTimeout(() => {
-                nextStep();
-            }, 300);
-        }
-
-        // Form handling with Netlify Forms (AJAX - stays on page)
-        const form = document.getElementById('waitlist-form');
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(form);
-            
-            try {
-                const response = await fetch('/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams(formData).toString()
-                });
-                
-                if (response.ok) {
-                    // Show success step
-                    const steps = document.querySelectorAll('.quiz-step');
-                    steps[5].classList.remove('active');
-                    steps[6].classList.add('active');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                // Still show success (form likely submitted)
-                const steps = document.querySelectorAll('.quiz-step');
-                steps[5].classList.remove('active');
-                steps[6].classList.add('active');
-            }
-        });
 
         // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -1497,5 +1454,6 @@
             });
         });
     </script>
+
 </body>
 </html>

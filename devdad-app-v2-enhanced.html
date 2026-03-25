@@ -3,56 +3,75 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dev Dad Strength | TESTING VERSION</title>
+  <title>DevDad Strength — 30-Minute Strength System</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
       background: #0a0a0a;
     }
 
-    :root {
-            --bg-primary: #000000;
-            --bg-secondary: #000000;
-            --bg-card: #181818;
-            --bg-card-hover: #222222;
-            --bg-selected: #e8e4db;
-            --text-primary: #e8e4db;
-            --text-secondary: #a09a90;
-            --text-muted: #706b62;
-            --text-dark: #000000;
-            --accent: #f97316;
-            --accent-hover: #fb923c;
-            --accent-light: #fb923c;
-            --accent-glow: rgba(249, 115, 22, 0.4);
-            --success: #22c55e;
-            --border: #333333;
+    /* Noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 1000;
     }
+
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #141414;
+      --bg-card: #1a1a1a;
+      --bg-card-hover: #222222;
+      --bg-selected: #f97316;
+      --text-primary: #ffffff;
+      --text-secondary: #a3a3a3;
+      --text-muted: #737373;
+      --text-dark: #0a0a0a;
+      --accent: #f97316;
+      --accent-hover: #fb923c;
+      --accent-light: #fb923c;
+      --accent-glow: rgba(249, 115, 22, 0.4);
+      --success: #22c55e;
+      --border: #262626;
+    }
+
     .btn-primary {
-      background: #0a0a0a;
+      background: var(--bg-card);
       color: var(--accent);
       padding: 16px 32px;
       border-radius: 12px;
       font-weight: 600;
       width: 100%;
-      border: none;
+      border: 1px solid var(--border);
       cursor: pointer;
       transition: all 0.2s;
     }
+
     .btn-primary:hover {
-      background: #1E4468;
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
     }
+
     .btn-secondary {
-      background: #E8F0F7;
-      color: var(--accent);
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
       padding: 16px 32px;
       border-radius: 12px;
       font-weight: 600;
       width: 100%;
-      border: none;
+      border: 1px solid var(--border);
       cursor: pointer;
     }
 
@@ -74,7 +93,7 @@
 
     .nav-cta:hover {
       background: var(--accent);
-      color: var(--bg-primary);
+      color: white;
     }
 
     .nav-cta:disabled {
@@ -83,27 +102,31 @@
     }
 
     .card {
-      background: #E8F0F7;
+      background: var(--bg-card);
       border-radius: 16px;
       padding: 20px;
       margin-bottom: 16px;
-      box-shadow: 0 2px 8px rgba(44,95,141,0.08);
-      border: 1px solid #E8F0F7;
+      border: 1px solid var(--border);
     }
+
     .exercise-card {
-      background: white;
+      background: var(--bg-card);
       border-radius: 12px;
       padding: 12px;
       margin-bottom: 12px;
       display: flex;
       align-items: center;
       gap: 12px;
+      border: 1px solid var(--border);
       box-shadow: 0 1px 4px rgba(44,95,141,0.06);
       border: 1px solid #F0F4F8;
     }
+    .exercise-card:hover {
+      background: var(--accent-hover);
+    }
     .day-tab {
       width: 60px;
-      height: 80px;
+      height: 60px;
       border-radius: 12px;
       display: flex;
       flex-direction: column;
@@ -113,18 +136,26 @@
       transition: all 0.2s;
     }
     .day-tab.active {
-      background: #2C5F8D;
+      background: #2A2A2A;
       color: white;
-      border: 3px solid #4A7BA7;
+      border: 1.5px solid #4A7BA7;
     }
     .day-tab.inactive {
-      background: #E8F0F7;
-      color: #2C5F8D;
+      background: #DBEAFE;
+      color: gray;
     }
     .day-tab.locked {
       background: #F5F7F9;
       color: #CCC;
       cursor: not-allowed;
+    }
+    .day-tab.active:hover {
+      background: #FDBA74;
+      cursor: pointer;
+    }
+    .day-tab.inactive:hover {
+      background: #0EA5E9;
+      color: gray;
     }
     .progress-bar {
       height: 8px;
@@ -170,6 +201,19 @@
       font-size: 12px;
       font-weight: 600;
       font-family: 'Courier New', monospace;
+    }
+    .dev-badge-profile {
+      display: inline-block;
+      background: #E8F0F7;
+      color: #2C5F8D;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'Courier New', monospace;
+    }
+    .dev-badge-profile:hover {
+      background: var(--accent-hover);
     }
 
     .video-wrapper {
@@ -546,6 +590,10 @@
     };
 
     function App() {
+      // Purchase Verification State
+      const [hasPurchased, setHasPurchased] = useState(false);
+      const [purchaseChecked, setPurchaseChecked] = useState(false);
+      
       // Navigation & UI State
       const [screen, setScreen] = useState('welcome');
       const [showGoalsModal, setShowGoalsModal] = useState(false);
@@ -557,6 +605,7 @@
       const [workoutStarted, setWorkoutStarted] = useState(false);
       const [currentExercise, setCurrentExercise] = useState(0);
       const [workoutFeedback, setWorkoutFeedback] = useState({});
+
       
       // Goals State
       const [goals, setGoals] = useState({
@@ -599,7 +648,9 @@
         weightHistory: [] // {date, weight}
       });
 
+      // Exercise details state
       const [selectedExercise, setSelectedExercise] = useState(null);
+
       const totalWeeks = 12;
       const currentPhase = currentWeek <= 4 ? 'Foundation' : currentWeek <= 8 ? 'Build' : 'Peak';
       // Phase 1-2: 5 workouts/week × 8 weeks = 40
@@ -645,6 +696,70 @@
       const calculateWeekFromWorkouts = (completedCount) => {
         return Math.floor(completedCount / 4) + 1;
       };
+
+      // Check for purchase verification on component mount
+      useEffect(() => {
+        console.log('🔍 Checking for purchase...');
+        
+        // Check URL parameters for purchase redirect
+        const urlParams = new URLSearchParams(window.location.search);
+        const justPurchased = urlParams.get('purchased');
+        const purchaseDataParam = urlParams.get('data');
+        
+        console.log('📍 URL params:', window.location.search);
+        console.log('   purchased:', justPurchased);
+        console.log('   data param exists:', !!purchaseDataParam);
+        
+        // CRITICAL: Get purchase from URL params first (file:// protocol fix)
+        if (purchaseDataParam) {
+          try {
+            const purchaseData = JSON.parse(decodeURIComponent(purchaseDataParam));
+            console.log('🔗 Purchase data from URL:', purchaseData);
+            
+            // Save to localStorage for future visits
+            localStorage.setItem('devDadPurchase', JSON.stringify(purchaseData));
+            console.log('💾 Saved purchase to localStorage');
+            
+            if (purchaseData.active) {
+              setHasPurchased(true);
+              console.log('✅ Purchase verified from URL params!');
+            }
+          } catch (e) {
+            console.error('❌ Error parsing purchase from URL:', e);
+          }
+        }
+        
+        // Fallback: Check localStorage for existing purchase
+        if (!purchaseDataParam) {
+          const purchase = localStorage.getItem('devDadPurchase');
+          console.log('💾 Checking localStorage for purchase:', purchase);
+          
+          if (purchase) {
+            try {
+              const purchaseData = JSON.parse(purchase);
+              console.log('📦 Purchase data from localStorage:', purchaseData);
+              
+              if (purchaseData.active) {
+                setHasPurchased(true);
+                console.log('✅ Purchase verified from localStorage!');
+              }
+            } catch (e) {
+              console.error('❌ Purchase verification error:', e);
+            }
+          } else {
+            console.log('⚠️ No purchase found in localStorage');
+          }
+        }
+        
+        if (justPurchased === 'true') {
+          // Clear URL parameter (clean up the URL)
+          window.history.replaceState({}, document.title, window.location.pathname);
+          console.log('🧹 Cleaned URL parameters');
+        }
+        
+        setPurchaseChecked(true);
+        console.log('✅ Purchase check complete. hasPurchased:', hasPurchased);
+      }, []);
 
       // Check for existing session on component mount
       useEffect(() => {
@@ -803,8 +918,6 @@
       // Check rate limiting
       const checkRateLimit = (email) => {
         const now = Date.now();
-        const attempts = loginAttempts.current[email] || { count: 0, firstAttempt: now, lastAttempt: now };
-
         // Get existing attempts or null
         const existing = loginAttempts.current[email];
 
@@ -815,7 +928,7 @@
         }
 
         // Reset after 15 minutes
-        if (now - existing.firstAttempt > 15 * 60 * 1000) {
+        if (now - attempts.firstAttempt > 15 * 60 * 1000) {
           loginAttempts.current[email] = { count: 1, firstAttempt: now, lastAttempt: now };
           return { allowed: true };
         }
@@ -831,7 +944,6 @@
           return { allowed: false, message: `Too many attempts. Wait ${waitTime} minute(s).` };
         }
 
-        // Update tracking
         loginAttempts.current[email].count++;
         loginAttempts.current[email].lastAttempt = now;
         return { allowed: true };
@@ -1024,7 +1136,10 @@
       function handleLogout() {
         if (confirm('Are you sure you want to log out?')) {
           localStorage.removeItem('devDadSession');
+          
+          // Clear rate limiting on logout
           loginAttempts.current = {};
+          
           setIsLoggedIn(false);
           setCurrentUser(null);
           setEmail('');
@@ -1048,7 +1163,7 @@
           setSuccess('');
           setScreen('welcome');
         }
-      };
+      }
 
       // Handle workout completion with feedback
       const handleWorkoutComplete = (feedback) => {
@@ -1248,7 +1363,7 @@
               </div>
 
               <div className="flex gap-3 mt-6">
-                <button className="btn-secondary" onClick={() => setShowGoalsModal(false)}>
+                <button className="btn-secondary hover:bg-[gray]" onClick={() => setShowGoalsModal(false)}>
                   Cancel
                 </button>
                 <button className="nav-cta" onClick={handleSave}>
@@ -1541,21 +1656,78 @@
       // Render current screen
       return (
         <div className="max-w-md mx-auto bg-white min-h-screen shadow-xl">
-          {/* TESTING VERSION WARNING */}
-          <div style={{
-            background: '#fee2e2',
-            borderBottom: '3px solid #ef4444',
-            padding: '12px',
-            textAlign: 'center'
-          }}>
-            <div style={{color: '#991b1b', fontWeight: 'bold', fontSize: '14px'}}>
-              ⚠️ TESTING VERSION - NOT SECURE
+          {/* Purchase Gate - Show if not purchased */}
+          {purchaseChecked && !hasPurchased && (
+            <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{background: 'linear-gradient(135deg, #2C5F8D 0%, #1e4666 100%)'}}>
+              <div className="max-w-md w-full text-center">
+                <div className="text-6xl mb-6">🔒</div>
+                <h2 className="text-3xl font-bold mb-4 text-white">Purchase Required</h2>
+                <p className="text-lg text-white mb-8 opacity-90">
+                  This app is available to customers who have purchased The 30-Minute Strength System.
+                </p>
+                
+                <div className="bg-white rounded-lg p-6 mb-6">
+                  <h3 className="font-bold text-xl mb-4" style={{color: '#2C5F8D'}}>Already purchased?</h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    Your purchase should have redirected you automatically. If you're seeing this message, please try refreshing the page or clear your browser cache.
+                  </p>
+                  <button 
+                    className="w-full py-3 px-6 rounded-lg font-semibold mb-3"
+                    style={{background: '#2C5F8D', color: 'white'}}
+                    onClick={() => window.location.reload()}
+                  >
+                    Refresh Page
+                  </button>
+                  
+                  {/* TESTING ONLY - Remove in production */}
+                  <button 
+                    className="w-full py-2 px-4 rounded-lg font-semibold text-sm"
+                    style={{background: '#ef4444', color: 'white', marginTop: '8px'}}
+                    onClick={() => {
+                      const testPurchase = {
+                        email: 'test@test.com',
+                        name: 'Test User',
+                        tier: 'complete',
+                        price: 97,
+                        purchaseCode: 'TEST-123',
+                        purchaseDate: new Date().toISOString(),
+                        active: true
+                      };
+                      localStorage.setItem('devDadPurchase', JSON.stringify(testPurchase));
+                      alert('Test purchase added! Reloading...');
+                      window.location.reload();
+                    }}
+                  >
+                    🧪 BYPASS (Testing Only)
+                  </button>
+                </div>
+
+                <a 
+                  href="devdad-landing.html" 
+                  style={{
+                    display: 'block',
+                    background: '#f97316',
+                    color: 'white',
+                    padding: '16px 32px',
+                    borderRadius: '8px',
+                    textDecoration: 'none',
+                    fontWeight: '600',
+                    fontSize: '18px'
+                  }}
+                >
+                  Get Access - From $67
+                </a>
+
+                <p className="text-white text-sm mt-6 opacity-75">
+                  Questions? Email <a href="mailto:support@devdadstrength.com" style={{color: '#f97316'}}>support@devdadstrength.com</a>
+                </p>
+              </div>
             </div>
-            <div style={{color: '#7f1d1d', fontSize: '12px', marginTop: '4px'}}>
-              Passwords NOT hashed • For local testing only
-            </div>
-          </div>
-          
+          )}
+
+          {/* Main App - Show only if purchased or purchase not checked yet */}
+          {(!purchaseChecked || hasPurchased) && (
+            <>
           {showGoalsModal && <GoalsModal />}
           {showSkipRestModal && <SkipRestDayModal />}
 
@@ -1730,6 +1902,8 @@
           {screen === 'help' && <HelpCenterScreen />}
           {screen === 'weight' && <WeightTrackingScreen />}
           {screen === 'exercise-detail' && <ExerciseDetailScreen />}
+          </>
+          )}
         </div>
       );
 
@@ -1751,17 +1925,9 @@
             <div className="bg-white p-6 border-b border-gray-200">
               <div className="flex justify-between items-center mb-3">
                 <div>
-                  <h1 className="text-2xl font-bold" style={{color: '#2C5F8D'}}>Dev<span style={{color: '#f97316'}}>Dad</span> Strength</h1>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="dev-badge">Week {currentWeek} • {currentPhase}</div>
-                    {currentCycleNumber > 1 && (
-                      <div className="dev-badge" style={{background: '#f97316', color: 'white'}}>
-                        Cycle {currentCycleNumber}
-                      </div>
-                    )}
-                  </div>
+                  <h1 className="text-2xl font-bold text-grey-300" >Dev<span style={{color: '#f97316'}}>Dad</span> Strength</h1>
                 </div>
-                <button onClick={() => setScreen('profile')} className="w-10 h-10 rounded-full flex items-center justify-center font-bold" style={{background: '#2C5F8D', color: 'white'}}>
+                <button onClick={() => setScreen('profile')} className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-orange-400 bg-[#2A2A2A] hover:bg-[gray]">
                   {(currentUser?.name || 'U')[0].toUpperCase()}
                 </button>
               </div>
@@ -1805,12 +1971,12 @@
             <div className="px-6 mb-6">
               <div className="flex gap-4">
                 <div className="card flex-1">
-                  <div className="text-sm text-gray-600 mb-1">Program</div>
-                  <div className="text-lg font-bold">Build Strength</div>
+                  <div className="text-sm text-orange-400 mb-1">Program</div>
+                  <div className="text-lg font-bold text-gray-300">Build Strength</div>
                 </div>
                 <div className="card flex-1">
-                  <div className="text-sm text-gray-600 mb-1">Current Week</div>
-                  <div className="text-lg font-bold">Week {currentWeek}</div>
+                  <div className="text-sm text-orange-400 mb-1">Current Week</div>
+                  <div className="text-lg font-bold text-gray-300">Week {currentWeek}</div>
                 </div>
               </div>
             </div>
@@ -1819,17 +1985,17 @@
             <div className="px-6 mb-6">
               <div className="card">
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-bold">Your Progress</h3>
-                  <span className="text-sm text-gray-600">{completedDays.length} of {totalWorkouts} workouts</span>
+                  <h3 className="font-bold text-orange-400">Your Progress</h3>
+                  <span className="text-xs text-orange-100">{completedDays.length} of {totalWorkouts} workouts</span>
                 </div>
                 <div className="progress-bar">
                   <div className="progress-fill" style={{ width: `${(completedDays.length / totalWorkouts) * 100}%` }}></div>
                 </div>
-                <div className="mt-3 text-sm text-gray-600">
+                <div className="mt-3 text-xs text-gray-300">
                   Phase {currentWeek <= 4 ? '1' : currentWeek <= 8 ? '2' : '3'}: {currentPhase}
                 </div>
                 {goals.consistencyGoal && (
-                  <div className="mt-2 text-sm" style={{color: '#2C5F8D'}}>
+                  <div className="mt-2 text-xs text-blue-300">
                     Goal: {Math.round((completedDays.length / (64 * goals.consistencyGoal / 100)) * 100)}% of consistency target
                   </div>
                 )}
@@ -1840,7 +2006,7 @@
             <div className="px-6 mb-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold">Today's Session</h3>
-                <button onClick={() => setShowGoalsModal(true)} className="text-sm" style={{color: '#2C5F8D'}}>⚙️ Goals</button>
+                <button onClick={() => setShowGoalsModal(true)} className="text-sm" style={{color: '#2C5F8D'}}>⚙️ Goals <button className="text-gray-400">›</button></button>
               </div>
               
               {isRestDay ? (
@@ -1868,15 +2034,15 @@
                       {'{ 💪 }'}
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-bold text-lg mb-1">
+                      <h4 className="font-bold text-lg mb-1 text-orange-100">
                         Day {currentDay}: {getWorkoutInfo(currentDay, currentWeek)?.type || 'Workout'}
                       </h4>
-                      <p className="text-sm text-gray-600">30 min • {currentDayExercises.length} exercises</p>
+                      <p className="text-xs text-gray-400">30 min • {currentDayExercises.length} exercises</p>
                       <div className="dev-badge mt-2">Pause-friendly • Baby-proof</div>
                     </div>
                   </div>
                   
-                  <button 
+                  <button
                     className="nav-cta"
                     onClick={() => {
                       setScreen('workout');
@@ -1894,8 +2060,8 @@
                   {/* Exercise List */}
                   <div className="section-label">EXERCISES</div>
                   {currentDayExercises.map((ex, idx) => (
-                    <div
-                      key={ex.id}
+                    <div 
+                      key={ex.id} 
                       className="exercise-card"
                       onClick={() => {
                         setSelectedExercise(ex);
@@ -1907,8 +2073,8 @@
                         {ex.image}
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-semibold">{ex.name}</h4>
-                        <p className="text-sm text-gray-600">{ex.sets}</p>
+                        <h4 className="font-semibold text-orange-100 text-sm">{ex.name}</h4>
+                        <p className="text-xs text-gray-300">{ex.sets}</p>
                       </div>
                       <button className="text-gray-400">›</button>
                     </div>
@@ -2226,20 +2392,22 @@
               <p className="text-gray-400 mb-4">{exercise.sets}</p>
 
               {/* Dual Timer Section */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-2 gap-4 mb-4">
                 {/* Countdown Timer (Planned) */}
-                <div className="rounded-lg p-3 text-center" style={{background: '#252525'}}>
-                  <div className="text-xs text-gray-400 mb-1">PLANNED</div>
-                  <div
-                    className={`text-3xl font-bold mb-1 ${isTimerRunning ? 'timer-running' : ''}`}
+                <div className="rounded-lg p-4 text-center" style={{background: '#252525'}}>
+                  <div className="text-xs text-gray-400 mb-2">PLANNED TIME</div>
+                  <div 
+                    className={`text-4xl font-bold mb-2 ${isTimerRunning ? 'timer-running' : ''}`}
                     style={{color: exerciseTimeLeft === 0 ? '#22c55e' : '#fb923c'}}
                     key={exerciseTimeLeft}
                   >
                     {formatTime(exerciseTimeLeft)}
                   </div>
+                  <div className="text-xs text-gray-400 mb-1">Countdown</div>
+                  <div className="text-xs text-gray-500">{isTimerRunning ? '⏵ Running' : '⏸ Paused'}</div>
                   
                   {/* Individual countdown controls */}
-                  <div className="flex gap-1 mt-2">
+                  <div className="flex gap-1">
                     <button
                       className="flex-1 py-1 px-2 rounded text-xs font-semibold"
                       style={{background: isTimerRunning ? '#ef4444' : '#22c55e', color: 'white'}}
@@ -2270,18 +2438,20 @@
                 </div>
 
                 {/* Stopwatch (Actual) */}
-                <div className="rounded-lg p-3 text-center" style={{background: '#252525'}}>
-                  <div className="text-xs text-gray-400 mb-1">ACTUAL</div>
-                  <div
-                    className={`text-3xl font-bold mb-1 ${isStopwatchRunning ? 'timer-running' : ''}`}
+                <div className="rounded-lg p-4 text-center" style={{background: '#252525'}}>
+                  <div className="text-xs text-gray-400 mb-2">ACTUAL TIME</div>
+                  <div 
+                    className={`text-4xl font-bold mb-2 ${isStopwatchRunning ? 'timer-running' : ''}`}
                     style={{color: '#3b82f6'}}
                     key={actualTimeElapsed}
                   >
                     {formatTime(actualTimeElapsed)}
                   </div>
+                  <div className="text-xs text-gray-400 mb-1">Stopwatch</div>
+                  <div className="text-xs text-gray-500">{isStopwatchRunning ? '⏵ Running' : '⏸ Paused'}</div>
                   
                   {/* Individual stopwatch controls */}
-                  <div className="flex gap-1 mt-2">
+                  <div className="flex gap-1">
                     <button
                       className="flex-1 py-1 px-2 rounded text-xs font-semibold"
                       style={{background: isStopwatchRunning ? '#ef4444' : '#22c55e', color: 'white'}}
@@ -2573,16 +2743,16 @@
             )}
             
             <div className="card w-full max-w-md mb-6">
-              <h3 className="font-bold mb-4">How was today's session?</h3>
+              <h3 className="font-bold mb-4 text-orange-100">How was today's session?</h3>
               <div className="space-y-3">
                 <button 
                   className={`feedback-btn ${selectedFeedback === 'perfect' ? 'selected' : ''}`}
                   onClick={() => setSelectedFeedback('perfect')}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">✓</span>
+                    <span className="text-sm">✓</span>
                     <div className="text-left">
-                      <div className="font-semibold">Perfect - dialed in</div>
+                      <div className="font-semibold text-sm">Perfect - dialed in</div>
                       <div className="text-xs text-gray-500">Weight felt just right, form was solid</div>
                     </div>
                   </div>
@@ -2592,9 +2762,9 @@
                   onClick={() => setSelectedFeedback('hard')}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">↑</span>
+                    <span className="text-sm">↑</span>
                     <div className="text-left">
-                      <div className="font-semibold">Too hard - need to adjust weight</div>
+                      <div className="font-semibold text-sm">Too hard - need to adjust weight</div>
                       <div className="text-xs text-gray-500">Struggled with the weight, form suffered</div>
                     </div>
                   </div>
@@ -2604,9 +2774,9 @@
                   onClick={() => setSelectedFeedback('easy')}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">↓</span>
+                    <span className="text-sm">↓</span>
                     <div className="text-left">
-                      <div className="font-semibold">Too easy - ready for progression</div>
+                      <div className="font-semibold text-sm">Too easy - ready for progression</div>
                       <div className="text-xs text-gray-500">Could do more reps, increase weight next time</div>
                     </div>
                   </div>
@@ -2635,34 +2805,36 @@
         const readyForProgress = Object.values(workoutFeedback).filter(f => f.feedback === 'easy').length;
 
         return (
-          <div className="min-h-screen pb-20">
+          <div className="min-h-screen pb-6">
             <div className="bg-white p-6 border-b border-gray-200">
-              <h1 className="text-2xl font-bold" style={{color: '#2C5F8D'}}>Progress</h1>
-              <div className="dev-badge mt-2">Tracking your system execution</div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold" style={{color: '#2A2A2A'}}>Progress</h1>
+              </div>
+                <div className="dev-badge mt-2 bg-black text-orange-300">Tracking your system execution</div>
             </div>
 
             <div className="p-6">
               {/* Stats Cards */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="card">
-                  <div className="text-sm text-gray-600 mb-1">Workouts</div>
+                  <div className="text-sm text-orange-400 mb-1">Workouts</div>
                   <div className="text-2xl font-bold" style={{color: '#2C5F8D'}}>{completedDays.length}</div>
-                  <div className="text-xs text-gray-500">of {totalWorkouts} completed</div>
+                  <div className="text-xs text-gray-300">of {totalWorkouts} completed</div>
                 </div>
                 <div className="card">
-                  <div className="text-sm text-gray-600 mb-1">Consistency</div>
+                  <div className="text-sm text-orange-400 mb-1">Consistency</div>
                   <div className="text-2xl font-bold" style={{color: '#2C5F8D'}}>{consistencyRate}%</div>
-                  <div className="text-xs text-gray-500">completion rate</div>
+                  <div className="text-xs text-gray-300">completion rate</div>
                 </div>
                 <div className="card">
-                  <div className="text-sm text-gray-600 mb-1">Perfect Form</div>
+                  <div className="text-sm text-orange-400 mb-1">Perfect Form</div>
                   <div className="text-2xl font-bold" style={{color: '#2C5F8D'}}>{perfectWorkouts}</div>
-                  <div className="text-xs text-gray-500">dialed-in sessions</div>
+                  <div className="text-xs text-gray-300">dialed-in sessions</div>
                 </div>
                 <div className="card">
-                  <div className="text-sm text-gray-600 mb-1">Ready to Progress</div>
+                  <div className="text-sm text-orange-400 mb-1">Ready to Progress</div>
                   <div className="text-2xl font-bold" style={{color: '#2C5F8D'}}>{readyForProgress}</div>
-                  <div className="text-xs text-gray-500">increase weight</div>
+                  <div className="text-xs text-gray-300">increase weight</div>
                 </div>
               </div>
 
@@ -2693,7 +2865,7 @@
 
               {/* Weekly Progress */}
               <div className="card mb-6">
-                <h3 className="font-bold mb-4">Week {currentWeek} Progress</h3>
+                <h3 className="font-bold mb-4 text-orange-400">Week {currentWeek} Progress</h3>
                 <div className="space-y-3">
                   {[1, 2, 3, 4, 5, 6, 7].map(day => {
                     const dayKey = `w${currentWeek}d${day}`;
@@ -2706,7 +2878,7 @@
                           {isCompleted ? '✓' : day}
                         </div>
                         <div className="flex-1">
-                          <div className="text-sm font-semibold">Day {day}</div>
+                          <div className="text-sm font-semibold text-gray-300">Day {day}</div>
                           {feedback && (
                             <div className="text-xs text-gray-500">
                               {feedback.feedback === 'perfect' && '✓ Perfect form'}
@@ -2727,11 +2899,11 @@
 
               {/* Phase Indicator */}
               <div className="card">
-                <div className="text-sm text-gray-600 mb-2">Current Phase</div>
-                <div className="text-lg font-bold mb-3" style={{color: '#2C5F8D'}}>
+                <div className="text-sm text-orange-400 mb-2">Current Phase</div>
+                <div className="text-lg font-bold mb-3 text-blue-500">
                   {currentPhase} (Weeks {currentWeek <= 4 ? '1-4' : currentWeek <= 8 ? '5-8' : '9-12'})
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-xs text-gray-500">
                   {currentPhase === 'Foundation' && 'Focus: Form and movement patterns • 5 workouts/week'}
                   {currentPhase === 'Build' && 'Focus: Adding weight and volume • 5 workouts/week'}
                   {currentPhase === 'Peak' && 'Focus: Maximum strength development • 6 workouts/week'}
@@ -2780,7 +2952,7 @@
               <div className="flex items-center gap-3">
                 <button onClick={() => setScreen('more')} className="text-2xl">←</button>
                 <div>
-                  <h1 className="text-2xl font-bold" style={{color: '#2C5F8D'}}>Program History</h1>
+                  <h1 className="text-2xl font-bold" style={{color: '#2A2A2A'}}>Program History</h1>
                   <div className="dev-badge mt-1">All completed cycles</div>
                 </div>
               </div>
@@ -2814,7 +2986,7 @@
               {programHistory.length === 0 ? (
                 <div className="card text-center py-8">
                   <div className="text-5xl mb-4">📊</div>
-                  <h3 className="font-bold mb-2">No Completed Cycles Yet</h3>
+                  <h3 className="font-bold mb-2 text-gray-400">No Completed Cycles Yet</h3>
                   <p className="text-sm text-gray-600">
                     Complete all 12 weeks to save your first cycle to history
                   </p>
@@ -2934,8 +3106,8 @@
         return (
           <div className="min-h-screen pb-20">
             <div className="bg-white p-6 border-b border-gray-200">
-              <h1 className="text-2xl font-bold" style={{color: '#2C5F8D'}}>More</h1>
-              <div className="dev-badge mt-2">System settings & resources</div>
+              <h1 className="text-2xl font-bold" style={{color: '#1f1f1f'}}>More</h1>
+              <div className="dev-badge mt-2 bg-black text-orange-300">System settings & resources</div>
             </div>
 
             <div className="p-6">
@@ -2971,8 +3143,14 @@
                 </div>
               </button>
 
-              {/* Settings */}
-              <div className="section-label">PREFERENCES</div>
+              <div className="section-label">SETTINGS</div>
+              <button className="w-full p-4 bg-white rounded-lg mb-3 flex items-center justify-between" onClick={() => setScreen('profile')}>
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">👤</span>
+                  <span className="font-semibold">My Profile</span>
+                </div>
+                <span className="text-gray-400">›</span>
+              </button>
               <button
                 className="w-full p-4 bg-white rounded-lg mb-3 flex items-center justify-between"
                 onClick={() => setScreen('settings')}
@@ -3057,17 +3235,16 @@
             <div className="bg-white p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <button onClick={() => setScreen('more')} className="text-2xl">←</button>
-                <h1 className="text-2xl font-bold" style={{color: '#2C5F8D'}}>My Profile</h1>
+                <h1 className="text-2xl font-bold" style={{color: '#2A2A2A'}}>My Profile</h1>
               </div>
             </div>
 
             <div className="p-6">
               {/* User Card */}
               <div className="card mb-4 text-center">
-                <div className="w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center font-bold text-2xl" style={{background: '#2C5F8D', color: 'white'}}>
+                <div className="w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center font-bold text-2xl text-orange-500" style={{background: '#BFDBFE'}}>
                   {(currentUser?.name || email || 'U')[0].toUpperCase()}
                 </div>
-                <div className="font-bold text-lg mb-1">{currentUser?.name || email || 'Engineer Dad'}</div>
                 <div className="dev-badge">Cycle {currentCycleNumber} • Week {currentWeek}</div>
               </div>
 
@@ -3077,22 +3254,22 @@
                 <div className="card text-center">
                   <div className="text-2xl mb-1">🔥</div>
                   <div className="font-bold text-lg" style={{color: '#2C5F8D'}}>{currentStreak}</div>
-                  <div className="text-xs text-gray-600">Day Streak</div>
+                  <div className="text-xs text-orange-300">Day Streak</div>
                 </div>
                 <div className="card text-center">
                   <div className="text-2xl mb-1">💪</div>
                   <div className="font-bold text-lg" style={{color: '#2C5F8D'}}>{completedDays.length}</div>
-                  <div className="text-xs text-gray-600">Total Workouts</div>
+                  <div className="text-xs text-orange-300">Total Workouts</div>
                 </div>
                 <div className="card text-center">
                   <div className="text-2xl mb-1">🎯</div>
                   <div className="font-bold text-lg" style={{color: '#2C5F8D'}}>{perfectWorkouts}</div>
-                  <div className="text-xs text-gray-600">Perfect Form</div>
+                  <div className="text-xs text-orange-300">Perfect Form</div>
                 </div>
                 <div className="card text-center">
                   <div className="text-2xl mb-1">🏆</div>
                   <div className="font-bold text-lg" style={{color: '#2C5F8D'}}>{programHistory.length}</div>
-                  <div className="text-xs text-gray-600">Cycles Done</div>
+                  <div className="text-xs text-orange-300">Cycles Done</div>
                 </div>
               </div>
 
@@ -3105,7 +3282,7 @@
                 <div className="flex items-center gap-3">
                   <span className="text-xl">⚖️</span>
                   <div className="text-left">
-                    <div className="font-semibold">Weight Log</div>
+                    <div className="font-semibold">BMI</div>
                     <div className="text-xs text-gray-500">
                       {userProfile.currentWeight ? displayWeight(userProfile.currentWeight) : 'Not logged'}
                     </div>
@@ -3113,38 +3290,6 @@
                 </div>
                 <span className="text-gray-400">›</span>
               </button>
-
-              {/* Height */}
-              <div className="section-label">HEIGHT</div>
-              <div className="card mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">📏</span>
-                    <div>
-                      <div className="font-semibold">Your Height</div>
-                      <div className="text-xs text-gray-500">
-                        {userProfile.height ? `${userProfile.height} ${settings.units === 'kg' ? 'cm' : 'in'}` : 'Not set'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <input
-                    type="number"
-                    placeholder={settings.units === 'kg' ? 'Height (cm)' : 'Height (inches)'}
-                    defaultValue={userProfile.height || ''}
-                    onBlur={(e) => {
-                      if (e.target.value) {
-                        setUserProfile({...userProfile, height: e.target.value});
-                      }
-                    }}
-                    className="flex-1"
-                  />
-                </div>
-                <div className="text-xs text-gray-500 mt-2 text-center">
-                  {settings.units === 'kg' ? 'Enter height in centimeters (e.g., 180). ' : 'Enter height in inches (e.g., 70 for 5\'10"). '}<span>Saves when you click away or tabs out</span>
-                </div>
-              </div>
 
               {/* Goals */}
               <div className="section-label">GOALS</div>
@@ -3171,7 +3316,7 @@
                 <span className="text-gray-600 text-sm">{email || 'user@example.com'}</span>
               </button>
 
-              <button className="btn-secondary mt-6" onClick={handleLogout}>
+              <button className="btn-secondary text-orange-300 mt-6 bg-[#2A2A2A] hover:bg-[grey]" onClick={handleLogout}>
                 Log Out
               </button>
             </div>
@@ -3197,7 +3342,7 @@
           setSuccess('Settings saved!');
           setTimeout(() => {
             setSuccess('');
-            setScreen('profile');
+            setScreen('more');
           }, 1500);
         };
 
@@ -3248,8 +3393,8 @@
           <div className="min-h-screen pb-6">
             <div className="bg-white p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <button onClick={() => setScreen('profile')} className="text-2xl">←</button>
-                <h1 className="text-2xl font-bold" style={{color: '#2C5F8D'}}>Settings</h1>
+                <button onClick={() => setScreen('more')} className="text-2xl">←</button>
+                <h1 className="text-2xl font-bold" style={{color: '#1f1f1f'}}>Settings</h1>
               </div>
             </div>
 
@@ -3257,10 +3402,10 @@
               {success && <div className="success-box">{success}</div>}
 
               {/* Units */}
-              <div className="section-label">UNITS</div>
+              <div className="section-label text-orange-400">UNITS</div>
               <div className="card mb-6">
-                <div className="font-semibold mb-3">Weight & Height Units</div>
-                <div className="flex gap-3">
+                <div className="font-semibold mb-3 text-gray-400">Weight & Height Units</div>
+                <div className="flex gap-3 text-sm">
                   <button
                     className={`flex-1 py-3 px-4 rounded-lg font-semibold ${
                       localSettings.units === 'lbs' ? 'text-white' : 'bg-gray-100'
@@ -3308,9 +3453,7 @@
               {/* Notifications */}
               <div className="section-label">NOTIFICATIONS</div>
               <div className="card mb-6">
-                <div className="font-semibold mb-3">Daily Workout Reminder
-                <span className="text-xs text-orange-500 ml-2">Coming Soon</span>
-                </div>
+                <div className="font-semibold mb-3">Daily Workout Reminder</div>
                 <input
                   type="time"
                   value={localSettings.notificationTime}
@@ -3321,7 +3464,7 @@
               </div>
 
               {/* Password Change */}
-              <div className="section-label">SECURITY</div>
+              <div className="section-label text-orange-400">SECURITY</div>
               {!showPasswordChange ? (
                 <button
                   className="w-full p-4 bg-white rounded-lg mb-3 flex items-center justify-between"
@@ -3335,12 +3478,12 @@
                 </button>
               ) : (
                 <div className="card mb-6">
-                  <h3 className="font-bold mb-4">Change Password</h3>
+                  <h3 className="font-bold mb-4 text-gray-400">Change Password</h3>
                   
                   {passwordError && <div className="error-box">{passwordError}</div>}
                   {passwordSuccess && <div className="success-box">{passwordSuccess}</div>}
 
-                  <div className="space-y-3">
+                  <div className="space-y-3 text-sm">
                     <input
                       type="password"
                       placeholder="Current Password"
@@ -3361,7 +3504,7 @@
                     />
                   </div>
 
-                  <div className="flex gap-3 mt-4">
+                  <div className="flex gap-3 mt-4 text-xs">
                     <button
                       className="btn-secondary flex-1"
                       onClick={() => {
@@ -3375,7 +3518,7 @@
                       Cancel
                     </button>
                     <button className="nav-cta flex-1" onClick={handlePasswordChange}>
-                      Update Password
+                      Update
                     </button>
                   </div>
                 </div>
@@ -3432,8 +3575,8 @@
           <div className="min-h-screen pb-6">
             <div className="bg-white p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <button onClick={() => setScreen('profile')} className="text-2xl">←</button>
-                <h1 className="text-2xl font-bold" style={{color: '#2C5F8D'}}>Help Center</h1>
+                <button onClick={() => setScreen('more')} className="text-2xl">←</button>
+                <h1 className="text-2xl font-bold" style={{color: '#1f1f1f'}}>Help Center</h1>
               </div>
             </div>
 
@@ -3442,16 +3585,16 @@
               <div className="card mb-6" style={{background: '#E8F0F7'}}>
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-2xl">💬</span>
-                  <div className="font-bold">Need help?</div>
+                  <div className="font-bold text-red-400">Need help?</div>
                 </div>
                 <p className="text-sm text-gray-700 mb-3">
-                  Email us at <a href="mailto:support@devdadstrength.com" className="font-semibold" style={{color: '#2C5F8D'}}>support@devdadstrength.com</a>
+                  Email us at <a href="mailto:devdad.desk@gmail.com" className="font-semibold" style={{color: '#2C5F8D'}}>devdad.desk@gmail.com</a>
                 </p>
                 <p className="text-xs text-gray-600">We respond within 24-48 hours</p>
               </div>
 
               {/* FAQs */}
-              <div className="section-label">FREQUENTLY ASKED QUESTIONS</div>
+              <div className="section-label text-orange-400">FREQUENTLY ASKED QUESTIONS</div>
               <div className="space-y-3 mb-6">
                 {faqs.map((faq, idx) => (
                   <div key={idx} className="card">
@@ -3459,11 +3602,11 @@
                       className="w-full text-left flex items-start justify-between gap-3"
                       onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
                     >
-                      <div className="font-semibold flex-1">{faq.q}</div>
-                      <span className="text-xl">{expandedFaq === idx ? '−' : '+'}</span>
+                      <div className="font-semibold flex-1 text-gray-500">{faq.q}</div>
+                      <span className="text-xl text-gray-500">{expandedFaq === idx ? '−' : '+'}</span>
                     </button>
                     {expandedFaq === idx && (
-                      <div className="mt-3 pt-3 border-t border-gray-200 text-sm text-gray-700">
+                      <div className="mt-3 pt-3 border-t border-gray-200 text-sm text-gray-600">
                         {faq.a}
                       </div>
                     )}
@@ -3472,7 +3615,7 @@
               </div>
 
               {/* Resources */}
-              <div className="section-label">RESOURCES</div>
+              <div className="section-label text-orange-400">RESOURCES</div>
               <button className="w-full p-4 bg-white rounded-lg mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-xl">📹</span>
@@ -3498,11 +3641,11 @@
               </button>
 
               {/* About */}
-              <div className="section-label">ABOUT</div>
+              <div className="section-label text-orange-400">ABOUT</div>
               <div className="card">
-                <div className="font-bold mb-2">The 30-Minute Strength System</div>
+                <div className="font-bold mb-2 text-orange-700">The 30-Minute Strength System</div>
                 <p className="text-sm text-gray-700 mb-2">Version 1.0</p>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-gray-500">
                   Built by Simeon @ Oracle for engineer dads balancing career, fitness, and family.
                 </p>
               </div>
@@ -3514,6 +3657,7 @@
       function WeightTrackingScreen() {
         const [showWeightInput, setShowWeightInput] = useState(false);
         const [newWeight, setNewWeight] = useState('');
+        const [newHeight, setNewHeight] = useState(userProfile.height || '');
 
         const handleLogWeight = () => {
           if (!newWeight) return;
@@ -3533,6 +3677,18 @@
           setNewWeight('');
           setShowWeightInput(false);
           setSuccess('Weight logged!');
+          setTimeout(() => setSuccess(''), 2000);
+        };
+
+        const handleSaveHeight = () => {
+          if (!newHeight) return;
+
+          setUserProfile({
+            ...userProfile,
+            height: newHeight
+          });
+
+          setSuccess('Height saved!');
           setTimeout(() => setSuccess(''), 2000);
         };
 
@@ -3556,7 +3712,7 @@
             <div className="bg-white p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <button onClick={() => setScreen('profile')} className="text-2xl">←</button>
-                <h1 className="text-2xl font-bold" style={{color: '#2C5F8D'}}>Weight Tracking</h1>
+                <h1 className="text-2xl font-bold" style={{color: '#2C5F8D'}}>Body Mass Index Tracking</h1>
               </div>
             </div>
 
@@ -3637,6 +3793,25 @@
                 </div>
               )}
 
+              {/* Height */}
+              <div className="section-label">HEIGHT</div>
+              <div className="card mb-6">
+                <div className="font-semibold mb-3">Your Height</div>
+                <div className="flex gap-3 items-end">
+                  <div className="flex-1">
+                    <input
+                      type="number"
+                      placeholder={settings.units === 'kg' ? 'Height (cm)' : 'Height (inches)'}
+                      value={newHeight}
+                      onChange={(e) => setNewHeight(e.target.value)}
+                    />
+                  </div>
+                  <button className="nav-cta" onClick={handleSaveHeight} style={{width: 'auto', padding: '16px 24px'}}>
+                    Save
+                  </button>
+                </div>
+              </div>
+
               {/* Weight History */}
               <div className="section-label">RECENT HISTORY</div>
               {recentWeights.length === 0 ? (
@@ -3678,7 +3853,8 @@
           </div>
         );
       }
-    function ExerciseDetailScreen() {
+
+      function ExerciseDetailScreen() {
         if (!selectedExercise) {
           return (
             <div className="min-h-screen">
@@ -3715,13 +3891,14 @@
                 <div className="dev-badge">{selectedExercise.sets}</div>
               </div>
 
-              {/* Instructions - only show if exists */}
+              {/* Instructions */}
               {selectedExercise.instructions && selectedExercise.instructions.length > 0 && (
                 <>
                   <div className="section-label">HOW TO PERFORM</div>
                   <div className="card mb-6">
-                    {selectedExercise.instructions.map((instruction, idx) => (
-                      <div key={idx} className="flex gap-3">
+                    <div className="space-y-3">
+                      {selectedExercise.instructions.map((instruction, idx) => (
+                        <div key={idx} className="flex gap-3">
                           <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm" style={{background: '#E8F0F7', color: '#2C5F8D'}}>
                             {idx + 1}
                           </div>
@@ -3729,12 +3906,13 @@
                             <p className="text-gray-700">{instruction}</p>
                           </div>
                         </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </>
               )}
 
-              {/* Mistakes - only show if exists */}
+              {/* Common Mistakes */}
               {selectedExercise.mistakes && selectedExercise.mistakes.length > 0 && (
                 <>
                   <div className="section-label">AVOID THESE MISTAKES</div>
@@ -3751,7 +3929,7 @@
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                <button
+                <button 
                   className="nav-cta"
                   onClick={() => {
                     setScreen('workout');
@@ -3765,8 +3943,8 @@
                 >
                   Start This Exercise
                 </button>
-
-                <button
+                
+                <button 
                   className="btn-secondary"
                   onClick={() => setScreen('home')}
                 >
