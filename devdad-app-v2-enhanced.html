@@ -347,11 +347,6 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
 
-    // ⚠️⚠️⚠️ TESTING VERSION - NO PASSWORD HASHING ⚠️⚠️⚠️
-    console.log('%c⚠️ TESTING VERSION - PASSWORDS NOT SECURED', 'color: red; font-size: 20px; font-weight: bold');
-    console.log('%cThis version is for TESTING ONLY. Do NOT use in production.', 'color: orange; font-size: 14px');
-    console.log('%cPasswords are stored in plaintext for local testing.', 'color: orange; font-size: 14px');
-
     // Exercise data with specific instructions
     const exercises = {
       day1: [
@@ -699,66 +694,51 @@
 
       // Check for purchase verification on component mount
       useEffect(() => {
-        console.log('🔍 Checking for purchase...');
         
         // Check URL parameters for purchase redirect
         const urlParams = new URLSearchParams(window.location.search);
         const justPurchased = urlParams.get('purchased');
         const purchaseDataParam = urlParams.get('data');
         
-        console.log('📍 URL params:', window.location.search);
-        console.log('   purchased:', justPurchased);
-        console.log('   data param exists:', !!purchaseDataParam);
         
         // CRITICAL: Get purchase from URL params first (file:// protocol fix)
         if (purchaseDataParam) {
           try {
             const purchaseData = JSON.parse(decodeURIComponent(purchaseDataParam));
-            console.log('🔗 Purchase data from URL:', purchaseData);
             
             // Save to localStorage for future visits
             localStorage.setItem('devDadPurchase', JSON.stringify(purchaseData));
-            console.log('💾 Saved purchase to localStorage');
             
             if (purchaseData.active) {
               setHasPurchased(true);
-              console.log('✅ Purchase verified from URL params!');
             }
           } catch (e) {
-            console.error('❌ Error parsing purchase from URL:', e);
           }
         }
         
         // Fallback: Check localStorage for existing purchase
         if (!purchaseDataParam) {
           const purchase = localStorage.getItem('devDadPurchase');
-          console.log('💾 Checking localStorage for purchase:', purchase);
           
           if (purchase) {
             try {
               const purchaseData = JSON.parse(purchase);
-              console.log('📦 Purchase data from localStorage:', purchaseData);
               
               if (purchaseData.active) {
                 setHasPurchased(true);
-                console.log('✅ Purchase verified from localStorage!');
               }
             } catch (e) {
-              console.error('❌ Purchase verification error:', e);
             }
           } else {
-            console.log('⚠️ No purchase found in localStorage');
           }
         }
         
         if (justPurchased === 'true') {
           // Clear URL parameter (clean up the URL)
           window.history.replaceState({}, document.title, window.location.pathname);
-          console.log('🧹 Cleaned URL parameters');
         }
         
         setPurchaseChecked(true);
-        console.log('✅ Purchase check complete. hasPurchased:', hasPurchased);
       }, []);
 
       // Check for existing session on component mount
@@ -774,7 +754,6 @@
               const expiresAt = new Date(userData.expiresAt);
               
               if (now > expiresAt) {
-                console.log('Session expired');
                 localStorage.removeItem('devDadSession');
                 setScreen('welcome');
                 return;
@@ -822,7 +801,6 @@
             
             setScreen('home');
           } catch (e) {
-            console.error('Session load error:', e);
             localStorage.removeItem('devDadSession');
             setScreen('welcome');
           }
@@ -1022,7 +1000,6 @@
             setConfirmPassword('');
           }, 1000);
         } catch (error) {
-          console.error('Signup error:', error);
           setError('Account creation failed. Please try again.');
         }
       };
@@ -1069,7 +1046,6 @@
             return;
           }
 
-          console.log('Login successful');
 
           // Reset rate limit on success
           delete loginAttempts.current[normalizedEmail];
@@ -1103,7 +1079,6 @@
               });
               setCurrentCycleNumber(progress.currentCycleNumber || 1);
             } catch (e) {
-              console.error('Progress load error:', e);
             }
           }
 
@@ -1113,7 +1088,6 @@
             try {
               setProgramHistory(JSON.parse(userHistory));
             } catch (e) {
-              console.error('History load error:', e);
             }
           }
 
@@ -1127,7 +1101,6 @@
             setLoginPassword('');
           }, 800);
         } catch (error) {
-          console.error('Login error:', error);
           setError('Login failed. Please try again.');
         }
       };
@@ -1167,9 +1140,6 @@
 
       // Handle workout completion with feedback
       const handleWorkoutComplete = (feedback) => {
-        console.log('=== WORKOUT COMPLETE ===');
-        console.log('Current Week:', currentWeek, 'Current Day:', currentDay);
-        console.log('Completed Days Before:', completedDays);
         
         const workoutKey = `week${currentWeek}_day${currentDay}`;
         const newFeedback = {
@@ -1190,12 +1160,9 @@
         if (!completedDays.includes(dayKey)) {
           updatedCompletedDays = [...completedDays, dayKey];
           setCompletedDays(updatedCompletedDays);
-          console.log('Added to completed days:', dayKey);
         } else {
-          console.log('Day already completed:', dayKey);
         }
         
-        console.log('Completed Days After:', updatedCompletedDays);
         
         // Find the next incomplete day in the current week
         let foundNext = false;
@@ -1203,7 +1170,6 @@
           const checkKey = `w${currentWeek}d${day}`;
           if (!updatedCompletedDays.includes(checkKey)) {
             // Found next incomplete day
-            console.log('Next incomplete day found:', checkKey);
             setCurrentDay(day);
             foundNext = true;
             break;
@@ -1212,15 +1178,12 @@
         
         // If all days in current week are complete
         if (!foundNext) {
-          console.log('All days in week', currentWeek, 'complete');
           if (currentWeek === 12) {
             // Program complete
-            console.log('PROGRAM COMPLETE!');
             setScreen('completion');
             return;
           } else {
             // Move to next week
-            console.log('Moving to next week:', currentWeek + 1);
             setCurrentWeek(currentWeek + 1);
             setCurrentDay(1);
           }
@@ -1679,27 +1642,6 @@
                     Refresh Page
                   </button>
                   
-                  {/* TESTING ONLY - Remove in production */}
-                  <button 
-                    className="w-full py-2 px-4 rounded-lg font-semibold text-sm"
-                    style={{background: '#ef4444', color: 'white', marginTop: '8px'}}
-                    onClick={() => {
-                      const testPurchase = {
-                        email: 'test@test.com',
-                        name: 'Test User',
-                        tier: 'complete',
-                        price: 97,
-                        purchaseCode: 'TEST-123',
-                        purchaseDate: new Date().toISOString(),
-                        active: true
-                      };
-                      localStorage.setItem('devDadPurchase', JSON.stringify(testPurchase));
-                      alert('Test purchase added! Reloading...');
-                      window.location.reload();
-                    }}
-                  >
-                    🧪 BYPASS (Testing Only)
-                  </button>
                 </div>
 
                 <a 
@@ -1715,7 +1657,7 @@
                     fontSize: '18px'
                   }}
                 >
-                  Get Access - From $67
+                  Get Access — $47
                 </a>
 
                 <p className="text-white text-sm mt-6 opacity-75">
@@ -1802,7 +1744,7 @@
                       <p className="text-sm text-gray-600">12-week progressive program</p>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-lg" style={{color: '#2C5F8D'}}>$87</div>
+                      <div className="font-bold text-lg" style={{color: '#f97316'}}>$47</div>
                       <div className="text-xs text-gray-500">one-time</div>
                     </div>
                   </div>
@@ -1831,7 +1773,7 @@
                 </div>
 
                 <button className="nav-cta mb-3" onClick={handleSignup}>
-                  Get The System - $87
+                  Get The System — $47
                 </button>
 
                 <p className="text-xs text-center text-gray-500 mt-4">
@@ -2145,7 +2087,6 @@
         // Parse exercise duration from "0:45" format to seconds
         const getDefaultDuration = () => {
           if (!exercise || !exercise.duration) {
-            console.log('No exercise or duration, defaulting to 45s');
             return 45;
           }
           try {
@@ -2153,10 +2094,8 @@
             const mins = parseInt(parts[0]) || 0;
             const secs = parseInt(parts[1]) || 0;
             const total = mins * 60 + secs;
-            console.log(`Parsed duration: ${exercise.duration} = ${total}s`);
             return total > 0 ? total : 45;
           } catch (error) {
-            console.error('Error parsing duration:', error);
             return 45;
           }
         };
@@ -2164,12 +2103,10 @@
         // Initialize timers on first mount
         React.useEffect(() => {
           if (isFirstMountRef.current) {
-            console.log('FIRST MOUNT - Initializing timers');
             isFirstMountRef.current = false;
             prevExerciseRef.current = currentExercise;
             
             const defaultTime = getDefaultDuration();
-            console.log('Setting initial timer to:', defaultTime);
             setExerciseTimeLeft(defaultTime);
             setActualTimeElapsed(0);
           }
@@ -2179,11 +2116,9 @@
         React.useEffect(() => {
           // Only reset if exercise actually changed
           if (prevExerciseRef.current !== currentExercise) {
-            console.log('Exercise ACTUALLY changed from', prevExerciseRef.current, 'to', currentExercise);
             prevExerciseRef.current = currentExercise;
             
             const defaultTime = getDefaultDuration();
-            console.log('Initializing timers with:', defaultTime);
             
             // Reset display values
             setExerciseTimeLeft(defaultTime);
@@ -2201,13 +2136,11 @@
             setCustomTime('');
             setActualTimeInput('');
           } else {
-            console.log('useEffect fired but exercise did not change. Skipping reset.');
           }
         }, [currentExercise]);
 
         // Countdown timer logic - runs once, checks ref for running state
         React.useEffect(() => {
-          console.log('Setting up countdown timer (once)');
           
           const timer = setInterval(() => {
             // Check ref instead of state to avoid re-creating interval
@@ -2216,7 +2149,6 @@
             setExerciseTimeLeft(prev => {
               if (prev <= 0) return 0;
               
-              console.log('Countdown tick:', prev, '→', prev - 1);
               
               if (prev <= 1) {
                 setIsTimerRunning(false);
@@ -2231,21 +2163,18 @@
 
           // Only cleanup on unmount
           return () => {
-            console.log('Countdown timer unmounting (component cleanup)');
             clearInterval(timer);
           };
         }, []); // Empty deps - only run once!
 
         // Stopwatch logic - runs once, checks ref for running state
         React.useEffect(() => {
-          console.log('Setting up stopwatch (once)');
           
           const timer = setInterval(() => {
             // Check ref instead of state to avoid re-creating interval
             if (!isStopwatchRunningRef.current) return;
             
             setActualTimeElapsed(prev => {
-              console.log('Stopwatch tick:', prev, '→', prev + 1);
               return prev + 1;
             });
           }, 1000);
@@ -2255,7 +2184,6 @@
 
           // Only cleanup on unmount
           return () => {
-            console.log('Stopwatch unmounting (component cleanup)');
             clearInterval(timer);
           };
         }, []); // Empty deps - only run once!
@@ -2279,7 +2207,6 @@
 
         // Start both timers together
         const handleStartBoth = () => {
-          console.log('=== START BOTH CLICKED ===');
           setIsTimerRunning(true);
           setIsStopwatchRunning(true);
           isTimerRunningRef.current = true;
@@ -2288,7 +2215,6 @@
 
         // Pause both timers together
         const handlePauseBoth = () => {
-          console.log('=== PAUSE BOTH CLICKED ===');
           setIsTimerRunning(false);
           setIsStopwatchRunning(false);
           isTimerRunningRef.current = false;
@@ -2297,7 +2223,6 @@
 
         // Reset both timers
         const handleResetBoth = () => {
-          console.log('=== RESET BOTH CLICKED ===');
           const defaultTime = getDefaultDuration();
           setExerciseTimeLeft(defaultTime);
           setActualTimeElapsed(0);
@@ -2412,7 +2337,6 @@
                       className="flex-1 py-1 px-2 rounded text-xs font-semibold"
                       style={{background: isTimerRunning ? '#ef4444' : '#22c55e', color: 'white'}}
                       onClick={() => {
-                        console.log('Countdown button clicked. Current state:', isTimerRunning);
                         const newState = !isTimerRunning;
                         setIsTimerRunning(newState);
                         isTimerRunningRef.current = newState;
@@ -2425,7 +2349,6 @@
                       className="flex-1 py-1 px-2 rounded text-xs font-semibold"
                       style={{background: '#374151', color: 'white'}}
                       onClick={() => {
-                        console.log('Countdown reset clicked');
                         const defaultTime = getDefaultDuration();
                         setExerciseTimeLeft(defaultTime);
                         setIsTimerRunning(false);
@@ -2456,7 +2379,6 @@
                       className="flex-1 py-1 px-2 rounded text-xs font-semibold"
                       style={{background: isStopwatchRunning ? '#ef4444' : '#22c55e', color: 'white'}}
                       onClick={() => {
-                        console.log('Stopwatch button clicked. Current state:', isStopwatchRunning);
                         const newState = !isStopwatchRunning;
                         setIsStopwatchRunning(newState);
                         isStopwatchRunningRef.current = newState;
@@ -2468,7 +2390,6 @@
                       className="flex-1 py-1 px-2 rounded text-xs font-semibold"
                       style={{background: '#374151', color: 'white'}}
                       onClick={() => {
-                        console.log('Stopwatch reset clicked');
                         setActualTimeElapsed(0);
                         setIsStopwatchRunning(false);
                         isStopwatchRunningRef.current = false;
