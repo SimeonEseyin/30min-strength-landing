@@ -1704,7 +1704,6 @@
         function submitForm() {
             return new Promise((resolve, reject) => {
                 // Debug: log all answers
-                console.log('All answers:', JSON.stringify(state.answers, null, 2));
 
 <!--                -->
 <!--                // Populate hidden form fields-->
@@ -1739,14 +1738,12 @@
                 };
 
                 // Debug: log what we're sending
-                console.log('Submitting form data:', formData);
 
                 // Encode form data
                 const formBody = Object.keys(formData)
                     .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(formData[key]))
                     .join('&');
 
-                console.log('Encoded body:', formBody);
 
                 fetch('/', {
                     method: 'POST',
@@ -1755,7 +1752,6 @@
                 })
                 .then(response => {
                     if (response.ok) {
-                        console.log('Form submitted successfully');
                         showToast('🎉 Successfully joined the waitlist!');
                         resolve();
                     } else {
@@ -1763,7 +1759,6 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Form submission error:', error);
                     showToast('Something went wrong. Please try again.', true);
                     reject(error);
                 });
@@ -1807,14 +1802,12 @@
             if (state.currentStep === 11) {
                 const emailValue = document.getElementById('emailInput').value;
                 state.answers.email = emailValue;
-                console.log('Captured email:', emailValue);
             }
 
             // Capture name on step 12 before advancing
             if (state.currentStep === 12) {
                 const nameValue = document.getElementById('nameInput').value;
                 state.answers.name = nameValue;
-                console.log('Captured name:', nameValue);
             }
 
             if (stepType === 'results') {

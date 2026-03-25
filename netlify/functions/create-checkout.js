@@ -47,7 +47,7 @@ exports.handler = async (event) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: session.url }),
     };
-  } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+  } catch {
+    return { statusCode: 500, body: JSON.stringify({ error: 'Checkout unavailable. Please try again.' }) };
   }
 };
