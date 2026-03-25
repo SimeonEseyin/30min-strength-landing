@@ -1900,6 +1900,7 @@
           {screen === 'settings' && <SettingsScreen />}
           {screen === 'help' && <HelpCenterScreen />}
           {screen === 'weight' && <WeightTrackingScreen />}
+          {screen === 'strength-progress' && <StrengthProgressScreen />}
           {screen === 'exercise-detail' && <ExerciseDetailScreen />}
           </>
           )}
@@ -2105,8 +2106,8 @@
                       <div className="flex-1">
                         <h4 className="font-semibold text-orange-100 text-sm">{ex.name}</h4>
                         <p className="text-xs text-gray-300">{ex.sets}</p>
-                        {exerciseWeights[ex.name] && (
-                          <p className="text-xs mt-1" style={{color:'#f97316'}}>Last: {exerciseWeights[ex.name]} {settings.units}</p>
+                        {Array.isArray(exerciseWeights[ex.name]) && exerciseWeights[ex.name].length > 0 && (
+                          <p className="text-xs mt-1" style={{color:'#f97316'}}>Last: {exerciseWeights[ex.name][exerciseWeights[ex.name].length - 1].weight} {settings.units}</p>
                         )}
                       </div>
                       <button className="text-gray-400">›</button>
@@ -2691,7 +2692,9 @@
         const [weightInputs, setWeightInputs] = useState(() => {
           const init = {};
           todayExercises.forEach(ex => {
-            init[ex.name] = exerciseWeights[ex.name] || '';
+            const h = exerciseWeights[ex.name];
+            const last = Array.isArray(h) && h.length > 0 ? h[h.length - 1].weight : '';
+            init[ex.name] = last;
           });
           return init;
         });
@@ -2776,7 +2779,7 @@
                         type="number"
                         min="0"
                         step="2.5"
-                        placeholder={exerciseWeights[ex.name] ? String(exerciseWeights[ex.name]) : '—'}
+                        placeholder={Array.isArray(exerciseWeights[ex.name]) && exerciseWeights[ex.name].length > 0 ? String(exerciseWeights[ex.name][exerciseWeights[ex.name].length - 1].weight) : '—'}
                         value={weightInputs[ex.name]}
                         onChange={e => setWeightInputs(prev => ({ ...prev, [ex.name]: e.target.value }))}
                         className="w-20 text-center text-sm rounded-lg px-2 py-2"
@@ -2835,11 +2838,19 @@
               className="nav-cta max-w-md w-full"
               onClick={() => {
                 if (!selectedFeedback) return;
-                // Save weights
+                // Append to weight history
                 const updated = { ...exerciseWeights };
                 Object.entries(weightInputs).forEach(([name, val]) => {
                   const w = parseFloat(val);
-                  if (!isNaN(w) && w > 0) updated[name] = w;
+                  if (!isNaN(w) && w > 0) {
+                    const history = Array.isArray(updated[name]) ? updated[name] : [];
+                    updated[name] = [...history, {
+                      weight: w,
+                      date: new Date().toISOString(),
+                      week: currentWeek,
+                      day: currentDay
+                    }];
+                  }
                 });
                 setExerciseWeights(updated);
                 handleWorkoutComplete(selectedFeedback);
@@ -3159,6 +3170,136 @@
         );
       }
 
+      function StrengthProgressScreen() {
+        const unit = settings.units;
+
+        // Build list of logged exercises, sorted by most recently logged
+        const logged = Object.entries(exerciseWeights)
+          .filter(([, h]) => Array.isArray(h) && h.length > 0)
+          .map(([name, history]) => {
+            const sorted = [...history].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const first = sorted[0].weight;
+            const last  = sorted[sorted.length - 1].weight;
+            const delta = last - first;
+            const trend = delta > 0 ? '↑' : delta < 0 ? '↓' : '→';
+            const trendColor = delta > 0 ? '#22c55e' : delta < 0 ? '#ef4444' : '#a3a3a3';
+            return { name, history: sorted, first, last, delta, trend, trendColor };
+          })
+          .sort((a, b) => new Date(b.history[b.history.length - 1].date) - new Date(a.history[a.history.length - 1].date));
+
+        const [expanded, setExpanded] = React.useState({});
+
+        const fmt = (iso) => {
+          const d = new Date(iso);
+          return `${d.getMonth() + 1}/${d.getDate()}`;
+        };
+
+        return (
+          <div className="min-h-screen pb-20">
+            <div className="p-6 border-b" style={{background:'#1a1a1a', borderColor:'#262626'}}>
+              <button onClick={() => setScreen('more')} className="mb-4 text-2xl text-white">←</button>
+              <h1 className="text-2xl font-bold text-white">Strength Progress</h1>
+              <p className="text-sm mt-1" style={{color:'#a3a3a3'}}>Weight logged per exercise over time</p>
+            </div>
+
+            <div className="p-6">
+              {logged.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="text-5xl mb-4">📋</div>
+                  <p className="font-semibold text-gray-400">No weights logged yet.</p>
+                  <p className="text-sm text-gray-500 mt-2">Log weights after each workout to track your progression.</p>
+                </div>
+              ) : (
+                logged.map(({ name, history, first, last, delta, trend, trendColor }) => (
+                  <div key={name} className="rounded-lg mb-4 overflow-hidden" style={{background:'#1a1a1a', border:'1px solid #262626'}}>
+                    {/* Header row */}
+                    <button
+                      className="w-full p-4 flex items-center justify-between"
+                      onClick={() => setExpanded(prev => ({ ...prev, [name]: !prev[name] }))}
+                    >
+                      <div className="text-left">
+                        <div className="font-semibold text-white text-sm">{name}</div>
+                        <div className="text-xs mt-1" style={{color:'#a3a3a3'}}>
+                          {history.length} {history.length === 1 ? 'session' : 'sessions'} logged
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <div className="font-bold text-white">{last} {unit}</div>
+                          {history.length > 1 && (
+                            <div className="text-xs font-semibold" style={{color: trendColor}}>
+                              {trend} {delta > 0 ? '+' : ''}{delta} {unit}
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-gray-500">{expanded[name] ? '▲' : '▼'}</span>
+                      </div>
+                    </button>
+
+                    {/* History list */}
+                    {expanded[name] && (
+                      <div className="px-4 pb-4">
+                        {/* Visual bar chart */}
+                        {history.length > 1 && (
+                          <div className="mb-4">
+                            <div className="flex items-end gap-1" style={{height:'48px'}}>
+                              {history.map((entry, i) => {
+                                const max = Math.max(...history.map(e => e.weight));
+                                const pct = max > 0 ? (entry.weight / max) * 100 : 0;
+                                const isLatest = i === history.length - 1;
+                                return (
+                                  <div key={i} className="flex-1 flex flex-col items-center justify-end gap-1">
+                                    <div
+                                      className="w-full rounded-t"
+                                      style={{
+                                        height: `${pct}%`,
+                                        background: isLatest ? '#f97316' : '#262626',
+                                        minHeight: '4px'
+                                      }}
+                                    />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                        {/* Entry list */}
+                        <div className="space-y-2">
+                          {[...history].reverse().map((entry, i) => (
+                            <div key={i} className="flex justify-between items-center text-sm py-1" style={{borderBottom:'1px solid #262626'}}>
+                              <span style={{color:'#a3a3a3'}}>
+                                W{entry.week}D{entry.day} · {fmt(entry.date)}
+                              </span>
+                              <span className="font-semibold text-white">{entry.weight} {unit}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Bottom nav */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex">
+              <button className="flex-1 py-4 flex flex-col items-center gap-1" onClick={() => setScreen('home')}>
+                <span className="text-xl">📋</span>
+                <span className="text-xs">Plan</span>
+              </button>
+              <button className="flex-1 py-4 flex flex-col items-center gap-1" onClick={() => setScreen('progress')}>
+                <span className="text-xl">📊</span>
+                <span className="text-xs">Progress</span>
+              </button>
+              <button className="flex-1 py-4 flex flex-col items-center gap-1" style={{background:'#E8F0F7'}}>
+                <span className="text-xl">☰</span>
+                <span className="text-xs font-semibold" style={{color:'#2C5F8D'}}>More</span>
+              </button>
+            </div>
+          </div>
+        );
+      }
+
       function MoreScreen() {
         return (
           <div className="min-h-screen pb-20">
@@ -3175,6 +3316,21 @@
                   <span className="font-semibold">Workouts</span>
                 </div>
                 <span className="text-gray-400">›</span>
+              </button>
+
+              <button className="w-full p-4 bg-white rounded-lg mb-3 flex items-center justify-between" onClick={() => setScreen('strength-progress')}>
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">📈</span>
+                  <span className="font-semibold">Strength Progress</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {Object.keys(exerciseWeights).length > 0 && (
+                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-semibold">
+                      {Object.keys(exerciseWeights).length} exercises
+                    </span>
+                  )}
+                  <span className="text-gray-400">›</span>
+                </div>
               </button>
 
               <button className="w-full p-4 bg-white rounded-lg mb-3 flex items-center justify-between" onClick={() => setShowGoalsModal(true)}>
