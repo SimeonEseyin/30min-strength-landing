@@ -1389,7 +1389,7 @@
                     <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                 </div>
                 <h2 class="success-title">You're on the list! 🎉</h2>
-                <p class="success-text">We'll email you when The 30-Minute Strength System launches in February 2026.</p>
+                <p class="success-text">Check your inbox — your personalized plan is on its way.</p>
                 
                 <div class="success-details">
                     <div class="success-detail-row">
@@ -1406,7 +1406,7 @@
                     </div>
                     <div class="success-detail-row">
                         <span class="detail-label">Launch price</span>
-                        <span class="detail-value">$47 <span style="color: var(--text-secondary); text-decoration: line-through; font-size: 12px;">$147</span></span>                    </div>
+                        <span class="detail-value">$97</span>                    </div>
                 </div>
             </div>
         </div>
@@ -1825,9 +1825,10 @@
                 // Submit form and wait for response
                 submitForm()
                     .then(() => {
-                        // Success - show success page
-                        updateSuccessPage();
-                        showStep(15);
+                        // Redirect to landing page with data pre-filled
+                        const email = encodeURIComponent(state.answers.email || '');
+                        const name = encodeURIComponent(state.answers.name || '');
+                        window.location.href = `devdad-landing.html?from=quiz&email=${email}&name=${name}`;
                     })
                     .catch((error) => {
                         // Error - remove loading state, user can try again
