@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-title" content="DevDad">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="DevDad Strength">
-    <meta name="msapplication-TileImage" content="/icons/icon-144.png">
+    <meta name="msapplication-TileImage" content="/icons/web-app-manifest-192x192.png">
     <meta name="msapplication-config" content="/browserconfig.xml">
 
     <!-- Fonts -->
@@ -1149,10 +1149,7 @@
             </div>
             <div class="hero-visual">
                 <div class="hero-video-container">
-                    <video id="hero-video" autoplay muted loop playsinline poster="site-images/pushup.JPG">
-                        <source src="site-images/video-demo.MOV" type="video/mp4">
-                        <img src="site-images/pushup.JPG" alt="30-minute strength workout demo">
-                    </video>
+                    <img src="site-images/pushup.JPG" alt="30-minute strength workout demo">
                 </div>
                 <div class="hero-stats">
                     <div class="stat">
@@ -1178,7 +1175,7 @@
     <div class="container">
         <div class="problem-hero">
             <div class="problem-image">
-                <img src="site-images/1.jpg" alt="Dev Dad exhausted with baby - this is real life">
+                <img src="site-images/1.JPG" alt="Dev Dad exhausted with baby - this is real life">
             </div>
             <div class="problem-intro">
                 <div class="section-label">The Reality</div>
@@ -1408,38 +1405,6 @@
 </footer>
 
 <script>
-        // Hero video - play on view and hover
-        const heroVideo = document.getElementById('hero-video');
-
-        if (heroVideo) {
-            // Intersection Observer - play when in view
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        heroVideo.play();
-                    } else {
-                        heroVideo.pause();
-                    }
-                });
-            }, { threshold: 0.3 });
-
-            observer.observe(heroVideo);
-
-            // Also play on hover
-            heroVideo.parentElement.addEventListener('mouseenter', () => {
-                heroVideo.play();
-            });
-
-            heroVideo.parentElement.addEventListener('mouseleave', () => {
-                // Only pause if not in view
-                const rect = heroVideo.getBoundingClientRect();
-                const inView = rect.top < window.innerHeight && rect.bottom > 0;
-                if (!inView) {
-                    heroVideo.pause();
-                }
-            });
-        }
-
         // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
