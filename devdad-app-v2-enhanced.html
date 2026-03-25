@@ -645,6 +645,12 @@
         weightHistory: [] // {date, weight}
       });
 
+      // Progressive overload — last weight used per exercise name
+      const [exerciseWeights, setExerciseWeights] = useState({});
+
+      // Welcome-back
+      const [daysSinceLastWorkout, setDaysSinceLastWorkout] = useState(0);
+
       // Exercise details state
       const [selectedExercise, setSelectedExercise] = useState(null);
 
@@ -808,8 +814,30 @@
             if (profile) {
               setUserProfile(JSON.parse(profile));
             }
-            
-            setScreen('home');
+
+            // Load exercise weights
+            const weights = localStorage.getItem(`weights_${userData.email}`);
+            if (weights) {
+              setExerciseWeights(JSON.parse(weights));
+            }
+
+            // Welcome back — check days since last workout
+            const feedbackData = progress ? (JSON.parse(progress).workoutFeedback || {}) : {};
+            const completedWorkouts = Object.values(feedbackData).filter(f => f.feedback !== 'skipped');
+            let daysSince = 0;
+            if (completedWorkouts.length > 0) {
+              const lastDate = completedWorkouts
+                .map(f => new Date(f.date))
+                .sort((a, b) => b - a)[0];
+              daysSince = Math.floor((Date.now() - lastDate) / 86400000);
+            }
+
+            if (daysSince >= 3) {
+              setDaysSinceLastWorkout(daysSince);
+              setScreen('welcome-back');
+            } else {
+              setScreen('home');
+            }
           } catch (e) {
             localStorage.removeItem('devDadSession');
             setScreen('welcome');
@@ -846,6 +874,13 @@
           localStorage.setItem(`profile_${currentUser.email}`, JSON.stringify(userProfile));
         }
       }, [userProfile, isLoggedIn, currentUser]);
+
+      // Auto-save exercise weights whenever they change
+      useEffect(() => {
+        if (isLoggedIn && currentUser) {
+          localStorage.setItem(`weights_${currentUser.email}`, JSON.stringify(exerciseWeights));
+        }
+      }, [exerciseWeights, isLoggedIn, currentUser]);
 
       // Timer countdown effect
       const [timerSeconds, setTimerSeconds] = useState(45);
@@ -1853,6 +1888,7 @@
             </div>
           )}
 
+          {screen === 'welcome-back' && <WelcomeBackScreen />}
           {screen === 'home' && <HomeScreen />}
           {screen === 'workout' && <WorkoutScreen />}
           {screen === 'complete' && <CompleteWorkoutScreen />}
@@ -1869,6 +1905,37 @@
           )}
         </div>
       );
+
+      function WelcomeBackScreen() {
+        const name = currentUser?.name || 'Dad';
+        const days = daysSinceLastWorkout;
+        const msg = days >= 7
+          ? "Life with twins is no joke. You're back — that's what matters."
+          : days >= 5
+          ? "A few days off is fine. Your strength didn't go anywhere."
+          : "Short break, quick return. That's the system working.";
+
+        return (
+          <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center"
+               style={{background:'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)'}}>
+            <div className="text-6xl mb-6">👋</div>
+            <h2 className="text-3xl font-bold mb-2 text-white">
+              Welcome back, {name.split(' ')[0]}.
+            </h2>
+            <p className="text-lg mb-2" style={{color:'#f97316'}}>
+              {days === 1 ? '1 day' : `${days} days`} since your last workout.
+            </p>
+            <p className="mb-10 text-base" style={{color:'#a3a3a3', maxWidth:'320px'}}>{msg}</p>
+            <button
+              className="nav-cta"
+              style={{maxWidth:'320px', width:'100%'}}
+              onClick={() => setScreen('home')}
+            >
+              Let's Go →
+            </button>
+          </div>
+        );
+      }
 
       function HomeScreen() {
         const weekCompletedDays = completedDays.filter(d => d.startsWith(`w${currentWeek}`)).length;
@@ -2038,6 +2105,9 @@
                       <div className="flex-1">
                         <h4 className="font-semibold text-orange-100 text-sm">{ex.name}</h4>
                         <p className="text-xs text-gray-300">{ex.sets}</p>
+                        {exerciseWeights[ex.name] && (
+                          <p className="text-xs mt-1" style={{color:'#f97316'}}>Last: {exerciseWeights[ex.name]} {settings.units}</p>
+                        )}
                       </div>
                       <button className="text-gray-400">›</button>
                     </div>
@@ -2616,6 +2686,15 @@
 
       function CompleteWorkoutScreen() {
         const [selectedFeedback, setSelectedFeedback] = useState(null);
+        const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
+        const todayExercises = workoutInfo ? (exercises[workoutInfo.exerciseDay] || exercises.day1) : exercises.day1;
+        const [weightInputs, setWeightInputs] = useState(() => {
+          const init = {};
+          todayExercises.forEach(ex => {
+            init[ex.name] = exerciseWeights[ex.name] || '';
+          });
+          return init;
+        });
 
         // Load actual times for this workout
         const actualTimes = JSON.parse(localStorage.getItem('actualExerciseTimes') || '{}');
@@ -2684,6 +2763,32 @@
               </div>
             )}
             
+            {/* Weight log */}
+            <div className="card w-full max-w-md mb-6">
+              <h3 className="font-bold mb-1 text-orange-100">Log weights used</h3>
+              <p className="text-xs text-gray-400 mb-4">Saved for next time — track your progress</p>
+              <div className="space-y-3">
+                {todayExercises.map(ex => (
+                  <div key={ex.id} className="flex items-center gap-3">
+                    <span className="text-sm flex-1 text-gray-300">{ex.name}</span>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        step="2.5"
+                        placeholder={exerciseWeights[ex.name] ? String(exerciseWeights[ex.name]) : '—'}
+                        value={weightInputs[ex.name]}
+                        onChange={e => setWeightInputs(prev => ({ ...prev, [ex.name]: e.target.value }))}
+                        className="w-20 text-center text-sm rounded-lg px-2 py-2"
+                        style={{background:'#0a0a0a', border:'1px solid #262626', color:'#fff'}}
+                      />
+                      <span className="text-xs text-gray-500">{settings.units}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="card w-full max-w-md mb-6">
               <h3 className="font-bold mb-4 text-orange-100">How was today's session?</h3>
               <div className="space-y-3">
@@ -2726,9 +2831,19 @@
               </div>
             </div>
 
-            <button 
-              className="nav-cta max-w-md w-full" 
-              onClick={() => selectedFeedback && handleWorkoutComplete(selectedFeedback)}
+            <button
+              className="nav-cta max-w-md w-full"
+              onClick={() => {
+                if (!selectedFeedback) return;
+                // Save weights
+                const updated = { ...exerciseWeights };
+                Object.entries(weightInputs).forEach(([name, val]) => {
+                  const w = parseFloat(val);
+                  if (!isNaN(w) && w > 0) updated[name] = w;
+                });
+                setExerciseWeights(updated);
+                handleWorkoutComplete(selectedFeedback);
+              }}
               disabled={!selectedFeedback}
             >
               {selectedFeedback ? 'Save & Continue' : 'Select feedback to continue'}
@@ -3139,28 +3254,32 @@
       }
 
       function ProfileScreen() {
-        // Calculate streak
+        // Real streak: consecutive calendar days with at least one completed workout
         const calculateStreak = () => {
-          if (completedDays.length === 0) return 0;
-          
-          let streak = 0;
-          const today = new Date();
-          
-          // Simple streak calculation (consecutive days)
-          for (let i = 0; i < 30; i++) {
-            const checkDate = new Date(today);
-            checkDate.setDate(checkDate.getDate() - i);
-            const hasWorkout = completedDays.some(dayKey => {
-              // Check if workout exists for this date
-              return true; // Simplified for now
-            });
-            if (hasWorkout) streak++;
+          const completed = Object.values(workoutFeedback).filter(f => f.feedback !== 'skipped' && f.date);
+          if (completed.length === 0) return 0;
+
+          // Unique calendar dates, sorted newest first
+          const dates = [...new Set(completed.map(f => f.date.split('T')[0]))].sort().reverse();
+
+          const today     = new Date().toISOString().split('T')[0];
+          const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+          // Streak must include today or yesterday
+          if (dates[0] !== today && dates[0] !== yesterday) return 0;
+
+          let streak = 1;
+          for (let i = 1; i < dates.length; i++) {
+            const diff = Math.round(
+              (new Date(dates[i - 1]) - new Date(dates[i])) / 86400000
+            );
+            if (diff === 1) streak++;
             else break;
           }
           return streak;
         };
 
-        const currentStreak = Math.min(completedDays.length, 7); // Simplified
+        const currentStreak = calculateStreak();
         const perfectWorkouts = Object.values(workoutFeedback).filter(f => f.feedback === 'perfect').length;
 
         // Calculate weight to display
