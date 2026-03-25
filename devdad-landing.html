@@ -822,7 +822,7 @@
           <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: var(--text-secondary); text-align: center;">
             <span id="spots-remaining" style="color: var(--accent); font-weight: 700;">20 spots</span> remaining at this price
           </div>
-          <button class="buy-btn" onclick="openCheckout('complete', 47)">Get Founding Member Access — $47</button>
+          <button class="buy-btn" onclick="openCheckout()">Get Founding Member Access — $47</button>
         </div>
       </div>
 
@@ -1054,61 +1054,21 @@
       }
     });
 
-    let selectedTier = '';
-    let selectedPrice = 0;
+    function openCheckout() {
+      document.getElementById('selectedTier').textContent = 'Founding Member';
+      document.getElementById('selectedPrice').textContent = '$47';
+      document.getElementById('totalPrice').textContent = '$47';
 
-    function openCheckout(tier, price) {
-      console.log('🔵 openCheckout called!', {tier, price});
-      console.log('🔍 Checking for quiz data...');
-      console.log('  window.quizEmail:', window.quizEmail);
-      console.log('  window.quizName:', window.quizName);
-      
-      selectedTier = tier;
-      selectedPrice = price;
-      
-      const tierNames = {
-        'starter': 'Starter Tier',
-        'complete': 'Complete Tier',
-        'premium': 'Premium Tier'
-      };
-
-      document.getElementById('selectedTier').textContent = tierNames[tier];
-      document.getElementById('selectedPrice').textContent = '$' + price;
-      document.getElementById('totalPrice').textContent = '$' + price;
-      
-      // Open modal first
       document.getElementById('checkoutModal').classList.add('active');
-      console.log('✅ Modal opened');
-      
-      // Pre-fill quiz data after modal is visible (small delay to ensure fields are rendered)
+
+      // Pre-fill from quiz if available
       setTimeout(() => {
-        const emailField = document.getElementById('email');
-        const nameField = document.getElementById('name');
-        
-        console.log('📝 Attempting to pre-fill...');
-        console.log('  Email field exists:', !!emailField);
-        console.log('  Name field exists:', !!nameField);
-        
-        // Try window object first, then fallback to localStorage
         const emailToFill = window.quizEmail || localStorage.getItem('quizEmail');
-        const nameToFill = window.quizName || localStorage.getItem('quizName');
-        
-        console.log('  Email to fill:', emailToFill);
-        console.log('  Name to fill:', nameToFill);
-        
-        if (emailField && emailToFill) {
-          emailField.value = emailToFill;
-          console.log('✅ Email pre-filled!');
-        } else {
-          console.log('❌ Could not pre-fill email');
-        }
-        
-        if (nameField && nameToFill) {
-          nameField.value = nameToFill;
-          console.log('✅ Name pre-filled!');
-        } else {
-          console.log('❌ Could not pre-fill name');
-        }
+        const nameToFill  = window.quizName  || localStorage.getItem('quizName');
+        const emailField  = document.getElementById('email');
+        const nameField   = document.getElementById('name');
+        if (emailField && emailToFill) emailField.value = emailToFill;
+        if (nameField  && nameToFill)  nameField.value  = nameToFill;
       }, 100);
     }
 
@@ -1131,14 +1091,13 @@
         const res = await fetch('/.netlify/functions/create-checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tier: selectedTier, price: selectedPrice, email, name }),
+          body: JSON.stringify({ email, name }),
         });
 
         if (!res.ok) throw new Error('Server error ' + res.status);
         const { url } = await res.json();
         window.location.href = url;
       } catch (err) {
-        console.error('Checkout error:', err);
         btn.disabled    = false;
         btn.textContent = 'Complete Purchase';
         alert('Something went wrong. Please try again.');

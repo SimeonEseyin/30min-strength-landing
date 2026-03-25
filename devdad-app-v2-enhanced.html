@@ -694,51 +694,36 @@
 
       // Check for purchase verification on component mount
       useEffect(() => {
-        
-        // Check URL parameters for purchase redirect
         const urlParams = new URLSearchParams(window.location.search);
-        const justPurchased = urlParams.get('purchased');
-        const purchaseDataParam = urlParams.get('data');
-        
-        
-        // CRITICAL: Get purchase from URL params first (file:// protocol fix)
-        if (purchaseDataParam) {
-          try {
-            const purchaseData = JSON.parse(decodeURIComponent(purchaseDataParam));
-            
-            // Save to localStorage for future visits
-            localStorage.setItem('devDadPurchase', JSON.stringify(purchaseData));
-            
-            if (purchaseData.active) {
-              setHasPurchased(true);
-            }
-          } catch (e) {
-          }
-        }
-        
-        // Fallback: Check localStorage for existing purchase
-        if (!purchaseDataParam) {
-          const purchase = localStorage.getItem('devDadPurchase');
-          
-          if (purchase) {
-            try {
-              const purchaseData = JSON.parse(purchase);
-              
-              if (purchaseData.active) {
-                setHasPurchased(true);
-              }
-            } catch (e) {
-            }
-          } else {
-          }
-        }
-        
-        if (justPurchased === 'true') {
-          // Clear URL parameter (clean up the URL)
+        const sessionId  = urlParams.get('session_id');
+        const verified   = localStorage.getItem('devDadVerified');
+
+        // Clean up URL immediately
+        if (urlParams.toString()) {
           window.history.replaceState({}, document.title, window.location.pathname);
         }
-        
-        setPurchaseChecked(true);
+
+        if (sessionId && sessionId.startsWith('cs_')) {
+          // Server-side verification via Stripe
+          fetch('/.netlify/functions/verify-purchase', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId }),
+          })
+            .then(r => r.json())
+            .then(data => {
+              if (data.verified) {
+                localStorage.setItem('devDadVerified', '1');
+                setHasPurchased(true);
+              }
+              setPurchaseChecked(true);
+            })
+            .catch(() => setPurchaseChecked(true));
+        } else {
+          // Return visit — trust localStorage only if previously server-verified
+          if (verified === '1') setHasPurchased(true);
+          setPurchaseChecked(true);
+        }
       }, []);
 
       // Check for existing session on component mount
