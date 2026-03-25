@@ -1006,51 +1006,17 @@
   </div>
 
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-    // Check if user came from quiz and personalize experience
+    // Pre-fill checkout from quiz URL params
     window.addEventListener('DOMContentLoaded', function() {
       const urlParams = new URLSearchParams(window.location.search);
-      const fromQuiz = urlParams.get('from') === 'quiz';
-      
-      console.log('📍 Page loaded. URL params:', window.location.search);
-      console.log('🔍 fromQuiz:', fromQuiz);
-      
-      // CRITICAL: Get email/name from URL params FIRST (fixes file:// localStorage issue)
-      let quizEmail = urlParams.get('email');
-      let quizName = urlParams.get('name');
-      
-      console.log('🔗 From URL params - Email:', quizEmail);
-      console.log('🔗 From URL params - Name:', quizName);
-      
-      // Fallback to localStorage if URL params are empty
-      if (!quizEmail) {
-        quizEmail = localStorage.getItem('quizEmail');
-        console.log('💾 Fallback to localStorage - Email:', quizEmail);
-      }
-      if (!quizName) {
-        quizName = localStorage.getItem('quizName');
-        console.log('💾 Fallback to localStorage - Name:', quizName);
-      }
-      
-      console.log('📧 Final quiz email:', quizEmail);
-      console.log('👤 Final quiz name:', quizName);
-      
+      let quizEmail = urlParams.get('email') || localStorage.getItem('quizEmail');
+      let quizName  = urlParams.get('name')  || localStorage.getItem('quizName');
+
       if (quizEmail || quizName) {
-        // Store in window for checkout to use
         window.quizEmail = quizEmail;
-        window.quizName = quizName;
-        
-        // Also save to localStorage for future use
+        window.quizName  = quizName;
         if (quizEmail) localStorage.setItem('quizEmail', quizEmail);
-        if (quizName) localStorage.setItem('quizName', quizName);
-        
-        console.log('✅ Quiz data loaded and stored in window object');
-        console.log('✅ Also saved to localStorage for future visits');
-      } else {
-        console.log('⚠️ No quiz data found in URL params or localStorage');
-      }
-      
-      if (fromQuiz) {
-        console.log('✅ User came from quiz!');
+        if (quizName)  localStorage.setItem('quizName',  quizName);
       }
     });
 

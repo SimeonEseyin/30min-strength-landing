@@ -15,12 +15,18 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: 'Invalid JSON' };
   }
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || typeof email !== 'string' || !emailRegex.test(email) || email.length > 254) {
+    return { statusCode: 400, body: 'Invalid email' };
+  }
+
+  const safeName = typeof name === 'string' ? name.replace(/[<>]/g, '').trim().slice(0, 100) : '';
+  const safeTags = Array.isArray(tags) ? tags.filter(t => typeof t === 'string').slice(0, 10) : [];
+
   const API_KEY = process.env.CONVERTKIT_API_KEY;
   const FORM_ID = process.env.CONVERTKIT_FORM_ID;
 
   if (!API_KEY || !FORM_ID) {
-    // Not configured yet — log and succeed silently so the quiz flow isn't blocked
-    console.warn('ConvertKit env vars not set. Skipping sequence enrollment.');
     return { statusCode: 200, body: JSON.stringify({ ok: true, skipped: true }) };
   }
 
@@ -31,8 +37,8 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         api_key: API_KEY,
         email,
-        first_name: name || '',
-        tags: Array.isArray(tags) ? tags : [],
+        first_name: safeName,
+        tags: safeTags,
       }),
     });
 
@@ -42,8 +48,7 @@ exports.handler = async (event) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ok: res.ok, data }),
     };
-  } catch (err) {
-    console.error('ConvertKit error:', err.message);
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+  } catch {
+    return { statusCode: 500, body: JSON.stringify({ ok: false }) };
   }
 };

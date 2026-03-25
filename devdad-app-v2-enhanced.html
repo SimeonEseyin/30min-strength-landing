@@ -588,6 +588,8 @@
       // Purchase Verification State
       const [hasPurchased, setHasPurchased] = useState(false);
       const [purchaseChecked, setPurchaseChecked] = useState(false);
+      const [restoreEmail, setRestoreEmail] = useState('');
+      const [restoreStatus, setRestoreStatus] = useState('idle'); // idle | loading | error
       
       // Navigation & UI State
       const [screen, setScreen] = useState('welcome');
@@ -725,6 +727,29 @@
           setPurchaseChecked(true);
         }
       }, []);
+
+      async function restoreAccess(e) {
+        e.preventDefault();
+        const email = restoreEmail.trim().toLowerCase();
+        if (!email) return;
+        setRestoreStatus('loading');
+        try {
+          const res = await fetch('/.netlify/functions/check-access', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+          });
+          const data = await res.json();
+          if (data.verified) {
+            localStorage.setItem('devDadVerified', '1');
+            setHasPurchased(true);
+          } else {
+            setRestoreStatus('error');
+          }
+        } catch {
+          setRestoreStatus('error');
+        }
+      }
 
       // Check for existing session on component mount
       useEffect(() => {
@@ -1606,47 +1631,58 @@
         <div className="max-w-md mx-auto bg-white min-h-screen shadow-xl">
           {/* Purchase Gate - Show if not purchased */}
           {purchaseChecked && !hasPurchased && (
-            <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{background: 'linear-gradient(135deg, #2C5F8D 0%, #1e4666 100%)'}}>
+            <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)'}}>
               <div className="max-w-md w-full text-center">
-                <div className="text-6xl mb-6">🔒</div>
-                <h2 className="text-3xl font-bold mb-4 text-white">Purchase Required</h2>
-                <p className="text-lg text-white mb-8 opacity-90">
-                  This app is available to customers who have purchased The 30-Minute Strength System.
-                </p>
-                
-                <div className="bg-white rounded-lg p-6 mb-6">
-                  <h3 className="font-bold text-xl mb-4" style={{color: '#2C5F8D'}}>Already purchased?</h3>
-                  <p className="text-gray-600 text-sm mb-4">
-                    Your purchase should have redirected you automatically. If you're seeing this message, please try refreshing the page or clear your browser cache.
-                  </p>
-                  <button 
-                    className="w-full py-3 px-6 rounded-lg font-semibold mb-3"
-                    style={{background: '#2C5F8D', color: 'white'}}
-                    onClick={() => window.location.reload()}
-                  >
-                    Refresh Page
-                  </button>
-                  
+                <h2 className="text-3xl font-bold mb-2 text-white">Dev<span style={{color:'#f97316'}}>Dad</span> Strength</h2>
+                <p className="mb-8" style={{color:'#a3a3a3'}}>The 30-Minute Strength System</p>
+
+                {/* Restore access */}
+                <div className="rounded-lg p-6 mb-6 text-left" style={{background:'#1a1a1a', border:'1px solid #262626'}}>
+                  <h3 className="font-bold text-lg mb-1 text-white">Already purchased?</h3>
+                  <p className="text-sm mb-4" style={{color:'#a3a3a3'}}>Enter the email you used at checkout to restore access on this device.</p>
+                  <form onSubmit={restoreAccess}>
+                    <input
+                      type="email"
+                      required
+                      placeholder="you@example.com"
+                      value={restoreEmail}
+                      onChange={e => { setRestoreEmail(e.target.value); setRestoreStatus('idle'); }}
+                      className="w-full px-4 py-3 rounded-lg mb-3 text-white"
+                      style={{background:'#0a0a0a', border:'1px solid #262626', outline:'none'}}
+                    />
+                    {restoreStatus === 'error' && (
+                      <p className="text-sm mb-3" style={{color:'#f97316'}}>No purchase found for that email. Try a different address or get access below.</p>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={restoreStatus === 'loading'}
+                      className="w-full py-3 rounded-lg font-semibold"
+                      style={{background:'#f97316', color:'white', opacity: restoreStatus === 'loading' ? 0.7 : 1}}
+                    >
+                      {restoreStatus === 'loading' ? 'Checking…' : 'Restore Access'}
+                    </button>
+                  </form>
                 </div>
 
-                <a 
-                  href="devdad-landing.html" 
+                <a
+                  href="devdad-landing.html"
                   style={{
                     display: 'block',
-                    background: '#f97316',
-                    color: 'white',
-                    padding: '16px 32px',
+                    background: 'transparent',
+                    color: '#a3a3a3',
+                    padding: '12px 32px',
                     borderRadius: '8px',
                     textDecoration: 'none',
                     fontWeight: '600',
-                    fontSize: '18px'
+                    fontSize: '15px',
+                    border: '1px solid #262626',
                   }}
                 >
                   Get Access — $47
                 </a>
 
-                <p className="text-white text-sm mt-6 opacity-75">
-                  Questions? Email <a href="mailto:support@devdadstrength.com" style={{color: '#f97316'}}>support@devdadstrength.com</a>
+                <p className="text-sm mt-6" style={{color:'#737373'}}>
+                  Questions? <a href="mailto:devdad.desk@gmail.com" style={{color:'#f97316'}}>devdad.desk@gmail.com</a>
                 </p>
               </div>
             </div>
