@@ -2,7 +2,7 @@
   "name": "DevDad Strength - The 30-Minute Strength System",
   "short_name": "DevDad",
   "description": "12-week progressive strength program built for busy engineer dads. 30-minute workouts that fit your schedule.",
-  "start_url": "/index.html",
+  "start_url": "/app",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -22,5 +22,6 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "prefer_related_applications": false
 }

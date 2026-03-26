@@ -1,4 +1,4 @@
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { createCheckoutSession } = require('./_stripe');
 
 const PRICE_CENTS = 4700; // $47 — founding member price
 
@@ -25,21 +25,12 @@ exports.handler = async (event) => {
     : '';
 
   try {
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      customer_email: email,
-      line_items: [{
-        price_data: {
-          currency: 'usd',
-          product_data: { name: 'DevDad Strength — 30-Minute Strength System (Founding Member)' },
-          unit_amount: PRICE_CENTS,
-        },
-        quantity: 1,
-      }],
-      mode: 'payment',
-      success_url: `${process.env.URL}/devdad-app-v2-enhanced.html?purchased=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${process.env.URL}/devdad-landing.html?cancelled=true`,
-      metadata: { name: safeName },
+    const session = await createCheckoutSession({
+      email,
+      safeName,
+      priceCents: PRICE_CENTS,
+      successUrl: `${process.env.URL}/app?purchased=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${process.env.URL}/devdad-landing.html?cancelled=true`,
     });
 
     return {

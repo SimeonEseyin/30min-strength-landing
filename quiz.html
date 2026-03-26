@@ -695,6 +695,126 @@
             color: var(--text-primary);
         }
 
+        .results-insight {
+            background: linear-gradient(180deg, rgba(249, 115, 22, 0.12) 0%, rgba(255,255,255,0.03) 100%);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            border-radius: 16px;
+            padding: 18px 20px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .results-insight-label {
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--accent-light);
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .results-insight-copy {
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+
+        .results-score-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .results-score-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .results-score-label {
+            font-size: 12px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .results-score-value {
+            font-size: 44px;
+            line-height: 1;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .results-score-badge {
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--accent-light);
+            white-space: nowrap;
+        }
+
+        .results-score-meter {
+            height: 10px;
+            background: #242424;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .results-score-fill {
+            height: 100%;
+            width: 0;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #f97316 0%, #22c55e 100%);
+            transition: width 0.5s ease;
+        }
+
+        .results-score-summary {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .results-diagnostics {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .diagnostic-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 18px;
+            text-align: left;
+        }
+
+        .diagnostic-label {
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .diagnostic-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .diagnostic-copy {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
         .results-chart {
             background: var(--bg-card);
             border-radius: 16px;
@@ -1252,7 +1372,7 @@
                     <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                 </div>
                 <h2 class="interstitial-title">This program was built by a <span class="highlight">dad</span>, for dads</h2>
-                <p class="interstitial-text">After becoming a father of twins while working as an engineer, I rebuilt my strength using only 30-minute workouts during nap times.</p>
+                <p class="interstitial-text">After becoming a father of twins while working as an engineer, I rebuilt my strength with 30-minute workouts that fit around real family life. That story shaped the system, but the system is for busy dads.</p>
                 
                 <div class="feature-list">
                     <div class="feature-item">
@@ -1271,7 +1391,7 @@
                         <div class="feature-icon">
                             <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                         </div>
-                        <span class="feature-text">Community of engineer dads</span>
+                        <span class="feature-text">Built for busy dads with an engineering mindset</span>
                     </div>
                 </div>
             </div>
@@ -1279,8 +1399,8 @@
 
         <!-- Step 11: Email -->
         <div class="step" data-step="11">
-            <h2 class="step-question">Enter your email to get your personalized plan</h2>
-            <p class="step-subtitle">We'll save your results and notify you at launch</p>
+            <h2 class="step-question">Enter your email to unlock your personalized plan</h2>
+            <p class="step-subtitle">We'll save your quiz answers and pre-fill checkout if you decide to join today</p>
             <div class="input-container">
                 <input type="email" class="text-input" id="emailInput" placeholder="your@email.com" required>
                 <p class="input-hint">We respect your privacy. No spam, ever.</p>
@@ -1288,7 +1408,7 @@
             
             <div class="privacy-note">
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
-                <span>Your data will be processed in accordance with our Privacy Policy. We'll only email you about the program launch.</span>
+                <span>Your data will be processed in accordance with our Privacy Policy. We'll use it to save your quiz answers and follow up about the program.</span>
             </div>
         </div>
 
@@ -1379,37 +1499,14 @@
                         <span class="benefit-text">Goal: <span id="goalResult">Build muscle & strength</span></span>
                     </div>
                 </div>
+
+                <div class="results-insight">
+                    <div class="results-insight-label">Best Next Step</div>
+                    <p class="results-insight-copy">Founding member access is live for $47 one time. Continue to checkout with your quiz answers pre-filled.</p>
+                </div>
             </div>
         </div>
 
-        <!-- Step 15: Success / Thank You -->
-        <div class="step" data-step="15" data-type="success">
-            <div class="success-container">
-                <div class="success-icon">
-                    <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                </div>
-                <h2 class="success-title">You're on the list! 🎉</h2>
-                <p class="success-text">Check your inbox — your personalized plan is on its way.</p>
-                
-                <div class="success-details">
-                    <div class="success-detail-row">
-                        <span class="detail-label">Your goal</span>
-                        <span class="detail-value" id="summaryGoal">Build muscle</span>
-                    </div>
-                    <div class="success-detail-row">
-                        <span class="detail-label">Available time</span>
-                        <span class="detail-value" id="summaryTime">30 minutes</span>
-                    </div>
-                    <div class="success-detail-row">
-                        <span class="detail-label">Kids age</span>
-                        <span class="detail-value" id="summaryKids">0-6 months</span>
-                    </div>
-                    <div class="success-detail-row">
-                        <span class="detail-label">Launch price</span>
-                        <span class="detail-value">$97</span>                    </div>
-                </div>
-            </div>
-        </div>
     </main>
 
     <!-- Footer CTA -->
@@ -1423,7 +1520,7 @@
     <!-- Toast Notification -->
     <div class="toast" id="toast">
         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-        <span id="toastMessage">Successfully joined waitlist!</span>
+        <span id="toastMessage">Quiz answers saved successfully!</span>
     </div>
 
     <!-- Hidden Netlify Form -->
@@ -1448,7 +1545,7 @@
         // Quiz State
         const state = {
             currentStep: 1,
-            totalSteps: 15,
+            totalSteps: 14,
             answers: {},
             questionSteps: [1, 3, 4, 6, 7, 8, 9, 11, 12], // Steps that count for progress
         };
@@ -1468,8 +1565,7 @@
             11: 'Almost Done',
             12: 'Almost Done',
             13: 'Creating Plan',
-            14: 'Your Plan',
-            15: 'Complete'
+            14: 'Your Plan'
         };
 
         // DOM Elements
@@ -1537,12 +1633,9 @@
                 runLoadingAnimation();
             } else if (stepType === 'results') {
                 ctaBtn.style.display = 'block';
-                ctaBtn.textContent = 'JOIN WAITLIST';
+                ctaBtn.textContent = 'GET FOUNDING MEMBER ACCESS - $47';
                 skipBtn.style.display = 'none';
                 updateResultsPage();
-            } else if (stepType === 'success') {
-                ctaBtn.style.display = 'none';
-                skipBtn.style.display = 'none';
             } else if (stepNum === 11) {
                 ctaBtn.textContent = 'GET MY PLAN';
                 ctaBtn.style.display = 'block';
@@ -1675,13 +1768,6 @@
             }
         }
 
-        // Update success page
-        function updateSuccessPage() {
-            document.getElementById('summaryGoal').textContent = state.answers.goal || 'Build muscle';
-            document.getElementById('summaryTime').textContent = state.answers.time || '30 minutes';
-            document.getElementById('summaryKids').textContent = state.answers.kids_age || 'Not specified';
-        }
-
         // Submit form to Netlify
         // Show toast notification
         function showToast(message, isError = false) {
@@ -1752,7 +1838,7 @@
                 })
                 .then(response => {
                     if (response.ok) {
-                        showToast('🎉 Successfully joined the waitlist!');
+                        showToast('Answers saved. Opening checkout...');
                         resolve();
                     } else {
                         throw new Error('Submission failed with status: ' + response.status);
@@ -1813,7 +1899,7 @@
             if (stepType === 'results') {
                 // Show loading state
                 ctaBtn.classList.add('loading');
-                ctaBtn.textContent = 'JOINING';
+                ctaBtn.textContent = 'OPENING CHECKOUT';
 
                 // Submit form and wait for response
                 submitForm()
@@ -1821,12 +1907,12 @@
                         // Redirect to landing page with data pre-filled
                         const email = encodeURIComponent(state.answers.email || '');
                         const name = encodeURIComponent(state.answers.name || '');
-                        window.location.href = `devdad-landing.html?from=quiz&email=${email}&name=${name}`;
+                        window.location.href = `devdad-landing.html?from=quiz&checkout=1&email=${email}&name=${name}`;
                     })
                     .catch((error) => {
                         // Error - remove loading state, user can try again
                         ctaBtn.classList.remove('loading');
-                        ctaBtn.textContent = 'JOIN WAITLIST';
+                        ctaBtn.textContent = 'GET FOUNDING MEMBER ACCESS - $47';
                     });
                 return;
             }
