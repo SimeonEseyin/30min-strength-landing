@@ -2,7 +2,7 @@
   "name": "devdad-strength",
   "version": "1.0.0",
   "private": true,
-  "dependencies": {
-    "stripe": "^16.0.0"
+  "scripts": {
+    "dev:local": "node local-dev-server.js"
   }
 }

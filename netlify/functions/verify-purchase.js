@@ -1,38 +1,43 @@
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { retrieveCheckoutSession } = require('./_stripe');
+const { json } = require('./_response');
+const { normalizeEmail, updateStore } = require('./_store');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
+    return json(405, { error: 'Method Not Allowed' });
   }
 
   let sessionId;
   try {
     ({ sessionId } = JSON.parse(event.body));
   } catch {
-    return { statusCode: 400, body: 'Invalid JSON' };
+    return json(400, { error: 'Invalid JSON' });
   }
 
   if (!sessionId || typeof sessionId !== 'string' || !sessionId.startsWith('cs_')) {
-    return { statusCode: 400, body: 'Invalid session ID' };
+    return json(400, { error: 'Invalid session ID' });
   }
 
   try {
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const session = await retrieveCheckoutSession(sessionId);
+    const email = normalizeEmail(session.customer_email || session.customer_details?.email || '');
 
-    if (session.payment_status === 'paid') {
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ verified: true, email: session.customer_email }),
-      };
+    if (session.payment_status === 'paid' && email) {
+      await updateStore(store => {
+        store.entitlements[email] = {
+          email,
+          source: 'stripe_checkout',
+          checkoutSessionId: session.id,
+          customerId: session.customer || '',
+          verifiedAt: new Date().toISOString(),
+        };
+      });
+
+      return json(200, { verified: true, email });
     }
 
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ verified: false }),
-    };
+    return json(200, { verified: false });
   } catch (err) {
-    return { statusCode: 400, body: JSON.stringify({ verified: false }) };
+    return json(400, { verified: false });
   }
 };

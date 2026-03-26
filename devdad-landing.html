@@ -178,6 +178,22 @@
       color: var(--text-muted);
     }
 
+    .hero-login {
+      margin-top: 16px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .hero-login a {
+      color: var(--text-primary);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .hero-login a:hover {
+      color: var(--accent);
+    }
+
     /* Section */
     .section {
       padding: 80px 20px;
@@ -712,6 +728,7 @@
       <nav class="header-nav">
         <a href="index.html">Home</a>
         <a href="quiz.html">Quiz</a>
+        <a href="/app">Already Purchased? Log In</a>
         <a href="#pricing" class="header-btn">Get Started</a>
       </nav>
     </div>
@@ -721,12 +738,13 @@
   <section class="hero">
     <div class="container">
       <h1>Build Strength in 30 Minutes.<br>While Your Kids Sleep.</h1>
-      <p class="subtitle">The proven 12-week system for engineer dads who don't have time for the gym</p>
+      <p class="subtitle">The proven 12-week system for busy dads who want structure, efficiency, and real results</p>
       <p class="description">
         You're juggling standups, deploys, diaper changes, and daycare drop-offs. 
         You don't need a 90-minute gym program. You need a system that works with your actual life.
       </p>
       <a href="#pricing" class="cta-primary">Get Founding Member Access — $47</a>
+      <p class="hero-login">Already purchased? <a href="/app">Log in here</a>.</p>
       <p class="trust-badge">✓ No gym required  ✓ Pause-friendly  ✓ Baby-proof</p>
     </div>
   </section>
@@ -793,7 +811,7 @@
         <div class="feature">
           <div class="icon">👨‍💻</div>
           <h3>Built for Engineers</h3>
-          <p>By an Oracle engineer with twins. Understands your schedule, your mindset, your life.</p>
+          <p>Built by an engineer dad who raised twins through the chaos. Structured for dads who want a system that fits real life.</p>
         </div>
       </div>
     </div>
@@ -823,6 +841,9 @@
             <span id="spots-remaining" style="color: var(--accent); font-weight: 700;">20 spots</span> remaining at this price
           </div>
           <button class="buy-btn" onclick="openCheckout()">Get Founding Member Access — $47</button>
+          <p style="margin-top: 16px; text-align: center; color: var(--text-secondary); font-size: 0.95rem;">
+            Already purchased? <a href="/app" style="color: var(--accent); font-weight: 700; text-decoration: none;">Open the app</a> and log in with your checkout email.
+          </p>
         </div>
       </div>
 
@@ -907,7 +928,7 @@
             <span>+</span>
           </div>
           <div class="faq-answer">
-            Absolutely! While it's designed for engineer dads, anyone who wants efficient, data-driven workouts will benefit. The principles work for anyone short on time.
+            Absolutely. It's positioned for engineering-minded dads, but the system works for any busy dad who wants efficient, structured training.
           </div>
         </div>
 
@@ -943,6 +964,7 @@
         The only difference between you now and you 12 weeks from now is the decision you make today.
       </p>
       <a href="#pricing" class="cta-primary">Get Founding Member Access — $47</a>
+      <p class="hero-login">Already purchased? <a href="/app">Log in here</a>.</p>
       <p class="trust-badge" style="margin-top: 20px;">✓ 30-day money-back guarantee  ✓ Lifetime access  ✓ One-time payment</p>
     </div>
   </section>
@@ -1011,12 +1033,17 @@
       const urlParams = new URLSearchParams(window.location.search);
       let quizEmail = urlParams.get('email') || localStorage.getItem('quizEmail');
       let quizName  = urlParams.get('name')  || localStorage.getItem('quizName');
+      const shouldOpenCheckout = urlParams.get('checkout') === '1';
 
       if (quizEmail || quizName) {
         window.quizEmail = quizEmail;
         window.quizName  = quizName;
         if (quizEmail) localStorage.setItem('quizEmail', quizEmail);
         if (quizName)  localStorage.setItem('quizName',  quizName);
+      }
+
+      if (shouldOpenCheckout) {
+        setTimeout(() => openCheckout(), 150);
       }
     });
 
@@ -1086,12 +1113,6 @@
         }
       });
     });
-
-    // Debug: Verify functions are loaded
-    console.log('✅ Landing page scripts loaded successfully');
-    console.log('openCheckout function:', typeof openCheckout);
-    console.log('closeCheckout function:', typeof closeCheckout);
-    console.log('processCheckout function:', typeof processCheckout);
   </script>
 </body>
 </html>
