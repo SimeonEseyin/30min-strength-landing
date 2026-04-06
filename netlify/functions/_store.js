@@ -1,15 +1,29 @@
 const fs = require('fs');
 const path = require('path');
+let getStore = null;
+
+try {
+  ({ getStore } = require('@netlify/blobs'));
+} catch {
+  getStore = null;
+}
 
 const rootDir = path.resolve(__dirname, '..', '..');
 const tempDataDir = path.join(process.env.TMPDIR || '/tmp', 'devdad-data');
+const STORE_BLOB_KEY = 'store';
+const STORE_NAMESPACE = 'devdad-data';
+const BLOB_WRITE_RETRIES = 5;
 
 function getPreferredDataDir() {
   if (process.env.DEVDAD_DATA_DIR) {
     return process.env.DEVDAD_DATA_DIR;
   }
 
-  const runningInServerless = Boolean(
+  return path.join(rootDir, '.mvp-data');
+}
+
+function isServerlessRuntime() {
+  return Boolean(
     process.env.NETLIFY ||
     process.env.AWS_LAMBDA_FUNCTION_NAME ||
     process.env.LAMBDA_TASK_ROOT ||
@@ -17,15 +31,25 @@ function getPreferredDataDir() {
     process.cwd().startsWith('/var/task') ||
     rootDir.startsWith('/var/task')
   );
+}
 
-  if (runningInServerless) {
-    return tempDataDir;
+function canUseNetlifyBlobs() {
+  return isServerlessRuntime() && typeof getStore === 'function';
+}
+
+function createBlobStore() {
+  if (!canUseNetlifyBlobs()) {
+    return null;
   }
 
-  return path.join(rootDir, '.mvp-data');
+  return getStore({
+    name: STORE_NAMESPACE,
+    consistency: 'strong',
+  });
 }
 
 const preferredDataDir = getPreferredDataDir();
+const blobStore = createBlobStore();
 let activeStoreFile = null;
 
 let writeChain = Promise.resolve();
@@ -127,6 +151,21 @@ function mergeDefaults(store) {
 }
 
 async function readStore() {
+  if (blobStore) {
+    try {
+      const store = await blobStore.get(STORE_BLOB_KEY, {
+        type: 'json',
+        consistency: 'strong',
+      });
+      return mergeDefaults(store || defaultStore());
+    } catch (error) {
+      if (isRecoverableStoreError(error)) {
+        return mergeDefaults(defaultStore());
+      }
+      throw error;
+    }
+  }
+
   const storeFile = ensureStoreFile();
   const raw = await fs.promises.readFile(storeFile, 'utf8');
   try {
@@ -137,12 +176,37 @@ async function readStore() {
 }
 
 async function writeStore(store) {
+  if (blobStore) {
+    await blobStore.setJSON(STORE_BLOB_KEY, mergeDefaults(store));
+    return;
+  }
+
   const storeFile = ensureStoreFile();
   await fs.promises.writeFile(storeFile, JSON.stringify(mergeDefaults(store), null, 2));
 }
 
 async function updateStore(mutator) {
   writeChain = writeChain.then(async () => {
+    if (blobStore) {
+      for (let attempt = 0; attempt < BLOB_WRITE_RETRIES; attempt++) {
+        const existing = await blobStore.getWithMetadata(STORE_BLOB_KEY, {
+          consistency: 'strong',
+          type: 'json',
+        });
+        const store = mergeDefaults(existing?.data || defaultStore());
+        const result = await mutator(store);
+        const writeResult = existing
+          ? await blobStore.setJSON(STORE_BLOB_KEY, store, { onlyIfMatch: existing.etag })
+          : await blobStore.setJSON(STORE_BLOB_KEY, store, { onlyIfNew: true });
+
+        if (writeResult.modified) {
+          return result;
+        }
+      }
+
+      throw new Error('Store write conflict. Please retry.');
+    }
+
     const store = await readStore();
     const result = await mutator(store);
     await writeStore(store);

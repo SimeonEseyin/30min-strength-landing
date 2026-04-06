@@ -5354,6 +5354,7 @@
       function ProfileScreen() {
         const actualWorkoutCount = getActualWorkoutCount();
         const fileInputRef = React.useRef(null);
+        const accountEmail = currentUser?.email || email || '';
         // Real streak: consecutive calendar days with at least one completed workout
         const calculateStreak = () => {
           const completed = Object.values(workoutFeedback).filter(f => f.feedback !== 'skipped' && f.date);
@@ -5588,7 +5589,7 @@
               <div className="section-label">ACCOUNT</div>
               <button className="surface-row">
                 <span className="font-semibold">Email</span>
-                <span className="text-gray-400 text-sm">{email || 'user@example.com'}</span>
+                <span className="text-gray-400 text-sm">{accountEmail || 'user@example.com'}</span>
               </button>
 
               <button className="btn-secondary text-orange-300 mt-6 bg-[#2A2A2A] hover:bg-[grey]" onClick={handleLogout}>
