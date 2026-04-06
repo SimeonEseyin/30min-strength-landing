@@ -1,5 +1,6 @@
 const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
 const { normalizeEmail, readStore, updateStore } = require('./_store');
+const { restoreStripeEntitlementByEmail } = require('./_entitlements');
 const {
   sanitizeName,
   validateEmail,
@@ -79,7 +80,14 @@ exports.handler = async (event) => {
   clearRateLimit(event, normalizedEmail, 'signup');
   const session = await createSession(normalizedEmail);
   const store = await readStore();
-  const hasPurchased = Boolean(store.entitlements[normalizedEmail]);
+  let hasPurchased = Boolean(store.entitlements[normalizedEmail]);
+  if (!hasPurchased) {
+    try {
+      hasPurchased = await restoreStripeEntitlementByEmail(normalizedEmail);
+    } catch {
+      hasPurchased = false;
+    }
+  }
 
   return json(200, {
     user: publicUser(createdUser, hasPurchased, session.expiresAt),
