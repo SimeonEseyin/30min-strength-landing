@@ -2,8 +2,31 @@ const fs = require('fs');
 const path = require('path');
 
 const rootDir = path.resolve(__dirname, '..', '..');
-const dataDir = process.env.DEVDAD_DATA_DIR || path.join(rootDir, '.mvp-data');
-const storeFile = path.join(dataDir, 'store.json');
+const tempDataDir = path.join(process.env.TMPDIR || '/tmp', 'devdad-data');
+
+function getPreferredDataDir() {
+  if (process.env.DEVDAD_DATA_DIR) {
+    return process.env.DEVDAD_DATA_DIR;
+  }
+
+  const runningInServerless = Boolean(
+    process.env.NETLIFY ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME ||
+    process.env.LAMBDA_TASK_ROOT ||
+    __dirname.startsWith('/var/task') ||
+    process.cwd().startsWith('/var/task') ||
+    rootDir.startsWith('/var/task')
+  );
+
+  if (runningInServerless) {
+    return tempDataDir;
+  }
+
+  return path.join(rootDir, '.mvp-data');
+}
+
+const preferredDataDir = getPreferredDataDir();
+let activeStoreFile = null;
 
 let writeChain = Promise.resolve();
 
@@ -49,13 +72,40 @@ function defaultStore() {
   };
 }
 
-function ensureStoreFile() {
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
+function isRecoverableStoreError(error) {
+  return Boolean(error && ['ENOENT', 'EACCES', 'EPERM', 'EROFS'].includes(error.code));
+}
+
+function ensureStoreFileForDir(dataDir) {
+  fs.mkdirSync(dataDir, { recursive: true });
+  const storeFile = path.join(dataDir, 'store.json');
   if (!fs.existsSync(storeFile)) {
     fs.writeFileSync(storeFile, JSON.stringify(defaultStore(), null, 2));
   }
+  return storeFile;
+}
+
+function ensureStoreFile() {
+  if (activeStoreFile && fs.existsSync(activeStoreFile)) {
+    return activeStoreFile;
+  }
+
+  const candidates = [...new Set([preferredDataDir, tempDataDir])];
+  let lastError = null;
+
+  for (const candidate of candidates) {
+    try {
+      activeStoreFile = ensureStoreFileForDir(candidate);
+      return activeStoreFile;
+    } catch (error) {
+      lastError = error;
+      if (!isRecoverableStoreError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError;
 }
 
 function normalizeEmail(email) {
@@ -77,7 +127,7 @@ function mergeDefaults(store) {
 }
 
 async function readStore() {
-  ensureStoreFile();
+  const storeFile = ensureStoreFile();
   const raw = await fs.promises.readFile(storeFile, 'utf8');
   try {
     return mergeDefaults(JSON.parse(raw));
@@ -87,7 +137,7 @@ async function readStore() {
 }
 
 async function writeStore(store) {
-  ensureStoreFile();
+  const storeFile = ensureStoreFile();
   await fs.promises.writeFile(storeFile, JSON.stringify(mergeDefaults(store), null, 2));
 }
 
