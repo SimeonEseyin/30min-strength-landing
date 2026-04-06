@@ -8,6 +8,7 @@
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#f97316">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <link rel="apple-touch-icon" sizes="96x96" href="/icons/favicon-96x96.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -121,6 +122,22 @@
         .nav-cta:hover {
             background: var(--accent);
             color: var(--bg-primary);
+        }
+
+        .install-note {
+            margin-top: 16px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .install-note button {
+            background: none;
+            border: 0;
+            color: var(--accent);
+            cursor: pointer;
+            font: inherit;
+            font-weight: 700;
+            padding: 0;
         }
 
         /* Hero Section */
@@ -1131,6 +1148,7 @@
             <nav style="display: flex; gap: 16px; align-items: center;">
                 <a href="devdad-landing.html" style="color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">Pricing</a>
                 <a href="/app" style="color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">Open App</a>
+                <button type="button" id="installAppButton" class="nav-cta">Install App</button>
                 <a href="devdad-landing.html" class="nav-cta">Get Access</a>
             </nav>
         </div>
@@ -1155,6 +1173,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
                 </a>
+                <p class="install-note">
+                    Prefer an app experience? <button type="button" id="installAppLink">Install DevDad on your phone</button>.
+                </p>
             </div>
             <div class="hero-visual">
                 <div class="hero-video-container">
@@ -1414,6 +1435,63 @@
 </footer>
 
 <script>
+        let deferredInstallPrompt = null;
+        const installButton = document.getElementById('installAppButton');
+        const installLink = document.getElementById('installAppLink');
+
+        function getInstallInstructions() {
+            const userAgent = navigator.userAgent || '';
+            const platform = navigator.platform || '';
+            const isIOS = /iphone|ipad|ipod/i.test(userAgent) || (/mac/i.test(platform) && navigator.maxTouchPoints > 1);
+            const isAndroid = /android/i.test(userAgent);
+            const isEdge = /edg/i.test(userAgent);
+            const isChrome = /chrome|crios/i.test(userAgent) && !isEdge;
+            const isSafari = /safari/i.test(userAgent) && !isChrome && !isEdge && !/android/i.test(userAgent);
+
+            if (isIOS) return 'Safari: tap Share, then Add to Home Screen.';
+            if (isAndroid) return 'Open the browser menu, then tap Install app or Add to Home screen.';
+            if (isSafari) return 'Safari: use File -> Add to Dock.';
+            if (isChrome || isEdge) return 'Use the install icon in the address bar or the browser menu.';
+            return 'Use your browser install or add-to-home-screen option.';
+        }
+
+        async function installApp() {
+            if (window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+                window.location.href = '/app';
+                return;
+            }
+
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                try {
+                    await deferredInstallPrompt.userChoice;
+                } catch (error) {
+                }
+                deferredInstallPrompt = null;
+                return;
+            }
+
+            window.alert(getInstallInstructions());
+        }
+
+        [installButton, installLink].forEach((element) => {
+            if (!element) return;
+            element.addEventListener('click', installApp);
+        });
+
+        window.addEventListener('beforeinstallprompt', (event) => {
+            event.preventDefault();
+            deferredInstallPrompt = event;
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+        });
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
+
         // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {

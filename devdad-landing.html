@@ -4,6 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DevDad Strength - The 30-Minute Strength System for Engineer Dads</title>
+  <meta name="description" content="Downloadable 30-minute strength system for busy dads. Install DevDad on your phone and train with a structured 12-week program.">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#f97316">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="DevDad">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="DevDad Strength">
+  <meta name="msapplication-TileImage" content="/icons/web-app-manifest-192x192.png">
+  <meta name="msapplication-config" content="/browserconfig.xml">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="96x96" href="/icons/favicon-96x96.png">
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -120,6 +132,22 @@
     .header-btn:hover {
       background: var(--accent);
       color: white;
+    }
+
+    .install-note {
+      margin-top: 18px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .install-note button {
+      background: none;
+      border: 0;
+      color: var(--accent);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      padding: 0;
     }
 
     /* Hero Section */
@@ -729,6 +757,7 @@
         <a href="index.html">Home</a>
         <a href="quiz.html">Quiz</a>
         <a href="/app">Already Purchased? Log In</a>
+        <button type="button" id="installAppButton" class="header-btn">Install App</button>
         <a href="#pricing" class="header-btn">Get Started</a>
       </nav>
     </div>
@@ -744,6 +773,7 @@
         You don't need a 90-minute gym program. You need a system that works with your actual life.
       </p>
       <a href="#pricing" class="cta-primary">Get Founding Member Access — $47</a>
+      <p class="install-note">Want this to feel like a real app? <button type="button" id="installAppLink">Install DevDad on your phone</button>.</p>
       <p class="hero-login">Already purchased? <a href="/app">Log in here</a>.</p>
       <p class="trust-badge">✓ No gym required  ✓ Pause-friendly  ✓ Baby-proof</p>
     </div>
@@ -1028,6 +1058,63 @@
   </div>
 
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    let deferredInstallPrompt = null;
+    const installButton = document.getElementById('installAppButton');
+    const installLink = document.getElementById('installAppLink');
+
+    function getInstallInstructions() {
+      const userAgent = navigator.userAgent || '';
+      const platform = navigator.platform || '';
+      const isIOS = /iphone|ipad|ipod/i.test(userAgent) || (/mac/i.test(platform) && navigator.maxTouchPoints > 1);
+      const isAndroid = /android/i.test(userAgent);
+      const isEdge = /edg/i.test(userAgent);
+      const isChrome = /chrome|crios/i.test(userAgent) && !isEdge;
+      const isSafari = /safari/i.test(userAgent) && !isChrome && !isEdge && !/android/i.test(userAgent);
+
+      if (isIOS) return 'Safari: tap Share, then Add to Home Screen.';
+      if (isAndroid) return 'Open the browser menu, then tap Install app or Add to Home screen.';
+      if (isSafari) return 'Safari: use File -> Add to Dock.';
+      if (isChrome || isEdge) return 'Use the install icon in the address bar or the browser menu.';
+      return 'Use your browser install or add-to-home-screen option.';
+    }
+
+    async function installApp() {
+      if (window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+        window.location.href = '/app';
+        return;
+      }
+
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        try {
+          await deferredInstallPrompt.userChoice;
+        } catch (error) {
+        }
+        deferredInstallPrompt = null;
+        return;
+      }
+
+      window.alert(getInstallInstructions());
+    }
+
+    [installButton, installLink].forEach((element) => {
+      if (!element) return;
+      element.addEventListener('click', installApp);
+    });
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredInstallPrompt = null;
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+
     // Pre-fill checkout from quiz URL params
     window.addEventListener('DOMContentLoaded', function() {
       const urlParams = new URLSearchParams(window.location.search);

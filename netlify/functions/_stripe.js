@@ -72,6 +72,14 @@ async function retrieveCheckoutSession(sessionId) {
   return stripeRequest(`/checkout/sessions/${encodeURIComponent(sessionId)}`);
 }
 
+async function retrievePaymentIntent(paymentIntentId) {
+  return stripeRequest(`/payment_intents/${encodeURIComponent(paymentIntentId)}`, {
+    query: {
+      'expand[0]': 'latest_charge',
+    },
+  });
+}
+
 async function listCheckoutSessions(limit = 100, startingAfter = null) {
   return stripeRequest('/checkout/sessions', {
     query: {
@@ -113,6 +121,7 @@ async function listCheckoutSessionsByEmail(email, limit = 100, maxPages = 10) {
 module.exports = {
   createCheckoutSession,
   retrieveCheckoutSession,
+  retrievePaymentIntent,
   listCheckoutSessions,
   listCheckoutSessionsByEmail,
 };
