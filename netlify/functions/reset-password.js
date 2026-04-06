@@ -1,6 +1,7 @@
 const { listCheckoutSessionsByEmail, retrievePaymentIntent } = require('./_stripe');
 const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
 const { normalizeEmail, readStore, updateStore } = require('./_store');
+const { persistStripeEntitlement } = require('./_entitlements');
 const {
   validateEmail,
   validatePassword,
@@ -66,6 +67,7 @@ exports.handler = async (event) => {
   }
 
   let verifiedPurchase = false;
+  let matchedCheckoutSession = null;
   try {
     const checkoutSessions = await listCheckoutSessionsByEmail(normalizedEmail, 100);
     for (const session of checkoutSessions.data || []) {
@@ -74,6 +76,7 @@ exports.handler = async (event) => {
       const paymentIntent = await retrievePaymentIntent(session.payment_intent);
       if (getCardLast4(paymentIntent) === normalizedCardLast4) {
         verifiedPurchase = true;
+        matchedCheckoutSession = session;
         break;
       }
     }
@@ -106,6 +109,10 @@ exports.handler = async (event) => {
 
     return { ...user };
   });
+
+  if (verifiedPurchase && matchedCheckoutSession) {
+    await persistStripeEntitlement(normalizedEmail, matchedCheckoutSession, 'stripe_password_reset_restore');
+  }
 
   clearRateLimit(event, normalizedEmail, 'password-reset');
   const session = await createSession(normalizedEmail);

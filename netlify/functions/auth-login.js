@@ -1,5 +1,6 @@
 const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
 const { normalizeEmail, readStore, updateStore } = require('./_store');
+const { restoreStripeEntitlementByEmail } = require('./_entitlements');
 const {
   validateEmail,
   checkRateLimit,
@@ -57,8 +58,17 @@ exports.handler = async (event) => {
   });
 
   const session = await createSession(normalizedEmail);
+  let hasPurchased = Boolean(store.entitlements[normalizedEmail]);
+  if (!hasPurchased) {
+    try {
+      hasPurchased = await restoreStripeEntitlementByEmail(normalizedEmail);
+    } catch {
+      hasPurchased = false;
+    }
+  }
+
   return json(200, {
-    user: publicUser(user, Boolean(store.entitlements[normalizedEmail]), session.expiresAt),
+    user: publicUser(user, hasPurchased, session.expiresAt),
   }, {
     'Set-Cookie': session.cookie,
   });
