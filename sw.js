@@ -45,6 +45,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/.netlify/functions/')) return;
+  if (url.pathname.startsWith('/cdn-cgi/')) return;
 
   if (request.mode === 'navigate') {
     const shouldCacheNavigation = !url.search;
@@ -53,6 +54,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
+          if (!response.ok || response.type === 'opaque') {
+            return response;
+          }
+
           if (shouldCacheNavigation) {
             const clone = response.clone();
             caches.open(CACHE_VERSION).then((cache) => cache.put(cacheKey, clone)).catch(() => {});
@@ -77,6 +82,10 @@ self.addEventListener('fetch', (event) => {
     caches.match(request).then(async (cached) => {
       const networkPromise = fetch(request)
         .then((response) => {
+          if (!response.ok || response.type === 'opaque') {
+            return response;
+          }
+
           const clone = response.clone();
           caches.open(CACHE_VERSION).then((cache) => cache.put(request, clone)).catch(() => {});
           return response;
