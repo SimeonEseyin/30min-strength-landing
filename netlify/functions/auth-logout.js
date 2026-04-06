@@ -1,4 +1,5 @@
 const { json, hasTrustedOrigin } = require('./_response');
+const { getPublicStoreError } = require('./_store');
 const { destroySession } = require('./_auth');
 
 exports.handler = async (event) => {
@@ -10,7 +11,14 @@ exports.handler = async (event) => {
     return json(403, { error: 'Forbidden' });
   }
 
-  const cookie = await destroySession(event);
+  let cookie;
+  try {
+    cookie = await destroySession(event);
+  } catch (error) {
+    const publicError = getPublicStoreError(error);
+    return json(publicError.statusCode || 500, { error: publicError.message || 'Logout failed. Please try again.' });
+  }
+
   return json(200, { ok: true }, {
     'Set-Cookie': cookie,
   });

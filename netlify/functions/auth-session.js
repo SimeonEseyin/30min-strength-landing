@@ -1,4 +1,5 @@
 const { json } = require('./_response');
+const { getPublicStoreError } = require('./_store');
 const { getSession, publicUser } = require('./_auth');
 const { restoreStripeEntitlementByEmail } = require('./_entitlements');
 
@@ -7,7 +8,14 @@ exports.handler = async (event) => {
     return json(405, { error: 'Method Not Allowed' });
   }
 
-  const session = await getSession(event);
+  let session;
+  try {
+    session = await getSession(event);
+  } catch (error) {
+    const publicError = getPublicStoreError(error);
+    return json(publicError.statusCode || 500, { error: publicError.message || 'Session check failed.' });
+  }
+
   if (!session) {
     return json(200, { user: null });
   }
