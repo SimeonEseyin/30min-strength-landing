@@ -1,10 +1,20 @@
 const { createCheckoutSession } = require('./_stripe');
+const { hasTrustedOrigin } = require('./_response');
+const { checkRateLimit, clearRateLimit } = require('./_auth');
 
 const PRICE_CENTS = 4700; // $47 — founding member price
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
+  }
+
+  if (!hasTrustedOrigin(event)) {
+    return {
+      statusCode: 403,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Forbidden' }),
+    };
   }
 
   let email, name;
@@ -17,6 +27,15 @@ exports.handler = async (event) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!email || typeof email !== 'string' || !emailRegex.test(email) || email.length > 254) {
     return { statusCode: 400, body: 'Invalid email' };
+  }
+
+  const rateLimit = checkRateLimit(event, email, 'checkout');
+  if (!rateLimit.allowed) {
+    return {
+      statusCode: 429,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: rateLimit.message }),
+    };
   }
 
   // Sanitize name: strip tags, limit length
@@ -33,6 +52,7 @@ exports.handler = async (event) => {
       cancelUrl: `${process.env.URL}/devdad-landing.html?cancelled=true`,
     });
 
+    clearRateLimit(event, email, 'checkout');
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },

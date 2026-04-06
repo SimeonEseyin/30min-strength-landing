@@ -38,14 +38,14 @@ function validatePassword(password) {
   return errors.length ? `Password must contain ${errors.join(', ')}` : null;
 }
 
-function getClientKey(event, email) {
+function getClientKey(event, email, scope = 'auth') {
   const forwardedFor = event.headers?.['x-forwarded-for'] || event.headers?.['X-Forwarded-For'] || 'unknown';
-  return `${forwardedFor.split(',')[0].trim()}::${normalizeEmail(email)}`;
+  return `${scope}::${forwardedFor.split(',')[0].trim()}::${normalizeEmail(email)}`;
 }
 
-function checkRateLimit(event, email) {
+function checkRateLimit(event, email, scope = 'auth') {
   const now = Date.now();
-  const key = getClientKey(event, email);
+  const key = getClientKey(event, email, scope);
   const existing = loginAttempts.get(key);
 
   if (!existing || now - existing.firstAttempt > 15 * 60 * 1000) {
@@ -68,8 +68,8 @@ function checkRateLimit(event, email) {
   return { allowed: true };
 }
 
-function clearRateLimit(event, email) {
-  loginAttempts.delete(getClientKey(event, email));
+function clearRateLimit(event, email, scope = 'auth') {
+  loginAttempts.delete(getClientKey(event, email, scope));
 }
 
 function randomToken() {

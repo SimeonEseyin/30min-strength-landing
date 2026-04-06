@@ -44,9 +44,44 @@ function serializeCookie(name, value, options = {}) {
   return parts.join('; ');
 }
 
+function getTrustedOrigin(event) {
+  if (process.env.URL) {
+    return process.env.URL;
+  }
+
+  const proto = event.headers?.['x-forwarded-proto'] || event.headers?.['X-Forwarded-Proto'] || 'https';
+  const host = event.headers?.['x-forwarded-host'] || event.headers?.['X-Forwarded-Host'] || event.headers?.host || event.headers?.Host;
+  if (!host) return '';
+
+  return `${proto}://${host}`;
+}
+
+function hasTrustedOrigin(event) {
+  const trustedOrigin = getTrustedOrigin(event);
+  if (!trustedOrigin) return false;
+
+  const origin = event.headers?.origin || event.headers?.Origin || '';
+  const referer = event.headers?.referer || event.headers?.Referer || '';
+
+  if (origin) {
+    return origin === trustedOrigin;
+  }
+
+  if (referer) {
+    try {
+      return new URL(referer).origin === trustedOrigin;
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+}
+
 module.exports = {
   json,
   parseJsonBody,
   parseCookies,
   serializeCookie,
+  hasTrustedOrigin,
 };

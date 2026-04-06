@@ -2318,19 +2318,22 @@
 
           if (sessionId && sessionId.startsWith('cs_')) {
             try {
+              checkoutEmail = sessionStorage.getItem('checkoutEmail') || '';
               const purchaseResult = await apiRequest('/.netlify/functions/verify-purchase', {
                 method: 'POST',
                 body: JSON.stringify({ sessionId })
               });
 
               checkoutVerified = Boolean(purchaseResult.verified);
-              checkoutEmail = purchaseResult.email || '';
 
               if (!cancelled && checkoutVerified) {
                 setHasPurchased(true);
-                setEmail(checkoutEmail);
-                setLoginEmail(checkoutEmail);
+                if (checkoutEmail) {
+                  setEmail(checkoutEmail);
+                  setLoginEmail(checkoutEmail);
+                }
                 setSuccess('Purchase confirmed. Create your account or log in with this email to unlock the app.');
+                sessionStorage.removeItem('checkoutEmail');
               }
             } catch (error) {
             }
@@ -2749,6 +2752,18 @@
         } catch (error) {
           setError(error.message || 'Login failed. Please try again.');
         }
+      };
+
+      const handlePurchaseAccess = () => {
+        const normalizedEmail = sanitizeInput(email.toLowerCase().trim());
+        const query = new URLSearchParams();
+
+        if (validateEmail(normalizedEmail)) {
+          query.set('email', normalizedEmail);
+        }
+        query.set('checkout', '1');
+
+        window.location.href = `/devdad-landing.html?${query.toString()}`;
       };
 
       const handlePasswordReset = async () => {
@@ -3517,6 +3532,10 @@
 
                 <button className="nav-cta mb-3" onClick={handleSignup}>
                   Create Account
+                </button>
+
+                <button className="btn-secondary mb-3" onClick={handlePurchaseAccess}>
+                  Need Access First? Buy Now
                 </button>
 
                 <p className="text-xs text-center text-gray-500 mt-4">

@@ -1,4 +1,4 @@
-const { json, parseJsonBody } = require('./_response');
+const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
 const { normalizeEmail, readStore, updateStore } = require('./_store');
 const {
   validateEmail,
@@ -12,6 +12,10 @@ const {
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return json(405, { error: 'Method Not Allowed' });
+  }
+
+  if (!hasTrustedOrigin(event)) {
+    return json(403, { error: 'Forbidden' });
   }
 
   let email;
@@ -28,7 +32,7 @@ exports.handler = async (event) => {
     return json(400, { error: 'Invalid email format' });
   }
 
-  const rateLimit = checkRateLimit(event, normalizedEmail);
+  const rateLimit = checkRateLimit(event, normalizedEmail, 'login');
   if (!rateLimit.allowed) {
     return json(429, { error: rateLimit.message });
   }
@@ -44,7 +48,7 @@ exports.handler = async (event) => {
     return json(401, { error: 'Invalid email or password' });
   }
 
-  clearRateLimit(event, normalizedEmail);
+  clearRateLimit(event, normalizedEmail, 'login');
   await updateStore(nextStore => {
     if (nextStore.users[normalizedEmail]) {
       nextStore.users[normalizedEmail].updatedAt = new Date().toISOString();

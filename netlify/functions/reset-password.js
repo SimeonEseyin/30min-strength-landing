@@ -1,9 +1,11 @@
 const { listCheckoutSessionsByEmail, retrievePaymentIntent } = require('./_stripe');
-const { json, parseJsonBody } = require('./_response');
+const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
 const { normalizeEmail, readStore, updateStore } = require('./_store');
 const {
   validateEmail,
   validatePassword,
+  checkRateLimit,
+  clearRateLimit,
   hashPassword,
   createSession,
   publicUser,
@@ -16,6 +18,10 @@ function getCardLast4(paymentIntent) {
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return json(405, { error: 'Method Not Allowed' });
+  }
+
+  if (!hasTrustedOrigin(event)) {
+    return json(403, { error: 'Forbidden' });
   }
 
   let email;
@@ -32,6 +38,11 @@ exports.handler = async (event) => {
   const normalizedEmail = normalizeEmail(email);
   if (!validateEmail(normalizedEmail)) {
     return json(400, { error: 'Please enter a valid email address' });
+  }
+
+  const rateLimit = checkRateLimit(event, normalizedEmail, 'password-reset');
+  if (!rateLimit.allowed) {
+    return json(429, { error: rateLimit.message });
   }
 
   const normalizedCardLast4 = String(cardLast4 || '').replace(/\D/g, '').slice(-4);
@@ -51,7 +62,7 @@ exports.handler = async (event) => {
   const store = await readStore();
   const existingUser = store.users[normalizedEmail];
   if (!existingUser) {
-    return json(404, { error: 'No account found for this email. Create an account instead.' });
+    return json(401, { error: 'We could not verify that purchase. Check the email and card last 4.' });
   }
 
   let verifiedPurchase = false;
@@ -78,8 +89,8 @@ exports.handler = async (event) => {
   const updatedUser = await updateStore(nextStore => {
     const user = nextStore.users[normalizedEmail];
     if (!user) {
-      const error = new Error('No account found for this email. Create an account instead.');
-      error.statusCode = 404;
+      const error = new Error('We could not verify that purchase. Check the email and card last 4.');
+      error.statusCode = 401;
       throw error;
     }
 
@@ -96,6 +107,7 @@ exports.handler = async (event) => {
     return { ...user };
   });
 
+  clearRateLimit(event, normalizedEmail, 'password-reset');
   const session = await createSession(normalizedEmail);
   return json(200, {
     user: publicUser(updatedUser, Boolean(store.entitlements[normalizedEmail]) || verifiedPurchase, session.expiresAt),

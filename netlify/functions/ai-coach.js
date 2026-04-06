@@ -1,4 +1,5 @@
-const { json, parseJsonBody } = require('./_response');
+const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
+const { getSession, checkRateLimit, clearRateLimit } = require('./_auth');
 
 function roundToIncrement(value, increment) {
   return Math.round(value / increment) * increment;
@@ -230,6 +231,24 @@ exports.handler = async (event) => {
     return json(405, { error: 'Method Not Allowed' });
   }
 
+  if (!hasTrustedOrigin(event)) {
+    return json(403, { error: 'Forbidden' });
+  }
+
+  const session = await getSession(event);
+  if (!session) {
+    return json(401, { error: 'Unauthorized' });
+  }
+
+  const rateLimit = checkRateLimit(event, session.email, 'ai-coach');
+  if (!rateLimit.allowed) {
+    return json(429, { error: rateLimit.message });
+  }
+
+  if (String(event.body || '').length > 50_000) {
+    return json(413, { error: 'Payload too large' });
+  }
+
   let snapshot;
   try {
     ({ snapshot } = parseJsonBody(event));
@@ -245,6 +264,7 @@ exports.handler = async (event) => {
 
   try {
     const coach = await createOpenAICoach(snapshot, fallback);
+    clearRateLimit(event, session.email, 'ai-coach');
     return json(200, { coach });
   } catch (error) {
     return json(200, {

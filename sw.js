@@ -47,15 +47,20 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/.netlify/functions/')) return;
 
   if (request.mode === 'navigate') {
+    const shouldCacheNavigation = !url.search;
+    const cacheKey = shouldCacheNavigation ? request : url.pathname;
+
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_VERSION).then((cache) => cache.put(request, clone)).catch(() => {});
+          if (shouldCacheNavigation) {
+            const clone = response.clone();
+            caches.open(CACHE_VERSION).then((cache) => cache.put(cacheKey, clone)).catch(() => {});
+          }
           return response;
         })
         .catch(async () => {
-          const cached = await caches.match(request);
+          const cached = await caches.match(cacheKey);
           if (cached) return cached;
           return (await caches.match(APP_SHELL)) || caches.match('/app');
         })
