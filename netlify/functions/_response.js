@@ -44,11 +44,7 @@ function serializeCookie(name, value, options = {}) {
   return parts.join('; ');
 }
 
-function getTrustedOrigin(event) {
-  if (process.env.URL) {
-    return process.env.URL;
-  }
-
+function getRequestOrigin(event) {
   const proto = event.headers?.['x-forwarded-proto'] || event.headers?.['X-Forwarded-Proto'] || 'https';
   const host = event.headers?.['x-forwarded-host'] || event.headers?.['X-Forwarded-Host'] || event.headers?.host || event.headers?.Host;
   if (!host) return '';
@@ -56,20 +52,28 @@ function getTrustedOrigin(event) {
   return `${proto}://${host}`;
 }
 
+function getTrustedOrigins(event) {
+  return [
+    process.env.URL,
+    process.env.DEPLOY_PRIME_URL,
+    getRequestOrigin(event),
+  ].filter(Boolean);
+}
+
 function hasTrustedOrigin(event) {
-  const trustedOrigin = getTrustedOrigin(event);
-  if (!trustedOrigin) return true;
+  const trustedOrigins = getTrustedOrigins(event);
+  if (trustedOrigins.length === 0) return true;
 
   const origin = event.headers?.origin || event.headers?.Origin || '';
   const referer = event.headers?.referer || event.headers?.Referer || '';
 
   if (origin) {
-    return origin === trustedOrigin;
+    return trustedOrigins.includes(origin);
   }
 
   if (referer) {
     try {
-      return new URL(referer).origin === trustedOrigin;
+      return trustedOrigins.includes(new URL(referer).origin);
     } catch {
       return false;
     }
@@ -83,5 +87,6 @@ module.exports = {
   parseJsonBody,
   parseCookies,
   serializeCookie,
+  getRequestOrigin,
   hasTrustedOrigin,
 };
