@@ -1,12 +1,21 @@
-const CACHE_VERSION = 'devdad-shell-v1';
+const CACHE_VERSION = 'devdad-shell-v2';
+const APP_SHELL = '/devdad-app-v2-enhanced.html';
 const CORE_ASSETS = [
+  '/',
+  '/index.html',
+  '/devdad-landing.html',
   '/app',
-  '/devdad-app-v2-enhanced.html',
+  APP_SHELL,
+  '/quiz.html',
+  '/privacy.html',
+  '/terms.html',
   '/manifest.json',
+  '/icons/site.webmanifest',
   '/icons/apple-touch-icon.png',
   '/icons/favicon-96x96.png',
   '/icons/web-app-manifest-192x192.png',
   '/icons/web-app-manifest-512x512.png',
+  '/site-images/pushup.JPG',
 ];
 
 self.addEventListener('install', (event) => {
@@ -48,7 +57,7 @@ self.addEventListener('fetch', (event) => {
         .catch(async () => {
           const cached = await caches.match(request);
           if (cached) return cached;
-          return caches.match('/app');
+          return (await caches.match(APP_SHELL)) || caches.match('/app');
         })
     );
     return;

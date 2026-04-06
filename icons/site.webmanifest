@@ -1,6 +1,9 @@
 {
+  "id": "/app",
+  "lang": "en-US",
   "name": "DevDad Strength",
   "short_name": "DevDad",
+  "description": "12-week progressive strength program built for busy dads who want a real system in 30 minutes.",
   "start_url": "/app",
   "scope": "/",
   "icons": [
@@ -8,16 +11,18 @@
       "src": "/icons/web-app-manifest-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     },
     {
       "src": "/icons/web-app-manifest-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ],
   "theme_color": "#f97316",
   "background_color": "#0a0a0a",
-  "display": "standalone"
+  "display": "standalone",
+  "orientation": "portrait",
+  "prefer_related_applications": false
 }

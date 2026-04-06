@@ -1912,6 +1912,10 @@
       const [confirmPassword, setConfirmPassword] = useState('');
       const [loginEmail, setLoginEmail] = useState('');
       const [loginPassword, setLoginPassword] = useState('');
+      const [resetEmail, setResetEmail] = useState('');
+      const [resetCardLast4, setResetCardLast4] = useState('');
+      const [resetPassword, setResetPassword] = useState('');
+      const [resetConfirmPassword, setResetConfirmPassword] = useState('');
       const [isLoggedIn, setIsLoggedIn] = useState(false);
       const [currentUser, setCurrentUser] = useState(null);
       const [error, setError] = useState('');
@@ -2747,6 +2751,74 @@
         }
       };
 
+      const handlePasswordReset = async () => {
+        setError('');
+        setSuccess('');
+
+        if (!resetEmail || !resetCardLast4 || !resetPassword || !resetConfirmPassword) {
+          setError('Please fill in all fields');
+          return;
+        }
+
+        const normalizedEmail = sanitizeInput(resetEmail.toLowerCase().trim());
+        if (!validateEmail(normalizedEmail)) {
+          setError('Please enter a valid email address');
+          return;
+        }
+
+        const normalizedCardLast4 = String(resetCardLast4 || '').replace(/\D/g, '').slice(-4);
+        if (!/^\d{4}$/.test(normalizedCardLast4)) {
+          setError('Enter the last 4 digits of the card used at checkout');
+          return;
+        }
+
+        const passwordError = validatePassword(resetPassword);
+        if (passwordError) {
+          setError(passwordError);
+          return;
+        }
+
+        if (resetPassword !== resetConfirmPassword) {
+          setError('New passwords do not match');
+          return;
+        }
+
+        try {
+          const result = await apiRequest('/.netlify/functions/reset-password', {
+            method: 'POST',
+            body: JSON.stringify({
+              email: normalizedEmail,
+              cardLast4: normalizedCardLast4,
+              newPassword: resetPassword,
+              confirmNewPassword: resetConfirmPassword
+            })
+          });
+
+          hydrationReady.current = false;
+          setCurrentUser(result.user);
+          setIsLoggedIn(true);
+          setEmail(result.user.email);
+          setHasPurchased(Boolean(result.user.hasPurchased));
+          const { daysSince } = await loadUserData(result.user.email);
+
+          setSuccess(result.message || 'Password reset successfully!');
+          setLoginEmail(result.user.email);
+          setLoginPassword('');
+          setResetEmail('');
+          setResetCardLast4('');
+          setResetPassword('');
+          setResetConfirmPassword('');
+
+          setTimeout(() => {
+            setScreen(daysSince >= 3 ? 'welcome-back' : 'home');
+            setError('');
+            setSuccess('');
+          }, 800);
+        } catch (error) {
+          setError(error.message || 'Password reset failed. Please try again.');
+        }
+      };
+
       // Handle user logout
       async function handleLogout() {
         const shouldLogout = typeof window !== 'undefined' && typeof window.confirm === 'function'
@@ -2773,6 +2845,10 @@
         setConfirmPassword('');
         setLoginEmail('');
         setLoginPassword('');
+        setResetEmail('');
+        setResetCardLast4('');
+        setResetPassword('');
+        setResetConfirmPassword('');
         setWorkoutStarted(false);
         setCurrentExercise(0);
         setSelectedExercise(null);
@@ -3264,7 +3340,7 @@
       };
 
       // Render current screen
-      const isAuthScreen = ['welcome', 'signup', 'login'].includes(screen);
+      const isAuthScreen = ['welcome', 'signup', 'login', 'reset-password'].includes(screen);
       const contentScreen = screen === 'exercise-detail' ? (detailReturnScreen || (workoutStarted ? 'workout' : 'home')) : screen;
 
       return (
@@ -3489,11 +3565,88 @@
                 </button>
 
                 <div className="text-center mb-6">
-                  <p className="text-gray-500 text-sm">Password reset flow is not live yet. Use your purchased email, or contact support if you are blocked.</p>
+                  <button
+                    type="button"
+                    className="font-semibold text-orange-300"
+                    onClick={() => {
+                      setError('');
+                      setSuccess('');
+                      setResetEmail(loginEmail || email || '');
+                      setResetCardLast4('');
+                      setResetPassword('');
+                      setResetConfirmPassword('');
+                      setScreen('reset-password');
+                    }}
+                  >
+                    Forgot password?
+                  </button>
                 </div>
 
                 <p className="text-sm text-center text-gray-400">
                   Don't have an account? <button onClick={() => {setError(''); setSuccess(''); setScreen('signup');}} className="font-semibold text-orange-300">Sign Up</button>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {screen === 'reset-password' && (
+            <div className="auth-shell">
+              <div className="auth-card">
+                <button onClick={() => {setError(''); setSuccess(''); setScreen('login');}} className="back-button mb-6">←</button>
+
+                <h2 className="text-2xl font-bold mb-2 text-white">Reset Password</h2>
+                <p className="text-gray-400 mb-6">Enter the checkout email and the last 4 digits of the card you used to purchase access.</p>
+
+                {error && <div className="error-box">{error}</div>}
+                {success && <div className="success-box">{success}</div>}
+
+                <div className="space-y-4 mb-6">
+                  <input
+                    type="email"
+                    placeholder="Purchase Email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
+                    autoComplete="email"
+                  />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength="4"
+                    placeholder="Card Last 4"
+                    value={resetCardLast4}
+                    onChange={(e) => setResetCardLast4(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
+                    autoComplete="off"
+                  />
+                  <input
+                    type="password"
+                    placeholder="New Password"
+                    value={resetPassword}
+                    onChange={(e) => setResetPassword(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
+                    autoComplete="new-password"
+                  />
+                  <input
+                    type="password"
+                    placeholder="Confirm New Password"
+                    value={resetConfirmPassword}
+                    onChange={(e) => setResetConfirmPassword(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
+                    autoComplete="new-password"
+                  />
+                </div>
+
+                <button className="nav-cta mb-3" onClick={handlePasswordReset}>
+                  Reset Password
+                </button>
+
+                <p className="text-sm text-center text-gray-500 mb-6">
+                  This works for paid accounts verified through Stripe card checkout. If the purchase used a different payment method, contact <a href="mailto:devdad.desk@gmail.com" className="text-orange-300">devdad.desk@gmail.com</a>.
+                </p>
+
+                <p className="text-sm text-center text-gray-400">
+                  Remembered it? <button onClick={() => {setError(''); setSuccess(''); setScreen('login');}} className="font-semibold text-orange-300">Back to Log In</button>
                 </p>
               </div>
             </div>
