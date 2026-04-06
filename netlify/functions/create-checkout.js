@@ -1,5 +1,5 @@
 const { createCheckoutSession } = require('./_stripe');
-const { hasTrustedOrigin } = require('./_response');
+const { hasTrustedOrigin, getRequestOrigin } = require('./_response');
 const { checkRateLimit, clearRateLimit } = require('./_auth');
 
 const PRICE_CENTS = 4700; // $47 — founding member price
@@ -42,14 +42,15 @@ exports.handler = async (event) => {
   const safeName = typeof name === 'string'
     ? name.replace(/[<>]/g, '').trim().slice(0, 100)
     : '';
+  const baseUrl = getRequestOrigin(event) || process.env.URL;
 
   try {
     const session = await createCheckoutSession({
       email,
       safeName,
       priceCents: PRICE_CENTS,
-      successUrl: `${process.env.URL}/app?purchased=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${process.env.URL}/devdad-landing.html?cancelled=true`,
+      successUrl: `${baseUrl}/app?purchased=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${baseUrl}/devdad-landing.html?cancelled=true`,
     });
 
     clearRateLimit(event, email, 'checkout');
