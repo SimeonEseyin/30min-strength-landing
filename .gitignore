@@ -2,3 +2,7 @@ node_modules/
 .DS_Store
 .env.local
 .mvp-data/
+.npm-cache/
+assets/devdad-app.css
+assets/devdad-app.js
+devdad-app.html

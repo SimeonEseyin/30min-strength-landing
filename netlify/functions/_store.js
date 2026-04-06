@@ -42,15 +42,19 @@ function createBlobStore() {
     return null;
   }
 
-  return getStore({
-    name: STORE_NAMESPACE,
-    consistency: 'strong',
-  });
+  try {
+    return getStore({
+      name: STORE_NAMESPACE,
+      consistency: 'strong',
+    });
+  } catch {
+    return null;
+  }
 }
 
 const preferredDataDir = getPreferredDataDir();
-const blobStore = createBlobStore();
 let activeStoreFile = null;
+let activeBlobStore = undefined;
 
 let writeChain = Promise.resolve();
 
@@ -98,6 +102,30 @@ function defaultStore() {
 
 function isRecoverableStoreError(error) {
   return Boolean(error && ['ENOENT', 'EACCES', 'EPERM', 'EROFS'].includes(error.code));
+}
+
+function shouldFallbackFromBlobError(error) {
+  if (!error) return false;
+  return Boolean(
+    error.name === 'MissingBlobsEnvironmentError' ||
+    error.code === 'NOT_FOUND' ||
+    error.code === 'FORBIDDEN' ||
+    error.status === 401 ||
+    error.status === 403
+  );
+}
+
+function getBlobStore() {
+  if (activeBlobStore !== undefined) {
+    return activeBlobStore;
+  }
+
+  activeBlobStore = createBlobStore();
+  return activeBlobStore;
+}
+
+function disableBlobStore() {
+  activeBlobStore = null;
 }
 
 function ensureStoreFileForDir(dataDir) {
@@ -151,6 +179,7 @@ function mergeDefaults(store) {
 }
 
 async function readStore() {
+  const blobStore = getBlobStore();
   if (blobStore) {
     try {
       const store = await blobStore.get(STORE_BLOB_KEY, {
@@ -162,7 +191,11 @@ async function readStore() {
       if (isRecoverableStoreError(error)) {
         return mergeDefaults(defaultStore());
       }
-      throw error;
+      if (shouldFallbackFromBlobError(error)) {
+        disableBlobStore();
+      } else {
+        throw error;
+      }
     }
   }
 
@@ -176,9 +209,17 @@ async function readStore() {
 }
 
 async function writeStore(store) {
+  const blobStore = getBlobStore();
   if (blobStore) {
-    await blobStore.setJSON(STORE_BLOB_KEY, mergeDefaults(store));
-    return;
+    try {
+      await blobStore.setJSON(STORE_BLOB_KEY, mergeDefaults(store));
+      return;
+    } catch (error) {
+      if (!shouldFallbackFromBlobError(error)) {
+        throw error;
+      }
+      disableBlobStore();
+    }
   }
 
   const storeFile = ensureStoreFile();
@@ -187,24 +228,32 @@ async function writeStore(store) {
 
 async function updateStore(mutator) {
   writeChain = writeChain.then(async () => {
+    const blobStore = getBlobStore();
     if (blobStore) {
-      for (let attempt = 0; attempt < BLOB_WRITE_RETRIES; attempt++) {
-        const existing = await blobStore.getWithMetadata(STORE_BLOB_KEY, {
-          consistency: 'strong',
-          type: 'json',
-        });
-        const store = mergeDefaults(existing?.data || defaultStore());
-        const result = await mutator(store);
-        const writeResult = existing
-          ? await blobStore.setJSON(STORE_BLOB_KEY, store, { onlyIfMatch: existing.etag })
-          : await blobStore.setJSON(STORE_BLOB_KEY, store, { onlyIfNew: true });
+      try {
+        for (let attempt = 0; attempt < BLOB_WRITE_RETRIES; attempt++) {
+          const existing = await blobStore.getWithMetadata(STORE_BLOB_KEY, {
+            consistency: 'strong',
+            type: 'json',
+          });
+          const store = mergeDefaults(existing?.data || defaultStore());
+          const result = await mutator(store);
+          const writeResult = existing
+            ? await blobStore.setJSON(STORE_BLOB_KEY, store, { onlyIfMatch: existing.etag })
+            : await blobStore.setJSON(STORE_BLOB_KEY, store, { onlyIfNew: true });
 
-        if (writeResult.modified) {
-          return result;
+          if (writeResult.modified) {
+            return result;
+          }
         }
-      }
 
-      throw new Error('Store write conflict. Please retry.');
+        throw new Error('Store write conflict. Please retry.');
+      } catch (error) {
+        if (!shouldFallbackFromBlobError(error)) {
+          throw error;
+        }
+        disableBlobStore();
+      }
     }
 
     const store = await readStore();
