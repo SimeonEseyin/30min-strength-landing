@@ -2000,7 +2000,7 @@
 
       async function apiRequest(path, options = {}) {
         const response = await fetch(path, {
-          credentials: 'same-origin',
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
             ...(options.headers || {})
@@ -2016,10 +2016,44 @@
         }
 
         if (!response.ok) {
-          throw new Error(payload.error || 'Request failed');
+          const requestError = new Error(payload.error || 'Request failed');
+          requestError.status = response.status;
+          requestError.payload = payload;
+          throw requestError;
         }
 
         return payload;
+      }
+
+      function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
+
+      function isUnauthorizedError(error) {
+        return error?.status === 401 || error?.message === 'Unauthorized';
+      }
+
+      async function waitForAuthenticatedSession(expectedEmail = '', maxAttempts = 4) {
+        const normalizedExpectedEmail = String(expectedEmail || '').trim().toLowerCase();
+
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          try {
+            const sessionResult = await apiRequest('/.netlify/functions/auth-session', { method: 'GET' });
+            const sessionUser = sessionResult.user;
+            const sessionEmail = String(sessionUser?.email || '').trim().toLowerCase();
+
+            if (sessionUser && (!normalizedExpectedEmail || sessionEmail === normalizedExpectedEmail)) {
+              return sessionUser;
+            }
+          } catch (error) {
+          }
+
+          if (attempt < maxAttempts - 1) {
+            await delay(150 * (attempt + 1));
+          }
+        }
+
+        return null;
       }
 
       function getDaysSinceFromFeedback(feedbackData = {}) {
@@ -2149,9 +2183,38 @@
         lastSavedPayload.current = serialized;
       }
 
-      async function loadUserData(emailAddress) {
-        const serverPayload = await apiRequest('/.netlify/functions/load-user-data', { method: 'GET' });
-        const serverData = serverPayload.data || buildDefaultUserData();
+      async function loadUserData(emailAddress, options = {}) {
+        const {
+          allowUnauthorizedFallback = false,
+          retries = 2
+        } = options;
+
+        let serverData = null;
+        let usedFallback = false;
+
+        for (let attempt = 0; attempt <= retries; attempt++) {
+          try {
+            const serverPayload = await apiRequest('/.netlify/functions/load-user-data', { method: 'GET' });
+            serverData = serverPayload.data || buildDefaultUserData();
+            break;
+          } catch (error) {
+            const unauthorized = isUnauthorizedError(error);
+            const canRetry = unauthorized && attempt < retries;
+
+            if (canRetry) {
+              await delay(150 * (attempt + 1));
+              continue;
+            }
+
+            if (unauthorized && allowUnauthorizedFallback) {
+              serverData = getLegacyUserData(emailAddress);
+              usedFallback = true;
+              break;
+            }
+
+            throw error;
+          }
+        }
 
         if (!hasMeaningfulUserData(serverData)) {
           const legacyData = getLegacyUserData(emailAddress);
@@ -2159,7 +2222,10 @@
             hydrateUserData(legacyData);
             hydrationReady.current = true;
             await persistUserData(legacyData);
-            return { daysSince: getDaysSinceFromFeedback(legacyData.progress.workoutFeedback) };
+            return {
+              daysSince: getDaysSinceFromFeedback(legacyData.progress.workoutFeedback),
+              usedFallback
+            };
           }
         }
 
@@ -2172,7 +2238,10 @@
           profile: serverData.profile || defaultUserProfile,
           weights: serverData.weights || {}
         });
-        return { daysSince: getDaysSinceFromFeedback((serverData.progress || {}).workoutFeedback || {}) };
+        return {
+          daysSince: getDaysSinceFromFeedback((serverData.progress || {}).workoutFeedback || {}),
+          usedFallback
+        };
       }
 
       function resetUserScopedState() {
@@ -2352,7 +2421,7 @@
               setSuccess('');
               setHasPurchased(Boolean(sessionResult.user.hasPurchased) || checkoutVerified);
 
-              const { daysSince } = await loadUserData(sessionResult.user.email);
+              const { daysSince } = await loadUserData(sessionResult.user.email, { allowUnauthorizedFallback: true });
               if (cancelled) return;
 
               setScreen(daysSince >= 3 ? 'welcome-back' : 'home');
@@ -2676,12 +2745,14 @@
             })
           });
 
+          const sessionUser = await waitForAuthenticatedSession(result.user.email);
+          const authenticatedUser = sessionUser || result.user;
           hydrationReady.current = false;
-          setCurrentUser(result.user);
+          setCurrentUser(authenticatedUser);
           setIsLoggedIn(true);
-          setEmail(result.user.email);
-          setHasPurchased(Boolean(result.user.hasPurchased));
-          await loadUserData(result.user.email);
+          setEmail(authenticatedUser.email);
+          setHasPurchased(Boolean(authenticatedUser.hasPurchased));
+          await loadUserData(authenticatedUser.email, { allowUnauthorizedFallback: true });
           setSuccess('Account created successfully!');
 
           setTimeout(() => {
@@ -2733,12 +2804,14 @@
           });
 
           delete loginAttempts.current[normalizedEmail];
+          const sessionUser = await waitForAuthenticatedSession(result.user.email);
+          const authenticatedUser = sessionUser || result.user;
           hydrationReady.current = false;
-          setCurrentUser(result.user);
+          setCurrentUser(authenticatedUser);
           setIsLoggedIn(true);
-          setEmail(result.user.email);
-          setHasPurchased(Boolean(result.user.hasPurchased));
-          const { daysSince } = await loadUserData(result.user.email);
+          setEmail(authenticatedUser.email);
+          setHasPurchased(Boolean(authenticatedUser.hasPurchased));
+          const { daysSince } = await loadUserData(authenticatedUser.email, { allowUnauthorizedFallback: true });
 
           setSuccess('Login successful!');
 
@@ -2809,15 +2882,17 @@
             })
           });
 
+          const sessionUser = await waitForAuthenticatedSession(result.user.email);
+          const authenticatedUser = sessionUser || result.user;
           hydrationReady.current = false;
-          setCurrentUser(result.user);
+          setCurrentUser(authenticatedUser);
           setIsLoggedIn(true);
-          setEmail(result.user.email);
-          setHasPurchased(Boolean(result.user.hasPurchased));
-          const { daysSince } = await loadUserData(result.user.email);
+          setEmail(authenticatedUser.email);
+          setHasPurchased(Boolean(authenticatedUser.hasPurchased));
+          const { daysSince } = await loadUserData(authenticatedUser.email, { allowUnauthorizedFallback: true });
 
           setSuccess(result.message || 'Password reset successfully!');
-          setLoginEmail(result.user.email);
+          setLoginEmail(authenticatedUser.email);
           setLoginPassword('');
           setResetEmail('');
           setResetCardLast4('');
