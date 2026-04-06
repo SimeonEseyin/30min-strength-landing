@@ -1,10 +1,15 @@
 const { retrieveCheckoutSession } = require('./_stripe');
-const { json } = require('./_response');
+const { json, hasTrustedOrigin } = require('./_response');
+const { checkRateLimit, clearRateLimit } = require('./_auth');
 const { normalizeEmail, updateStore } = require('./_store');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return json(405, { error: 'Method Not Allowed' });
+  }
+
+  if (!hasTrustedOrigin(event)) {
+    return json(403, { error: 'Forbidden' });
   }
 
   let sessionId;
@@ -16,6 +21,11 @@ exports.handler = async (event) => {
 
   if (!sessionId || typeof sessionId !== 'string' || !sessionId.startsWith('cs_')) {
     return json(400, { error: 'Invalid session ID' });
+  }
+
+  const rateLimit = checkRateLimit(event, sessionId, 'verify-purchase');
+  if (!rateLimit.allowed) {
+    return json(429, { error: rateLimit.message });
   }
 
   try {
@@ -33,7 +43,8 @@ exports.handler = async (event) => {
         };
       });
 
-      return json(200, { verified: true, email });
+      clearRateLimit(event, sessionId, 'verify-purchase');
+      return json(200, { verified: true });
     }
 
     return json(200, { verified: false });

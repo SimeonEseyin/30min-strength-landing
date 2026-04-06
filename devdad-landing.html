@@ -1075,7 +1075,32 @@
       if (isAndroid) return 'Open the browser menu, then tap Install app or Add to Home screen.';
       if (isSafari) return 'Safari: use File -> Add to Dock.';
       if (isChrome || isEdge) return 'Use the install icon in the address bar or the browser menu.';
-      return 'Use your browser install or add-to-home-screen option.';
+      return 'Open your browser menu and choose Install App, Add to Home Screen, or Create Shortcut.';
+    }
+
+    function getInstallCtaLabel() {
+      const userAgent = navigator.userAgent || '';
+      const platform = navigator.platform || '';
+      const isIOS = /iphone|ipad|ipod/i.test(userAgent) || (/mac/i.test(platform) && navigator.maxTouchPoints > 1);
+
+      if (deferredInstallPrompt) return 'Install App';
+      if (isIOS) return 'Add to Home Screen';
+      return 'How to Install';
+    }
+
+    function updateInstallCtas() {
+      const isStandalone = window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      if (installButton) {
+        installButton.style.display = isStandalone ? 'none' : '';
+      }
+      if (installLink) {
+        installLink.style.display = isStandalone ? 'none' : '';
+      }
+      if (isStandalone) return;
+
+      const label = getInstallCtaLabel();
+      if (installButton) installButton.textContent = label;
+      if (installLink) installLink.textContent = label;
     }
 
     async function installApp() {
@@ -1105,28 +1130,38 @@
     window.addEventListener('beforeinstallprompt', (event) => {
       event.preventDefault();
       deferredInstallPrompt = event;
+      updateInstallCtas();
     });
 
     window.addEventListener('appinstalled', () => {
       deferredInstallPrompt = null;
+      updateInstallCtas();
     });
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
     }
 
+    updateInstallCtas();
+
     // Pre-fill checkout from quiz URL params
     window.addEventListener('DOMContentLoaded', function() {
       const urlParams = new URLSearchParams(window.location.search);
-      let quizEmail = urlParams.get('email') || localStorage.getItem('quizEmail');
-      let quizName  = urlParams.get('name')  || localStorage.getItem('quizName');
+      let quizEmail = urlParams.get('email') || sessionStorage.getItem('quizEmail');
+      let quizName  = urlParams.get('name')  || sessionStorage.getItem('quizName');
       const shouldOpenCheckout = urlParams.get('checkout') === '1';
+      const hadSensitiveParams = urlParams.has('email') || urlParams.has('name') || urlParams.has('checkout');
 
       if (quizEmail || quizName) {
         window.quizEmail = quizEmail;
         window.quizName  = quizName;
-        if (quizEmail) localStorage.setItem('quizEmail', quizEmail);
-        if (quizName)  localStorage.setItem('quizName',  quizName);
+        if (quizEmail) sessionStorage.setItem('quizEmail', quizEmail);
+        if (quizName)  sessionStorage.setItem('quizName',  quizName);
+      }
+
+      if (hadSensitiveParams) {
+        const cleanUrl = `${window.location.pathname}${window.location.hash || ''}`;
+        window.history.replaceState({}, document.title, cleanUrl);
       }
 
       if (shouldOpenCheckout) {
@@ -1143,8 +1178,8 @@
 
       // Pre-fill from quiz if available
       setTimeout(() => {
-        const emailToFill = window.quizEmail || localStorage.getItem('quizEmail');
-        const nameToFill  = window.quizName  || localStorage.getItem('quizName');
+        const emailToFill = window.quizEmail || sessionStorage.getItem('quizEmail');
+        const nameToFill  = window.quizName  || sessionStorage.getItem('quizName');
         const emailField  = document.getElementById('email');
         const nameField   = document.getElementById('name');
         if (emailField && emailToFill) emailField.value = emailToFill;
@@ -1168,6 +1203,7 @@
       btn.textContent = 'Redirecting to secure checkout…';
 
       try {
+        if (email) sessionStorage.setItem('checkoutEmail', email);
         const res = await fetch('/.netlify/functions/create-checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -1,4 +1,4 @@
-const { json, parseJsonBody } = require('./_response');
+const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
 const { getSession } = require('./_auth');
 const { updateStore, getUserData } = require('./_store');
 
@@ -67,6 +67,10 @@ function sanitizeWeights(weights) {
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return json(405, { error: 'Method Not Allowed' });
+  }
+
+  if (!hasTrustedOrigin(event)) {
+    return json(403, { error: 'Forbidden' });
   }
 
   const session = await getSession(event);

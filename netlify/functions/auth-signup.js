@@ -1,9 +1,11 @@
-const { json, parseJsonBody } = require('./_response');
+const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
 const { normalizeEmail, readStore, updateStore } = require('./_store');
 const {
   sanitizeName,
   validateEmail,
   validatePassword,
+  checkRateLimit,
+  clearRateLimit,
   hashPassword,
   createSession,
   publicUser,
@@ -12,6 +14,10 @@ const {
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return json(405, { error: 'Method Not Allowed' });
+  }
+
+  if (!hasTrustedOrigin(event)) {
+    return json(403, { error: 'Forbidden' });
   }
 
   let email;
@@ -27,6 +33,11 @@ exports.handler = async (event) => {
   const normalizedEmail = normalizeEmail(email);
   if (!validateEmail(normalizedEmail)) {
     return json(400, { error: 'Please enter a valid email address' });
+  }
+
+  const rateLimit = checkRateLimit(event, normalizedEmail, 'signup');
+  if (!rateLimit.allowed) {
+    return json(429, { error: rateLimit.message });
   }
 
   const passwordError = validatePassword(String(password || ''));
@@ -65,6 +76,7 @@ exports.handler = async (event) => {
     return json(error.statusCode || 500, { error: error.message || 'Account creation failed. Please try again.' });
   }
 
+  clearRateLimit(event, normalizedEmail, 'signup');
   const session = await createSession(normalizedEmail);
   const store = await readStore();
   const hasPurchased = Boolean(store.entitlements[normalizedEmail]);

@@ -1,10 +1,14 @@
-const { json, parseJsonBody } = require('./_response');
-const { getSession, validatePassword, verifyPassword, hashPassword } = require('./_auth');
+const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
+const { getSession, validatePassword, verifyPassword, hashPassword, createSession } = require('./_auth');
 const { updateStore } = require('./_store');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return json(405, { error: 'Method Not Allowed' });
+  }
+
+  if (!hasTrustedOrigin(event)) {
+    return json(403, { error: 'Forbidden' });
   }
 
   const session = await getSession(event);
@@ -51,7 +55,16 @@ exports.handler = async (event) => {
     store.users[session.email].passwordHash = nextPassword.hash;
     store.users[session.email].passwordSalt = nextPassword.salt;
     store.users[session.email].updatedAt = new Date().toISOString();
+
+    Object.entries(store.sessions).forEach(([sessionId, activeSession]) => {
+      if ((activeSession?.email || '').toLowerCase() === session.email) {
+        delete store.sessions[sessionId];
+      }
+    });
   });
 
-  return json(200, { ok: true, message: 'Password changed successfully!' });
+  const nextSession = await createSession(session.email);
+  return json(200, { ok: true, message: 'Password changed successfully!' }, {
+    'Set-Cookie': nextSession.cookie,
+  });
 };
