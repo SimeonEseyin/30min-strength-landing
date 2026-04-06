@@ -1,5 +1,5 @@
 const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
-const { normalizeEmail, readStore, updateStore } = require('./_store');
+const { getPublicStoreError, normalizeEmail, readStore, updateStore } = require('./_store');
 const { restoreStripeEntitlementByEmail } = require('./_entitlements');
 const {
   validateEmail,
@@ -38,7 +38,14 @@ exports.handler = async (event) => {
     return json(429, { error: rateLimit.message });
   }
 
-  const store = await readStore();
+  let store;
+  try {
+    store = await readStore();
+  } catch (error) {
+    const publicError = getPublicStoreError(error);
+    return json(publicError.statusCode || 500, { error: publicError.message || 'Login failed. Please try again.' });
+  }
+
   const user = store.users[normalizedEmail];
   if (!user) {
     return json(401, { error: 'Invalid email or password' });
@@ -50,14 +57,21 @@ exports.handler = async (event) => {
   }
 
   clearRateLimit(event, normalizedEmail, 'login');
-  await updateStore(nextStore => {
-    if (nextStore.users[normalizedEmail]) {
-      nextStore.users[normalizedEmail].updatedAt = new Date().toISOString();
-      nextStore.users[normalizedEmail].lastLoginAt = new Date().toISOString();
-    }
-  });
+  let session;
+  try {
+    await updateStore(nextStore => {
+      if (nextStore.users[normalizedEmail]) {
+        nextStore.users[normalizedEmail].updatedAt = new Date().toISOString();
+        nextStore.users[normalizedEmail].lastLoginAt = new Date().toISOString();
+      }
+    });
 
-  const session = await createSession(normalizedEmail);
+    session = await createSession(normalizedEmail);
+  } catch (error) {
+    const publicError = getPublicStoreError(error);
+    return json(publicError.statusCode || 500, { error: publicError.message || 'Login failed. Please try again.' });
+  }
+
   let hasPurchased = Boolean(store.entitlements[normalizedEmail]);
   if (!hasPurchased) {
     try {

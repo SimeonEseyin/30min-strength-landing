@@ -1,5 +1,5 @@
 const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
-const { normalizeEmail, readStore, updateStore } = require('./_store');
+const { getPublicStoreError, normalizeEmail, readStore, updateStore } = require('./_store');
 const { restoreStripeEntitlementByEmail } = require('./_entitlements');
 const {
   sanitizeName,
@@ -74,12 +74,22 @@ exports.handler = async (event) => {
       return user;
     });
   } catch (error) {
-    return json(error.statusCode || 500, { error: error.message || 'Account creation failed. Please try again.' });
+    const publicError = getPublicStoreError(error, 'Account creation is temporarily unavailable. Please try again shortly.');
+    return json(publicError.statusCode || 500, { error: publicError.message || 'Account creation failed. Please try again.' });
   }
 
   clearRateLimit(event, normalizedEmail, 'signup');
-  const session = await createSession(normalizedEmail);
-  const store = await readStore();
+  let session;
+  let store;
+
+  try {
+    session = await createSession(normalizedEmail);
+    store = await readStore();
+  } catch (error) {
+    const publicError = getPublicStoreError(error, 'Account creation is temporarily unavailable. Please try again shortly.');
+    return json(publicError.statusCode || 500, { error: publicError.message || 'Account creation failed. Please try again.' });
+  }
+
   let hasPurchased = Boolean(store.entitlements[normalizedEmail]);
   if (!hasPurchased) {
     try {

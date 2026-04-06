@@ -41,15 +41,28 @@ function canUseLocalFileStore() {
   return !isServerlessRuntime() || Boolean(process.env.DEVDAD_DATA_DIR);
 }
 
+function getManualBlobConfig() {
+  const siteID = process.env.NETLIFY_SITE_ID || process.env.SITE_ID || process.env.BLOBS_SITE_ID || process.env.NETLIFY_BLOBS_SITE_ID;
+  const token = process.env.NETLIFY_AUTH_TOKEN || process.env.BLOBS_TOKEN || process.env.NETLIFY_BLOBS_TOKEN;
+
+  if (!siteID || !token) {
+    return null;
+  }
+
+  return { siteID, token };
+}
+
 function createBlobStore() {
   if (!canUseNetlifyBlobs()) {
     return null;
   }
 
   try {
+    const manualBlobConfig = getManualBlobConfig();
     return getStore({
       name: STORE_NAMESPACE,
       consistency: 'strong',
+      ...(manualBlobConfig || {}),
     });
   } catch (error) {
     if (canUseLocalFileStore() && shouldFallbackFromBlobError(error)) {
@@ -124,6 +137,16 @@ function shouldFallbackFromBlobError(error) {
 function getPersistentStoreError() {
   const error = new Error('Persistent auth store is unavailable in the serverless runtime.');
   error.statusCode = 503;
+  return error;
+}
+
+function getPublicStoreError(error, fallbackMessage = 'Authentication is temporarily unavailable. Please try again in a moment.') {
+  if (error?.statusCode === 503 || error?.name === 'MissingBlobsEnvironmentError') {
+    const publicError = new Error(fallbackMessage);
+    publicError.statusCode = 503;
+    return publicError;
+  }
+
   return error;
 }
 
@@ -316,6 +339,7 @@ function getUserData(store, email) {
 
 module.exports = {
   defaultUserData,
+  getPublicStoreError,
   normalizeEmail,
   readStore,
   updateStore,
