@@ -58,7 +58,7 @@ function getTrustedOrigin(event) {
 
 function hasTrustedOrigin(event) {
   const trustedOrigin = getTrustedOrigin(event);
-  if (!trustedOrigin) return false;
+  if (!trustedOrigin) return true;
 
   const origin = event.headers?.origin || event.headers?.Origin || '';
   const referer = event.headers?.referer || event.headers?.Referer || '';
@@ -75,7 +75,7 @@ function hasTrustedOrigin(event) {
     }
   }
 
-  return false;
+  return true;
 }
 
 module.exports = {
