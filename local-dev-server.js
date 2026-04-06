@@ -102,8 +102,9 @@ function safeFilePath(requestPath) {
   if (pathname === '/') pathname = '/devdad-landing.html';
 
   const routeAliases = {
-    '/app': '/devdad-app-v2-enhanced.html',
-    '/app/': '/devdad-app-v2-enhanced.html',
+    '/app': '/devdad-app.html',
+    '/app/': '/devdad-app.html',
+    '/favicon.ico': '/icons/favicon.ico',
   };
 
   pathname = routeAliases[pathname] || pathname;
