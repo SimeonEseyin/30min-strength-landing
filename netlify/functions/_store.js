@@ -37,6 +37,10 @@ function canUseNetlifyBlobs() {
   return isServerlessRuntime() && typeof getStore === 'function';
 }
 
+function canUseLocalFileStore() {
+  return !isServerlessRuntime() || Boolean(process.env.DEVDAD_DATA_DIR);
+}
+
 function createBlobStore() {
   if (!canUseNetlifyBlobs()) {
     return null;
@@ -47,8 +51,11 @@ function createBlobStore() {
       name: STORE_NAMESPACE,
       consistency: 'strong',
     });
-  } catch {
-    return null;
+  } catch (error) {
+    if (canUseLocalFileStore() && shouldFallbackFromBlobError(error)) {
+      return null;
+    }
+    throw error;
   }
 }
 
@@ -108,11 +115,16 @@ function shouldFallbackFromBlobError(error) {
   if (!error) return false;
   return Boolean(
     error.name === 'MissingBlobsEnvironmentError' ||
-    error.code === 'NOT_FOUND' ||
     error.code === 'FORBIDDEN' ||
     error.status === 401 ||
     error.status === 403
   );
+}
+
+function getPersistentStoreError() {
+  const error = new Error('Persistent auth store is unavailable in the serverless runtime.');
+  error.statusCode = 503;
+  return error;
 }
 
 function getBlobStore() {
@@ -191,12 +203,16 @@ async function readStore() {
       if (isRecoverableStoreError(error)) {
         return mergeDefaults(defaultStore());
       }
-      if (shouldFallbackFromBlobError(error)) {
+      if (canUseLocalFileStore() && shouldFallbackFromBlobError(error)) {
         disableBlobStore();
       } else {
         throw error;
       }
     }
+  }
+
+  if (!canUseLocalFileStore()) {
+    throw getPersistentStoreError();
   }
 
   const storeFile = ensureStoreFile();
@@ -215,11 +231,15 @@ async function writeStore(store) {
       await blobStore.setJSON(STORE_BLOB_KEY, mergeDefaults(store));
       return;
     } catch (error) {
-      if (!shouldFallbackFromBlobError(error)) {
+      if (!canUseLocalFileStore() || !shouldFallbackFromBlobError(error)) {
         throw error;
       }
       disableBlobStore();
     }
+  }
+
+  if (!canUseLocalFileStore()) {
+    throw getPersistentStoreError();
   }
 
   const storeFile = ensureStoreFile();
@@ -249,7 +269,7 @@ async function updateStore(mutator) {
 
         throw new Error('Store write conflict. Please retry.');
       } catch (error) {
-        if (!shouldFallbackFromBlobError(error)) {
+        if (!canUseLocalFileStore() || !shouldFallbackFromBlobError(error)) {
           throw error;
         }
         disableBlobStore();
