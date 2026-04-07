@@ -4,50 +4,7 @@ const {
   isConfigured,
   sendPushRequest,
 } = require('./_push');
-
-function getLocalTimeParts(date, timeZone) {
-  try {
-    const formatter = new Intl.DateTimeFormat('en-CA', {
-      timeZone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hourCycle: 'h23'
-    });
-
-    const parts = formatter.formatToParts(date).reduce((acc, part) => {
-      if (part.type !== 'literal') {
-        acc[part.type] = part.value;
-      }
-      return acc;
-    }, {});
-
-    const hour = parseInt(parts.hour, 10);
-    const minute = parseInt(parts.minute, 10);
-    const year = parts.year;
-    const month = parts.month;
-    const day = parts.day;
-
-    if (!year || !month || !day || Number.isNaN(hour) || Number.isNaN(minute)) {
-      return null;
-    }
-
-    return {
-      localDate: `${year}-${month}-${day}`,
-      minutes: hour * 60 + minute
-    };
-  } catch (error) {
-    return null;
-  }
-}
-
-function getScheduledMinutes(timeString) {
-  const match = /^(\d{2}):(\d{2})$/.exec(String(timeString || ''));
-  if (!match) return 7 * 60;
-  return (parseInt(match[1], 10) * 60) + parseInt(match[2], 10);
-}
+const { evaluateReminderDue } = require('./_reminder-debug');
 
 exports.handler = async () => {
   if (!isConfigured()) {
@@ -75,26 +32,25 @@ exports.handler = async () => {
         continue;
       }
 
-      const targetMinutes = getScheduledMinutes(settings.notificationTime);
       const nextSubscriptions = [];
 
       for (const entry of subscriptions) {
         if (!entry || !entry.subscription || !entry.subscription.endpoint) continue;
         checked += 1;
 
-        const timeZone = String(entry.notificationTimezone || settings.notificationTimezone || 'UTC');
-        const localParts = getLocalTimeParts(now, timeZone);
-        if (!localParts) {
-          nextSubscriptions.push(entry);
-          continue;
-        }
+        const evaluation = evaluateReminderDue({
+          now,
+          settings,
+          subscriptionEntry: entry
+        });
 
-        const isDue =
-          localParts.minutes >= targetMinutes &&
-          entry.lastSentLocalDate !== localParts.localDate;
-
-        if (!isDue) {
-          nextSubscriptions.push(entry);
+        if (!evaluation.local || !evaluation.due) {
+          nextSubscriptions.push({
+            ...entry,
+            lastAttemptAt: now.toISOString(),
+            lastAttemptStatus: evaluation.due ? 'ready' : 'skipped',
+            lastAttemptReason: evaluation.reason || 'skipped'
+          });
           continue;
         }
 
@@ -111,9 +67,12 @@ exports.handler = async () => {
           sent += 1;
           nextSubscriptions.push({
             ...entry,
-            updatedAt: new Date().toISOString(),
-            lastSentAt: new Date().toISOString(),
-            lastSentLocalDate: localParts.localDate
+            updatedAt: now.toISOString(),
+            lastSentAt: now.toISOString(),
+            lastSentLocalDate: evaluation.local.localDate,
+            lastAttemptAt: now.toISOString(),
+            lastAttemptStatus: `sent:${response.status}`,
+            lastAttemptReason: 'sent'
           });
         } catch (error) {
           const statusCode = error?.statusCode || error?.status;
@@ -122,7 +81,12 @@ exports.handler = async () => {
             continue;
           }
 
-          nextSubscriptions.push(entry);
+          nextSubscriptions.push({
+            ...entry,
+            lastAttemptAt: now.toISOString(),
+            lastAttemptStatus: `error:${statusCode || 'unknown'}`,
+            lastAttemptReason: error?.message || 'push-send-failed'
+          });
         }
       }
 
