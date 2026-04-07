@@ -33,6 +33,14 @@ function sanitizeTimeZone(value) {
   return String(value || '').trim().slice(0, 100) || 'UTC';
 }
 
+function reminderScheduleChanged(previousSettings = {}, nextSettings = {}) {
+  return (
+    Boolean(previousSettings.notificationEnabled) !== Boolean(nextSettings.notificationEnabled) ||
+    String(previousSettings.notificationTime || '') !== String(nextSettings.notificationTime || '') ||
+    String(previousSettings.notificationTimezone || '') !== String(nextSettings.notificationTimezone || '')
+  );
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'GET') {
     return json(200, {
@@ -64,34 +72,50 @@ exports.handler = async (event) => {
     const notificationTimezone = sanitizeTimeZone(body.notificationTimezone);
 
     await updateStore((store) => {
+      const previousSettings = ((store.userData[normalizedEmail] || {}).settings || {});
+      const nextSettings = {
+        ...previousSettings,
+        notificationEnabled: true,
+        notificationTime,
+        notificationTimezone
+      };
       const existing = Array.isArray(store.pushSubscriptions[normalizedEmail])
         ? store.pushSubscriptions[normalizedEmail]
         : [];
+      const shouldResetReminderState = reminderScheduleChanged(previousSettings, nextSettings);
+      const preparedExisting = shouldResetReminderState
+        ? existing.map((entry) => ({
+            ...entry,
+            lastSentAt: null,
+            lastSentLocalDate: null,
+            lastAttemptAt: null,
+            lastAttemptStatus: null,
+            lastAttemptReason: null,
+          }))
+        : existing;
       const currentEntry = existing.find(
         (entry) => entry && entry.subscription && entry.subscription.endpoint === subscription.endpoint
       );
       const now = new Date().toISOString();
 
-      const nextSubscriptions = existing
+      const nextSubscriptions = preparedExisting
         .filter((entry) => entry && entry.subscription && entry.subscription.endpoint !== subscription.endpoint)
         .concat([{
           subscription,
           notificationTimezone,
           createdAt: currentEntry?.createdAt || now,
           updatedAt: now,
-          lastSentAt: currentEntry?.lastSentAt || null,
-          lastSentLocalDate: currentEntry?.lastSentLocalDate || null,
+          lastSentAt: shouldResetReminderState ? null : (currentEntry?.lastSentAt || null),
+          lastSentLocalDate: shouldResetReminderState ? null : (currentEntry?.lastSentLocalDate || null),
+          lastAttemptAt: shouldResetReminderState ? null : (currentEntry?.lastAttemptAt || null),
+          lastAttemptStatus: shouldResetReminderState ? null : (currentEntry?.lastAttemptStatus || null),
+          lastAttemptReason: shouldResetReminderState ? null : (currentEntry?.lastAttemptReason || null),
           userAgent: String(event.headers?.['user-agent'] || '').slice(0, 240)
         }]);
 
       store.pushSubscriptions[normalizedEmail] = nextSubscriptions.slice(-8);
       store.userData[normalizedEmail] = store.userData[normalizedEmail] || {};
-      store.userData[normalizedEmail].settings = {
-        ...((store.userData[normalizedEmail] || {}).settings || {}),
-        notificationEnabled: true,
-        notificationTime,
-        notificationTimezone
-      };
+      store.userData[normalizedEmail].settings = nextSettings;
     });
 
     return json(200, {
