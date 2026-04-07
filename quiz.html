@@ -34,10 +34,34 @@
 
         body {
             font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: #000000;
+            background:
+                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
+                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
+                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
+                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.6;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                linear-gradient(to bottom,
+                    rgba(0,0,0,0.18) 0%,
+                    rgba(0,0,0,0.1) 22%,
+                    rgba(0,0,0,0.32) 70%,
+                    rgba(0,0,0,0.6) 100%
+                );
+            background-size: 24px 24px, 24px 24px, auto;
+            background-position: 0 0, 0 0, 0 0;
+            pointer-events: none;
+            z-index: -1;
         }
 
         /* Header */
@@ -47,8 +71,9 @@
             left: 0;
             right: 0;
             z-index: 100;
-            background: #000000;
-            border-bottom: 1px solid #1a1a1a;
+            background: rgba(12, 12, 12, 0.72);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
             padding: 12px 20px;
         }
 
@@ -111,7 +136,8 @@
             left: 0;
             right: 0;
             z-index: 99;
-            background: #000000;
+            background: rgba(12, 12, 12, 0.58);
+            backdrop-filter: blur(10px);
             padding: 16px 20px;
         }
 
@@ -188,9 +214,11 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-size: cover;
-            background-position: center 80%;
-            background-repeat: no-repeat;
+            background:
+                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
+                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
+                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
+                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
             z-index: -2;
         }
 
@@ -201,55 +229,69 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(to bottom,
-                rgba(0,0,0,0.7) 0%,
-                rgba(0,0,0,0.5) 30%,
-                rgba(0,0,0,0.6) 70%,
-                rgba(0,0,0,0.9) 100%
-            );
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                linear-gradient(to bottom,
+                    rgba(0,0,0,0.28) 0%,
+                    rgba(0,0,0,0.18) 22%,
+                    rgba(0,0,0,0.44) 70%,
+                    rgba(0,0,0,0.76) 100%
+                );
+            background-size: 24px 24px, 24px 24px, auto;
+            background-position: 0 0, 0 0, 0 0;
             z-index: -1;
         }
 
         .step.bg-fitness::before {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            background-image: url(./site-images/squat.JPG);
-            background-size: contain;
-            background-position: left;
-            background-repeat: no-repeat;
+            background:
+                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
+                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
+                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
+                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
         }
 
         .step.bg-dad::before {
-            background: linear-gradient(135deg, #2d132c 0%, #1a1a2e 50%, #16213e 100%);
-            background-image: url(./site-images/man.JPG);
-            background-size: contain;
-            background-position: left;
-            background-repeat: no-repeat;
+            background:
+                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
+                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
+                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
+                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
         }
 
         .step.bg-gym::before {
-            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #2d2d2d 100%);
-            background-image: url(./site-images/side-lounge.JPG);
-            background-size: contain;
-            background-position: left;
-            background-repeat: no-repeat;
+            background:
+                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
+                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
+                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
+                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
         }
 
         .step.bg-home::before {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            background-image: url(./site-images/bg-dad.JPG);
+            background:
+                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
+                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
+                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
+                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
         }
 
         .step.bg-strength::before {
-            background: linear-gradient(135deg, #232526 0%, #414345 100%);
-            background-image: url(./site-images/bg-dad.JPG);
+            background:
+                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
+                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
+                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
+                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
         }
 
         .step.bg-time::before {
-            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
-            background-image: url(./site-images/bg-dad.JPG);
+            background:
+                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
+                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
+                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
+                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
         }
 
-        .step.sleep-image {
+        .step-visual {
             width: 100%;
             max-width: 260px;
             height: 280px;
@@ -261,6 +303,13 @@
             align-items: center;
             justify-content: center;
             position: relative;
+        }
+
+        .step-visual img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
         }
 
         @keyframes fadeIn {
@@ -442,7 +491,14 @@
         /* Interstitial Styles */
         .interstitial {
             text-align: center;
-            padding: 20px 0;
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 28px 24px;
+            border-radius: 28px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.018) 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 24px 64px rgba(0,0,0,0.28);
+            backdrop-filter: blur(10px);
         }
 
         .interstitial-icon {
@@ -495,6 +551,11 @@
 
         .badge {
             text-align: center;
+            min-width: 88px;
+            padding: 12px 14px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.035);
+            border: 1px solid rgba(255,255,255,0.06);
         }
 
         .badge-number {
@@ -515,6 +576,7 @@
         .feature-list {
             text-align: left;
             margin: 24px 0;
+            padding: 8px 0;
         }
 
         .feature-item {
@@ -588,7 +650,14 @@
         /* Loading Screen */
         .loading-container {
             text-align: center;
-            padding: 40px 0;
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 32px 24px;
+            border-radius: 28px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.018) 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 24px 64px rgba(0,0,0,0.28);
+            backdrop-filter: blur(10px);
         }
 
         .loading-spinner {
@@ -636,6 +705,8 @@
         .loading-steps {
             margin-top: 40px;
             text-align: left;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.06);
         }
 
         .loading-step {
@@ -645,14 +716,17 @@
             padding: 12px 0;
             opacity: 0.4;
             transition: opacity 0.3s;
+            color: var(--text-secondary);
         }
 
         .loading-step.active {
             opacity: 1;
+            color: var(--text-primary);
         }
 
         .loading-step.completed {
             opacity: 1;
+            color: var(--text-primary);
         }
 
         .loading-step-icon {
@@ -684,6 +758,14 @@
         /* Results Screen */
         .results-container {
             text-align: center;
+            max-width: 440px;
+            margin: 0 auto;
+            padding: 32px 24px;
+            border-radius: 28px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.018) 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 24px 64px rgba(0,0,0,0.28);
+            backdrop-filter: blur(10px);
         }
 
         .results-greeting {
@@ -823,7 +905,8 @@
         }
 
         .results-chart {
-            background: var(--bg-card);
+            background: rgba(255,255,255,0.035);
+            border: 1px solid rgba(255,255,255,0.06);
             border-radius: 16px;
             padding: 24px;
             margin-bottom: 32px;
@@ -950,8 +1033,9 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: #000000;
-            border-top: 1px solid #1a1a1a;
+            background: rgba(12, 12, 12, 0.72);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
             padding: 16px 20px;
             padding-bottom: max(16px, env(safe-area-inset-bottom));
         }
@@ -1183,7 +1267,7 @@
         </div>
 
         <!-- Step 3: Available Time -->
-        <div class="step has-bg bg-fitness" data-step="3">
+        <div class="step has-bg bg-time" data-step="3">
             <h2 class="step-question-fitness">How much time can you realistically train on most days?</h2>
             <p class="step-subtitle">We'll keep the plan inside that window</p>
             
@@ -1265,10 +1349,6 @@
             <h2 class="step-question">What equipment do you have at home?</h2>
             <p class="step-subtitle">Select all that apply</p>
 
-            <div class="step sleep-image">
-                <img src="./site-images/sleep.JPG" alt="Workout setup at home" loading="lazy" decoding="async">
-            </div>
-
             <div class="options-grid two-col" data-field="equipment" data-multi="true">
                 <div class="option-card multi" data-value="Dumbbells">
                     <span class="option-text">Dumbbells</span>
@@ -1302,9 +1382,13 @@
         </div>
 
         <!-- Step 7: Sleep -->
-        <div class="step has-bg bg-gym" data-step="7">
+        <div class="step" data-step="7">
             <h2 class="step-question-gym">How has sleep been lately?</h2>
             <p class="step-subtitle">Optional. We'll use it to make week 1 more realistic.</p>
+
+            <div class="step-visual">
+                <img src="./site-images/sleep.JPG" alt="Dad recovering with sleep" loading="lazy" decoding="async">
+            </div>
             
             <div class="options-grid two-col" data-field="sleep">
                 <div class="option-card" data-value="Less than 5 hours">
@@ -1346,31 +1430,6 @@
                 </div>
                 <div class="option-card" data-value="Don't know what to do">
                     <span class="option-text">Not sure what to do</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Step 9: Biggest Challenge -->
-        <div class="step" data-step="9">
-            <h2 class="step-question">What's your biggest challenge?</h2>
-            <p class="step-subtitle">We'll address this head-on in your plan</p>
-            
-            <div class="options-grid two-col" data-field="challenge">
-                <div class="option-card" data-value="No time">
-                    <span class="option-text">Not enough time</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-                <div class="option-card" data-value="No energy">
-                    <span class="option-text">Too exhausted from parenting</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-                <div class="option-card" data-value="No motivation">
-                    <span class="option-text">Can't stay motivated</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-                <div class="option-card" data-value="Don't know what to do">
-                    <span class="option-text">Don't know what to do</span>
                     <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
                 </div>
             </div>

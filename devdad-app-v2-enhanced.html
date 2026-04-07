@@ -1296,6 +1296,516 @@
       'Burpees': ''
     };
 
+    function cloneExerciseWithPlan(exercise, overrides = {}) {
+      return {
+        ...exercise,
+        ...overrides,
+        instructions: Array.isArray(overrides.instructions) ? overrides.instructions : [...(exercise.instructions || [])],
+        mistakes: Array.isArray(overrides.mistakes) ? overrides.mistakes : [...(exercise.mistakes || [])],
+      };
+    }
+
+    function parseDurationToSeconds(duration = '0:45') {
+      const parts = String(duration || '0:45').split(':');
+      const mins = parseInt(parts[0], 10) || 0;
+      const secs = parseInt(parts[1], 10) || 0;
+      const total = mins * 60 + secs;
+      return total > 0 ? total : 45;
+    }
+
+    function formatDurationFromSeconds(totalSeconds = 45) {
+      const clamped = Math.max(20, Math.min(120, totalSeconds));
+      const mins = Math.floor(clamped / 60);
+      const secs = clamped % 60;
+      return `${mins}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function adjustDuration(duration, deltaSeconds = 0) {
+      return formatDurationFromSeconds(parseDurationToSeconds(duration) + deltaSeconds);
+    }
+
+    function getSetCount(setsText = '') {
+      const match = String(setsText).match(/(\d+)\s+sets/i);
+      return match ? parseInt(match[1], 10) : null;
+    }
+
+    function updateSetCount(setsText = '', nextCount = null) {
+      if (!nextCount) return setsText;
+      if (/^\d+\s+sets/i.test(String(setsText))) {
+        return String(setsText).replace(/^\d+\s+sets/i, `${nextCount} sets`);
+      }
+      return setsText;
+    }
+
+    function updateRepTarget(setsText = '', delta = 0, min = 6, max = 20) {
+      return String(setsText).replace(/(\d+)\s+reps/i, (_, value) => {
+        const nextValue = Math.max(min, Math.min(max, parseInt(value, 10) + delta));
+        return `${nextValue} reps`;
+      });
+    }
+
+    function getPlanEquipmentMode(config = {}) {
+      const equipment = Array.isArray(config.availableEquipment) ? config.availableEquipment : [];
+      const hasNoEquipment = equipment.includes('No equipment yet') || equipment.includes('Bodyweight only') || equipment.length === 0;
+      const hasBarbell = equipment.includes('Barbell');
+      const gymFirst = config.trainingEnvironment === 'Gym only';
+
+      if (hasNoEquipment && !hasBarbell) return 'bodyweight';
+      if (gymFirst || hasBarbell) return 'gym';
+      return 'dumbbell';
+    }
+
+    function rewriteInstructionForVariant(text = '', variantName = '', mode = 'dumbbell') {
+      let rewritten = String(text || '');
+
+      if (mode === 'gym') {
+        const toolLabel = variantName.includes('Cable')
+          ? 'cable handle'
+          : variantName.includes('Kettlebell')
+          ? 'kettlebell'
+          : variantName.includes('EZ-Bar')
+          ? 'EZ-bar'
+          : 'barbell';
+
+        rewritten = rewritten
+          .replace(/dumbbells/gi, toolLabel)
+          .replace(/dumbbell/gi, toolLabel);
+
+        if (variantName === 'Barbell Bench Press') {
+          rewritten = rewritten.replace(/floor/gi, 'bench');
+        }
+      }
+
+      return rewritten;
+    }
+
+    const equipmentExerciseVariants = {
+      bodyweight: {
+        'Goblet Squat': {
+          name: 'Tempo Air Squat',
+          image: '🦵',
+          tracksLoad: false,
+          sets: '3 sets × 15 reps',
+          instructions: [
+            'Stand tall with feet shoulder-width apart',
+            'Lower slowly for 3 seconds, chest up and knees tracking over toes',
+            'Pause briefly at the bottom',
+            'Drive up with control and squeeze glutes at the top'
+          ],
+          mistakes: ['Rushing the lowering phase', 'Knees collapsing inward', 'Losing heel contact']
+        },
+        'Dumbbell Shoulder Press': {
+          name: 'Pike Push-Up',
+          image: '🔺',
+          tracksLoad: false,
+          sets: '3 sets × 8 reps',
+          instructions: [
+            'Start in a pike position with hips high',
+            'Lower the head between the hands with elbows angled back',
+            'Press the floor away and return to the starting position',
+            'Keep ribs tucked and move with control'
+          ],
+          mistakes: ['Dumping weight into the neck', 'Hands too narrow', 'Losing the pike shape']
+        },
+        'Dumbbell Floor Press': {
+          name: 'Push-Up',
+          image: '🫸',
+          tracksLoad: false,
+          sets: '3 sets × 12 reps',
+          instructions: [
+            'Set hands just outside shoulder width',
+            'Keep body in a straight line from shoulders to heels',
+            'Lower chest under control until elbows hit roughly 45 degrees',
+            'Press back up without letting hips sag'
+          ],
+          mistakes: ['Hips sagging', 'Flaring elbows straight out', 'Half reps']
+        },
+        'Lateral Raise': {
+          name: 'Wall Slide',
+          image: '🧱',
+          tracksLoad: false,
+          sets: '3 sets × 12 reps',
+          instructions: [
+            'Stand with upper back and forearms against a wall',
+            'Keep ribs down and slide arms overhead',
+            'Pause at the top, then return slowly',
+            'Focus on shoulder control, not speed'
+          ],
+          mistakes: ['Lower back arching', 'Losing forearm contact', 'Shrugging shoulders']
+        },
+        'Romanian Deadlift': {
+          name: 'Hip Hinge Good Morning',
+          image: '🪵',
+          tracksLoad: false,
+          sets: '3 sets × 15 reps',
+          instructions: [
+            'Stand tall with hands across chest',
+            'Push hips back while keeping a neutral spine',
+            'Feel a stretch in the hamstrings',
+            'Drive hips forward to stand tall again'
+          ],
+          mistakes: ['Rounding the back', 'Turning it into a squat', 'Losing tension at the bottom']
+        },
+        'Bent-Over Row': {
+          name: 'Doorframe Row',
+          image: '🚪',
+          tracksLoad: false,
+          sets: '3 sets × 10 reps',
+          instructions: [
+            'Hold a sturdy doorframe or anchored towel',
+            'Lean back and keep body braced',
+            'Pull chest toward hands while keeping elbows close',
+            'Lower under control and repeat'
+          ],
+          mistakes: ['Shrugging shoulders', 'Using momentum', 'Loose core position']
+        },
+        'Single-Arm Row': {
+          name: 'Table Row',
+          image: '🪑',
+          tracksLoad: false,
+          sets: '3 sets × 8 reps',
+          instructions: [
+            'Use a sturdy table edge or low bar',
+            'Brace body in a straight line',
+            'Pull chest upward while squeezing shoulder blade down and back',
+            'Lower slowly each rep'
+          ],
+          mistakes: ['Loose hips', 'Pulling with just the arms', 'Rushing the lowering phase']
+        },
+        'Reverse Fly': {
+          name: 'Prone W Raise',
+          image: '🪽',
+          tracksLoad: false,
+          sets: '3 sets × 12 reps',
+          instructions: [
+            'Lie face down with forehead supported',
+            'Lift elbows into a W shape while squeezing upper back',
+            'Move slowly and keep neck relaxed',
+            'Lower with full control'
+          ],
+          mistakes: ['Shrugging shoulders', 'Swinging arms', 'Overarching lower back']
+        },
+        'Bicep Curl': {
+          name: 'Towel Curl ISO',
+          image: '🧷',
+          tracksLoad: false,
+          sets: '3 sets × 20 sec hold',
+          instructions: [
+            'Stand on a towel and grab both ends',
+            'Pull upward as if curling while feet pin the towel down',
+            'Hold maximum tension through the biceps',
+            'Release, reset, and repeat'
+          ],
+          mistakes: ['Standing too tall without tension', 'Shrugging shoulders', 'Short hold times']
+        },
+        'Bulgarian Split Squat': {
+          name: 'Rear-Foot Elevated Split Squat',
+          image: '🦿',
+          tracksLoad: false,
+          sets: '3 sets × 10 reps each',
+          instructions: [
+            'Place rear foot on a chair or couch edge',
+            'Stay tall through the torso',
+            'Lower until front thigh approaches parallel',
+            'Drive through the front foot to stand'
+          ],
+          mistakes: ['Front knee collapsing', 'Leaning too far forward', 'Rushing balance']
+        },
+        'Single-Leg RDL': {
+          name: 'Single-Leg Reach',
+          image: '⚖️',
+          tracksLoad: false,
+          sets: '3 sets × 8 reps each',
+          instructions: [
+            'Balance on one leg with soft knee bend',
+            'Reach both hands forward as free leg extends back',
+            'Keep hips square to the floor',
+            'Stand tall by driving through the planted foot'
+          ],
+          mistakes: ['Opening the hips', 'Rounding the back', 'Losing balance too early']
+        },
+        'Walking Lunges': {
+          name: 'Reverse Lunge',
+          image: '↩️',
+          tracksLoad: false,
+          sets: '3 sets × 12 reps total',
+          instructions: [
+            'Step back into a long reverse lunge',
+            'Lower under control until both knees are bent',
+            'Drive through front foot to return to standing',
+            'Alternate sides every rep'
+          ],
+          mistakes: ['Short step length', 'Front heel lifting', 'Torso collapsing']
+        },
+        'Calf Raises': {
+          name: 'Single-Leg Calf Raise',
+          image: '🦶',
+          tracksLoad: false,
+          sets: '3 sets × 12 reps each',
+          instructions: [
+            'Hold onto a wall for balance',
+            'Rise as high as possible on one foot',
+            'Pause and squeeze at the top',
+            'Lower slowly to a full stretch'
+          ],
+          mistakes: ['Bouncing reps', 'Not reaching full range', 'Rushing the lowering phase']
+        },
+        'Dumbbell Thruster': {
+          name: 'Squat To Reach',
+          image: '🚀',
+          tracksLoad: false,
+          sets: '3 sets × 12 reps',
+          instructions: [
+            'Squat down with hands near shoulders',
+            'Drive up powerfully and reach overhead',
+            'Flow immediately into the next rep',
+            'Keep chest lifted through the whole sequence'
+          ],
+          mistakes: ['Stopping at the top', 'Short squat depth', 'Losing posture']
+        },
+        'Renegade Row': {
+          name: 'Bear Plank Shoulder Tap',
+          image: '🐻',
+          tracksLoad: false,
+          sets: '3 sets × 12 taps',
+          instructions: [
+            'Hover knees just off the floor in a bear plank',
+            'Tap opposite shoulder without shifting hips',
+            'Move slowly and keep trunk braced',
+            'Alternate sides every rep'
+          ],
+          mistakes: ['Hips rocking side to side', 'Lifting knees too high', 'Moving too fast']
+        },
+        'Dumbbell Swing': {
+          name: 'Squat Jump',
+          image: '⚡',
+          tracksLoad: false,
+          sets: '3 sets × 10 reps',
+          instructions: [
+            'Sit into a quick athletic squat',
+            'Explode upward and leave the floor softly',
+            'Land quietly and reset balance',
+            'Use arms to help rhythm, not to pull'
+          ],
+          mistakes: ['Hard landings', 'Knees caving in', 'Too little rest between jumps']
+        },
+        'Push Press': {
+          name: 'Hand-Release Push-Up',
+          image: '🫷',
+          tracksLoad: false,
+          sets: '3 sets × 10 reps',
+          instructions: [
+            'Lower chest fully to the floor',
+            'Briefly release the hands while staying braced',
+            'Reset hands and press back to plank',
+            'Keep body in one line throughout'
+          ],
+          mistakes: ['Hips sagging', 'Rushing off the floor', 'Partial range']
+        }
+      },
+      gym: {
+        'Goblet Squat': {
+          name: 'Barbell Back Squat',
+          image: '🏋️',
+          sets: '4 sets × 6 reps',
+        },
+        'Dumbbell Shoulder Press': {
+          name: 'Barbell Overhead Press',
+          image: '🏋️',
+          sets: '4 sets × 6 reps',
+        },
+        'Dumbbell Floor Press': {
+          name: 'Barbell Bench Press',
+          image: '🏋️',
+          sets: '4 sets × 6 reps',
+        },
+        'Lateral Raise': {
+          name: 'Cable Lateral Raise',
+          image: '🪽',
+          sets: '3 sets × 12 reps',
+        },
+        'Romanian Deadlift': {
+          name: 'Barbell Romanian Deadlift',
+          image: '🏋️',
+          sets: '4 sets × 6 reps',
+        },
+        'Bent-Over Row': {
+          name: 'Barbell Row',
+          image: '🏋️',
+          sets: '4 sets × 8 reps',
+        },
+        'Single-Arm Row': {
+          name: 'Chest-Supported Row',
+          image: '🏋️',
+          sets: '3 sets × 10 reps',
+        },
+        'Reverse Fly': {
+          name: 'Face Pull',
+          image: '🧵',
+          sets: '3 sets × 15 reps',
+        },
+        'Bicep Curl': {
+          name: 'EZ-Bar Curl',
+          image: '💪',
+          sets: '3 sets × 10 reps',
+        },
+        'Bulgarian Split Squat': {
+          name: 'Barbell Split Squat',
+          image: '🏋️',
+          sets: '3 sets × 8 reps each',
+        },
+        'Single-Leg RDL': {
+          name: 'Barbell Good Morning',
+          image: '🏋️',
+          sets: '3 sets × 8 reps',
+        },
+        'Walking Lunges': {
+          name: 'Barbell Reverse Lunge',
+          image: '🏋️',
+          sets: '3 sets × 10 reps each',
+        },
+        'Calf Raises': {
+          name: 'Standing Calf Raise',
+          image: '🏋️',
+          sets: '4 sets × 12 reps',
+        },
+        'Dumbbell Thruster': {
+          name: 'Barbell Thruster',
+          image: '🏋️',
+          sets: '4 sets × 6 reps',
+        },
+        'Renegade Row': {
+          name: 'Cable Row',
+          image: '🧲',
+          sets: '3 sets × 10 reps',
+        },
+        'Dumbbell Swing': {
+          name: 'Kettlebell Swing',
+          image: '🔔',
+          sets: '3 sets × 15 reps',
+        },
+        'Push Press': {
+          name: 'Barbell Push Press',
+          image: '🏋️',
+          sets: '4 sets × 5 reps',
+        }
+      }
+    };
+
+    function applyEquipmentVariant(exercise, config = {}) {
+      const equipmentMode = getPlanEquipmentMode(config);
+      const variant = (equipmentExerciseVariants[equipmentMode] || {})[exercise.name];
+      if (!variant) return cloneExerciseWithPlan(exercise, { equipmentMode });
+
+      return cloneExerciseWithPlan(exercise, {
+        ...variant,
+        equipmentMode,
+        variantOf: exercise.name,
+        tracksLoad: variant.tracksLoad === false ? false : exercise.tracksLoad !== false,
+        instructions: Array.isArray(variant.instructions)
+          ? variant.instructions
+          : (exercise.instructions || []).map(item => rewriteInstructionForVariant(item, variant.name || exercise.name, equipmentMode)),
+        mistakes: Array.isArray(variant.mistakes)
+          ? variant.mistakes
+          : [...(exercise.mistakes || [])]
+      });
+    }
+
+    function deriveSuggestedGoalsFromPlan(config = {}) {
+      const equipmentLabel = Array.isArray(config.availableEquipment) && config.availableEquipment.length
+        ? config.availableEquipment[0]
+        : 'bodyweight';
+      const consistencyGoal = config.scheduleTemplate === '4-day'
+        ? (config.sessionLength >= 45 ? 85 : 80)
+        : (config.sessionLength <= 15 ? 65 : 75);
+
+      if (config.focus === 'Build muscle') {
+        return {
+          strengthGoal: `Own your main ${equipmentLabel.toLowerCase()} lifts with cleaner, higher-quality reps`,
+          customGoal: 'Build visible muscle with a repeatable weekly rhythm.',
+          consistencyGoal
+        };
+      }
+
+      if (config.focus === 'Lose fat') {
+        return {
+          strengthGoal: 'Keep strength moving up while training at a steady, sustainable pace',
+          customGoal: 'Lean out without losing the training habit.',
+          consistencyGoal
+        };
+      }
+
+      if (config.focus === 'Stay consistent') {
+        return {
+          strengthGoal: 'String together simple sessions until the week feels automatic',
+          customGoal: 'Lower friction so training survives busy family weeks.',
+          consistencyGoal: Math.max(65, consistencyGoal - 5)
+        };
+      }
+
+      return {
+        strengthGoal: `Progress your main ${equipmentLabel.toLowerCase()} movements week by week`,
+        customGoal: 'Build practical strength with a plan that fits family life.',
+        consistencyGoal
+      };
+    }
+
+    function syncGoalsWithPlanConfig(goals = {}, config = {}) {
+      const suggested = deriveSuggestedGoalsFromPlan(config);
+      return {
+        ...goals,
+        strengthGoal: goals.strengthGoal || suggested.strengthGoal,
+        customGoal: goals.customGoal || suggested.customGoal,
+        consistencyGoal: Number(goals.consistencyGoal || 80) === 80 ? suggested.consistencyGoal : goals.consistencyGoal
+      };
+    }
+
+    function applyPrescriptionAdjustments(exercise, config = {}, week = 1) {
+      let adjusted = cloneExerciseWithPlan(exercise);
+      const planNotes = [];
+
+      if (config.focus === 'Build muscle') {
+        adjusted.sets = updateSetCount(adjusted.sets, adjusted.tracksLoad === false ? 3 : 4);
+        adjusted.sets = updateRepTarget(adjusted.sets, 2, 8, 18);
+        adjusted.duration = adjustDuration(adjusted.duration, 5);
+        planNotes.push('Muscle bias: more total volume');
+      } else if (config.focus === 'Lose fat') {
+        adjusted.sets = updateRepTarget(adjusted.sets, adjusted.tracksLoad === false ? 2 : 1, 8, 20);
+        adjusted.duration = adjustDuration(adjusted.duration, -5);
+        planNotes.push('Fat-loss bias: faster session pacing');
+      } else if (config.focus === 'Stay consistent') {
+        adjusted.sets = updateSetCount(adjusted.sets, adjusted.tracksLoad === false ? 2 : 2);
+        adjusted.duration = adjustDuration(adjusted.duration, -10);
+        planNotes.push('Consistency bias: lower-friction start');
+      } else if (adjusted.tracksLoad !== false) {
+        adjusted.sets = updateRepTarget(adjusted.sets, -2, 5, 12);
+        planNotes.push('Strength bias: tighter rep targets');
+      }
+
+      if (config.recoveryMode === 'light' && week <= 2) {
+        adjusted.sets = updateSetCount(adjusted.sets, 2);
+        adjusted.duration = adjustDuration(adjusted.duration, -10);
+        planNotes.push('Recovery ramp: reduced week 1-2 volume');
+      } else if (config.recoveryMode === 'moderate' && week <= 2) {
+        adjusted.duration = adjustDuration(adjusted.duration, -5);
+        planNotes.push('Recovery ramp: controlled first two weeks');
+      }
+
+      return {
+        ...adjusted,
+        planNote: planNotes.join(' • ')
+      };
+    }
+
+    function buildPlanExerciseLibrary(config = {}, week = 1) {
+      return Object.fromEntries(
+        Object.entries(exercises).map(([dayKey, items]) => [
+          dayKey,
+          items.map(item => applyPrescriptionAdjustments(applyEquipmentVariant(item, config), config, week))
+        ])
+      );
+    }
+
     function doesExerciseTrackLoad(exerciseOrName) {
       if (!exerciseOrName) return true;
       if (typeof exerciseOrName === 'object') {
@@ -1877,6 +2387,7 @@
       // Purchase Verification State
       const [hasPurchased, setHasPurchased] = useState(false);
       const [purchaseChecked, setPurchaseChecked] = useState(false);
+      const [bootReady, setBootReady] = useState(false);
       
       // Navigation & UI State
       const [screen, setScreen] = useState('booting');
@@ -1944,6 +2455,16 @@
       const [daysSinceLastWorkout, setDaysSinceLastWorkout] = useState(0);
       const [aiCoach, setAiCoach] = useState(null);
       const [aiCoachStatus, setAiCoachStatus] = useState('idle');
+      const [planConfig, setPlanConfig] = useState({
+        focus: 'Build strength',
+        sessionLength: 30,
+        trainingEnvironment: 'Home only',
+        availableEquipment: ['Dumbbells'],
+        recoveryMode: 'normal',
+        scheduleTemplate: '3-day',
+        seededFromQuiz: false,
+        lastAdjustedAt: null
+      });
       const [onboardingIntake, setOnboardingIntake] = useState({
         source: '',
         capturedAt: null,
@@ -1981,12 +2502,25 @@
         preview: null
       };
 
+      const defaultPlanConfig = {
+        focus: 'Build strength',
+        sessionLength: 30,
+        trainingEnvironment: 'Home only',
+        availableEquipment: ['Dumbbells'],
+        recoveryMode: 'normal',
+        scheduleTemplate: '3-day',
+        seededFromQuiz: false,
+        lastAdjustedAt: null
+      };
+
       const totalWeeks = 12;
       const currentPhase = currentWeek <= 4 ? 'Foundation' : currentWeek <= 8 ? 'Build' : 'Peak';
-      // Phase 1-2: 5 workouts/week × 8 weeks = 40
-      // Phase 3: 6 workouts/week × 4 weeks = 24
-      // Total: 64 workouts
-      const totalWorkouts = 64;
+      const workoutsPerWeek = planConfig.scheduleTemplate === '4-day' ? 4 : 3;
+      const totalWorkouts = totalWeeks * workoutsPerWeek;
+      const programExercises = useMemo(
+        () => buildPlanExerciseLibrary(planConfig, currentWeek),
+        [planConfig, currentWeek]
+      );
       const hydrationReady = React.useRef(false);
       const lastSavedPayload = React.useRef('');
       const lastAiSnapshot = React.useRef('');
@@ -2090,6 +2624,55 @@
         );
       }
 
+      function getFocusLabel(focus = '') {
+        return String(focus || '').trim() || 'Build strength';
+      }
+
+      function getRecoveryModeLabel(recoveryMode = '') {
+        if (recoveryMode === 'light') return 'Light start';
+        if (recoveryMode === 'moderate') return 'Moderate start';
+        return 'Normal start';
+      }
+
+      function getScheduleTemplateLabel(scheduleTemplate = '') {
+        return scheduleTemplate === '4-day' ? '4 workouts/week' : '3 workouts/week';
+      }
+
+      function getEquipmentSummaryLabel(equipment = []) {
+        if (!Array.isArray(equipment) || equipment.length === 0) return 'Bodyweight-first';
+        if (equipment.includes('No equipment yet')) return 'No equipment yet';
+        if (equipment.includes('Bodyweight only')) return 'Bodyweight only';
+        if (equipment.includes('Dumbbells')) return 'Dumbbells';
+        if (equipment.includes('Barbell')) return 'Barbell';
+        return equipment.slice(0, 2).join(' + ');
+      }
+
+      function getPlanConfigSummary(config = defaultPlanConfig) {
+        return {
+          focus: getFocusLabel(config.focus),
+          sessionLength: `${config.sessionLength || 30} min`,
+          trainingEnvironment: config.trainingEnvironment || 'Home only',
+          equipment: getEquipmentSummaryLabel(config.availableEquipment),
+          recoveryMode: getRecoveryModeLabel(config.recoveryMode),
+          scheduleTemplate: getScheduleTemplateLabel(config.scheduleTemplate),
+        };
+      }
+
+      function getSeededAtLabel(value) {
+        if (!value) return '';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+        return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      }
+
+      function isWorkoutFeedbackType(value = '') {
+        return value === 'perfect' || value === 'hard' || value === 'easy';
+      }
+
+      function getWorkoutCountFromFeedback(feedbackData = {}) {
+        return Object.values(feedbackData || {}).filter(entry => isWorkoutFeedbackType(entry?.feedback)).length;
+      }
+
       function deriveSeedGoalsFromQuiz(profile) {
         const answers = profile?.answers || {};
         const goal = String(answers.goal || '').trim();
@@ -2130,6 +2713,35 @@
         };
       }
 
+      function derivePlanConfigFromQuiz(profile) {
+        const answers = profile?.answers || {};
+        const preview = profile?.preview || {};
+        const equipment = Array.isArray(answers.equipment) && answers.equipment.length > 0
+          ? answers.equipment
+          : ['Bodyweight only'];
+        const sessionLength = [15, 30, 45, 60].includes(Number(preview.minutes))
+          ? Number(preview.minutes)
+          : 30;
+        const frequency = Number(preview.frequency) >= 4 ? '4-day' : '3-day';
+        const recoveryMode = answers.sleep === 'Less than 5 hours'
+          ? 'light'
+          : answers.sleep === '5-6 hours'
+          ? 'moderate'
+          : 'normal';
+
+        return {
+          ...defaultPlanConfig,
+          focus: getFocusLabel(answers.goal || 'Build strength'),
+          sessionLength,
+          trainingEnvironment: answers.location || 'Home only',
+          availableEquipment: equipment,
+          recoveryMode,
+          scheduleTemplate: frequency,
+          seededFromQuiz: true,
+          lastAdjustedAt: new Date().toISOString()
+        };
+      }
+
       function shouldApplyQuizSeed(data, profile) {
         if (!profile || !profile.answers) return false;
         if (data?.intake?.seededAt) return false;
@@ -2149,6 +2761,7 @@
               ...deriveSeedGoalsFromQuiz(profile)
             }
           },
+          planConfig: derivePlanConfigFromQuiz(profile),
           intake: {
             ...defaultOnboardingIntake,
             source: 'quiz',
@@ -2191,9 +2804,42 @@
             snapshot: '',
             updatedAt: null
           },
+          planConfig: defaultPlanConfig,
           intake: defaultOnboardingIntake,
           updatedAt: null
         };
+      }
+
+      function normalizePlanConfigDraft(draft = {}) {
+        const validSessionLengths = new Set([15, 30, 45, 60]);
+        const validRecoveryModes = new Set(['light', 'moderate', 'normal']);
+        const validScheduleTemplates = new Set(['3-day', '4-day']);
+        const selectedEquipment = Array.isArray(draft.availableEquipment)
+          ? draft.availableEquipment.filter(Boolean).slice(0, 8)
+          : [];
+
+        return {
+          ...defaultPlanConfig,
+          focus: getFocusLabel(draft.focus || defaultPlanConfig.focus),
+          sessionLength: validSessionLengths.has(Number(draft.sessionLength)) ? Number(draft.sessionLength) : defaultPlanConfig.sessionLength,
+          trainingEnvironment: String(draft.trainingEnvironment || defaultPlanConfig.trainingEnvironment).trim() || defaultPlanConfig.trainingEnvironment,
+          availableEquipment: selectedEquipment.length ? selectedEquipment : ['Bodyweight only'],
+          recoveryMode: validRecoveryModes.has(String(draft.recoveryMode || '')) ? String(draft.recoveryMode) : defaultPlanConfig.recoveryMode,
+          scheduleTemplate: validScheduleTemplates.has(String(draft.scheduleTemplate || '')) ? String(draft.scheduleTemplate) : defaultPlanConfig.scheduleTemplate,
+          seededFromQuiz: Boolean(draft.seededFromQuiz),
+          lastAdjustedAt: draft.lastAdjustedAt || null
+        };
+      }
+
+      function buildPlanConfigFromIntake(intake) {
+        const quizAnswers = intake?.quizAnswers;
+        if (!quizAnswers || typeof quizAnswers !== 'object') return null;
+
+        return derivePlanConfigFromQuiz({
+          answers: quizAnswers,
+          preview: intake?.preview || {},
+          capturedAt: intake?.capturedAt || intake?.seededAt || null
+        });
       }
 
       async function apiRequest(path, options = {}) {
@@ -2255,7 +2901,7 @@
       }
 
       function getDaysSinceFromFeedback(feedbackData = {}) {
-        const completedWorkouts = Object.values(feedbackData || {}).filter(f => f.feedback !== 'skipped');
+        const completedWorkouts = Object.values(feedbackData || {}).filter(f => isWorkoutFeedbackType(f?.feedback));
         if (completedWorkouts.length === 0) return 0;
 
         const lastDate = completedWorkouts
@@ -2290,6 +2936,7 @@
         setAiCoach(persistedCoachCache.coach || null);
         setAiCoachStatus(persistedCoachCache.coach ? 'ready' : 'idle');
         lastAiSnapshot.current = persistedCoachCache.snapshot || '';
+        setPlanConfig(safeData.planConfig || defaultPlanConfig);
         setOnboardingIntake(safeData.intake || defaultOnboardingIntake);
       }
 
@@ -2346,6 +2993,7 @@
           profile: profile || defaultUserProfile,
           weights: weights || {},
           coachCache: buildDefaultUserData().coachCache,
+          planConfig: defaultPlanConfig,
           intake: defaultOnboardingIntake,
           updatedAt: null
         };
@@ -2383,6 +3031,7 @@
             snapshot: lastAiSnapshot.current,
             updatedAt: aiCoach ? new Date().toISOString() : null
           },
+          planConfig,
           intake: onboardingIntake
         };
 
@@ -2463,6 +3112,7 @@
           profile: serverData.profile || defaultUserProfile,
           weights: serverData.weights || {},
           coachCache: serverData.coachCache || buildDefaultUserData().coachCache,
+          planConfig: serverData.planConfig || defaultPlanConfig,
           intake: serverData.intake || defaultOnboardingIntake
         });
         return {
@@ -2490,6 +3140,7 @@
         setDaysSinceLastWorkout(0);
         setAiCoach(null);
         setAiCoachStatus('idle');
+        setPlanConfig(defaultPlanConfig);
         setOnboardingIntake(defaultOnboardingIntake);
         hydrationReady.current = false;
         lastSavedPayload.current = '';
@@ -2497,12 +3148,12 @@
       }
 
       function getActualWorkoutCount(feedback = workoutFeedback) {
-        return Object.values(feedback || {}).filter(entry => entry.feedback !== 'skipped').length;
+        return getWorkoutCountFromFeedback(feedback);
       }
 
       function getRecentFeedbackEntries(limit = 3) {
         return Object.values(workoutFeedback || {})
-          .filter(entry => entry && entry.feedback && entry.feedback !== 'skipped' && entry.date)
+          .filter(entry => entry && isWorkoutFeedbackType(entry.feedback) && entry.date)
           .sort((a, b) => new Date(b.date) - new Date(a.date))
           .slice(0, limit)
           .map(entry => ({
@@ -2513,12 +3164,118 @@
           }));
       }
 
-      function getCurrentWorkoutSnapshot() {
-        const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
-        const currentDayExercises = workoutInfo ? exercises[workoutInfo.exerciseDay] || exercises.day1 : exercises.day1;
+      function getWeekSchedule(config = planConfig) {
+        if (config.scheduleTemplate === '4-day') {
+          return {
+            1: { type: 'Push + Squat', exerciseDay: 'day1' },
+            2: { type: 'Pull + Hinge', exerciseDay: 'day2' },
+            4: { type: 'Lower', exerciseDay: 'day3' },
+            6: { type: 'Full Body Power', exerciseDay: 'day4' }
+          };
+        }
 
         return {
-          type: workoutInfo?.type || 'Workout',
+          1: { type: 'Push + Squat', exerciseDay: 'day1' },
+          3: { type: 'Pull + Hinge', exerciseDay: 'day2' },
+          5: { type: 'Lower', exerciseDay: 'day3' }
+        };
+      }
+
+      function getRecoveryDayLabel(day, config = planConfig) {
+        const workoutDays = Object.keys(getWeekSchedule(config)).map(Number);
+        const nextWorkoutDay = workoutDays.find(workoutDay => workoutDay > day);
+        if (nextWorkoutDay) {
+          return `Recovery day before Day ${nextWorkoutDay}.`;
+        }
+        return 'Recovery day before the next week begins.';
+      }
+
+      function getDayStatus(day, week = currentWeek, completedDayKeys = completedDays, config = planConfig) {
+        const dayKey = `w${week}d${day}`;
+        const workoutInfo = getWorkoutInfo(day, week);
+        return {
+          dayKey,
+          workoutInfo,
+          isWorkoutDay: Boolean(workoutInfo),
+          isCompleted: completedDayKeys.includes(dayKey),
+          isRecoveryDay: !workoutInfo
+        };
+      }
+
+      function getStoredPlanSnapshot(cycle) {
+        const snapshot = cycle?.planSnapshot;
+        if (!snapshot || typeof snapshot !== 'object') {
+          return {
+            focus: 'Legacy plan',
+            sessionLength: null,
+            scheduleLabel: null
+          };
+        }
+
+        return {
+          focus: getFocusLabel(snapshot.focus || 'Build strength'),
+          sessionLength: Number(snapshot.sessionLength) || null,
+          scheduleLabel: getScheduleTemplateLabel(snapshot.scheduleTemplate)
+        };
+      }
+
+      function getNextIncompletePosition(updatedCompletedDays, week) {
+        for (let day = 1; day <= 7; day++) {
+          const checkKey = `w${week}d${day}`;
+          if (!updatedCompletedDays.includes(checkKey)) {
+            return { week, day };
+          }
+        }
+
+        if (week >= totalWeeks) {
+          return null;
+        }
+
+        return { week: week + 1, day: 1 };
+      }
+
+      function getNextOpenPositionFromCursor(completedDayKeys = completedDays, startWeek = currentWeek, startDay = currentDay) {
+        for (let week = startWeek; week <= totalWeeks; week++) {
+          const firstDay = week === startWeek ? startDay : 1;
+          for (let day = firstDay; day <= 7; day++) {
+            const checkKey = `w${week}d${day}`;
+            if (!completedDayKeys.includes(checkKey)) {
+              return { week, day };
+            }
+          }
+        }
+
+        return null;
+      }
+
+      function getNextWorkoutPositionFromCursor(completedDayKeys = completedDays, startWeek = currentWeek, startDay = currentDay, config = planConfig) {
+        for (let week = startWeek; week <= totalWeeks; week++) {
+          const firstDay = week === startWeek ? startDay : 1;
+          for (let day = firstDay; day <= 7; day++) {
+            const checkKey = `w${week}d${day}`;
+            if (completedDayKeys.includes(checkKey)) continue;
+            if (getWorkoutInfo(day, week)) {
+              return { week, day };
+            }
+          }
+        }
+
+        return null;
+      }
+
+      function getCurrentWorkoutSnapshot() {
+        const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
+        if (!workoutInfo) {
+          return {
+            type: 'Recovery Day',
+            loadableExercises: []
+          };
+        }
+
+        const currentDayExercises = programExercises[workoutInfo.exerciseDay] || programExercises.day1;
+
+        return {
+          type: workoutInfo.type || 'Workout',
           loadableExercises: currentDayExercises
             .filter(exercise => doesExerciseTrackLoad(exercise))
             .map(exercise => {
@@ -2560,6 +3317,12 @@
             easyWorkouts,
             consistencyRate: Math.round((actualWorkoutCount / totalWorkouts) * 100)
           },
+          plan: {
+            workoutsPerWeek,
+            sessionLength: planConfig.sessionLength,
+            scheduleTemplate: planConfig.scheduleTemplate,
+            recoveryMode: planConfig.recoveryMode
+          },
           recentFeedback: getRecentFeedbackEntries(3),
           currentWorkout: getCurrentWorkoutSnapshot()
         };
@@ -2567,41 +3330,13 @@
 
       // Helper function to get workout type and exercise day for a given calendar day
       const getWorkoutInfo = (calendarDay, week) => {
-        const isPeakPhase = week > 8;
-        
-        // Map calendar days to workout programs
-        // Phase 1-2: Days 1,2,3,5,6 are workouts (rest: 4,7)
-        // Phase 3: Days 1,2,3,4,5,6 are workouts (rest: 7)
-        
-        const workoutTypes = ['Push', 'Pull', 'Lower', 'Full Body Power'];
-        
-        if (isPeakPhase) {
-          // Phase 3: 6 workouts/week, cycling through all 4 types
-          const workoutMapping = {
-            1: { type: 'Push + Squat', exerciseDay: 'day1' },
-            2: { type: 'Pull + Hinge', exerciseDay: 'day2' },
-            3: { type: 'Lower', exerciseDay: 'day3' },
-            4: { type: 'Full Body Power', exerciseDay: 'day4' },
-            5: { type: 'Push + Squat', exerciseDay: 'day1' },
-            6: { type: 'Pull + Hinge', exerciseDay: 'day2' }
-          };
-          return workoutMapping[calendarDay] || null;
-        } else {
-          // Phase 1-2: 5 workouts/week
-          const workoutMapping = {
-            1: { type: 'Push + Squat', exerciseDay: 'day1' },
-            2: { type: 'Pull + Hinge', exerciseDay: 'day2' },
-            3: { type: 'Lower', exerciseDay: 'day3' },
-            5: { type: 'Full Body Power', exerciseDay: 'day4' },
-            6: { type: 'Push + Squat', exerciseDay: 'day1' }
-          };
-          return workoutMapping[calendarDay] || null;
-        }
+        const workoutMapping = getWeekSchedule(planConfig);
+        return workoutMapping[calendarDay] || null;
       };
 
-      // Calculate week from completed days (4 workouts per week)
+      // Calculate week from completed days
       const calculateWeekFromWorkouts = (completedCount) => {
-        return Math.floor(completedCount / 4) + 1;
+        return Math.floor(completedCount / workoutsPerWeek) + 1;
       };
 
       useEffect(() => {
@@ -2684,6 +3419,7 @@
           } finally {
             if (!cancelled) {
               setPurchaseChecked(true);
+              setBootReady(true);
             }
           }
         }
@@ -2801,6 +3537,7 @@
             snapshot: lastAiSnapshot.current,
             updatedAt: aiCoach ? new Date().toISOString() : null
           },
+          planConfig,
           intake: onboardingIntake
         };
 
@@ -2824,6 +3561,7 @@
         userProfile,
         exerciseWeights,
         aiCoach,
+        planConfig,
         onboardingIntake,
         isLoggedIn,
         currentUser
@@ -2866,6 +3604,54 @@
         isLoggedIn,
         currentUser
       ]);
+
+      useEffect(() => {
+        const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
+        if (!workoutInfo && (screen === 'workout' || screen === 'complete' || workoutStarted)) {
+          setWorkoutStarted(false);
+          setCurrentExercise(0);
+          if (screen === 'workout' || screen === 'complete') {
+            setScreen('home');
+          }
+        }
+      }, [planConfig.scheduleTemplate, currentDay, currentWeek, screen, workoutStarted]);
+
+      useEffect(() => {
+        const currentDayKey = `w${currentWeek}d${currentDay}`;
+        const currentDayCompleted = completedDays.includes(currentDayKey);
+        const currentWorkoutInfo = getWorkoutInfo(currentDay, currentWeek);
+
+        if (!currentWorkoutInfo && !currentDayCompleted) {
+          const nextWorkout = getNextWorkoutPositionFromCursor(completedDays, currentWeek, currentDay);
+          const fallbackOpen = getNextOpenPositionFromCursor(completedDays, currentWeek, currentDay);
+          const preferredPosition = nextWorkout || fallbackOpen;
+
+          if (!preferredPosition) return;
+
+          if (preferredPosition.week !== currentWeek) {
+            setCurrentWeek(preferredPosition.week);
+          }
+          if (preferredPosition.day !== currentDay) {
+            setCurrentDay(preferredPosition.day);
+          }
+          return;
+        }
+
+        if (!currentDayCompleted) return;
+
+        const nextWorkout = getNextWorkoutPositionFromCursor(completedDays, currentWeek, currentDay);
+        const nextOpen = getNextOpenPositionFromCursor(completedDays, currentWeek, currentDay);
+        const preferredPosition = nextWorkout || nextOpen;
+
+        if (!preferredPosition) return;
+
+        if (preferredPosition.week !== currentWeek) {
+          setCurrentWeek(preferredPosition.week);
+        }
+        if (preferredPosition.day !== currentDay) {
+          setCurrentDay(preferredPosition.day);
+        }
+      }, [planConfig.scheduleTemplate]);
 
       // Timer countdown effect
       const [timerSeconds, setTimerSeconds] = useState(45);
@@ -3214,7 +4000,6 @@
 
       // Handle workout completion with feedback
       const handleWorkoutComplete = (feedback) => {
-        
         const workoutKey = `week${currentWeek}_day${currentDay}`;
         const newFeedback = {
           ...workoutFeedback,
@@ -3228,64 +4013,87 @@
         
         setWorkoutFeedback(newFeedback);
         
-        // Add to completed days if not already there
         const dayKey = `w${currentWeek}d${currentDay}`;
         let updatedCompletedDays = completedDays;
         if (!completedDays.includes(dayKey)) {
           updatedCompletedDays = [...completedDays, dayKey];
           setCompletedDays(updatedCompletedDays);
-        } else {
         }
-        
-        
-        // Find the next incomplete day in the current week
-        let foundNext = false;
-        for (let day = 1; day <= 7; day++) {
-          const checkKey = `w${currentWeek}d${day}`;
-          if (!updatedCompletedDays.includes(checkKey)) {
-            // Found next incomplete day
-            setCurrentDay(day);
-            foundNext = true;
-            break;
-          }
+
+        const nextPosition = getNextIncompletePosition(updatedCompletedDays, currentWeek);
+        if (!nextPosition) {
+          setScreen('completion');
+          return;
         }
-        
-        // If all days in current week are complete
-        if (!foundNext) {
-          if (currentWeek === 12) {
-            // Program complete
-            setScreen('completion');
-            return;
-          } else {
-            // Move to next week
-            setCurrentWeek(currentWeek + 1);
-            setCurrentDay(1);
-          }
+
+        if (nextPosition.week !== currentWeek) {
+          setCurrentWeek(nextPosition.week);
         }
+        setCurrentDay(nextPosition.day);
         
         setScreen('home');
         setWorkoutStarted(false);
       };
 
+      const handleRestDayComplete = () => {
+        const dayKey = `w${currentWeek}d${currentDay}`;
+        const workoutKey = `week${currentWeek}_day${currentDay}`;
+        const updatedCompletedDays = completedDays.includes(dayKey)
+          ? completedDays
+          : [...completedDays, dayKey];
+
+        setCompletedDays(updatedCompletedDays);
+        setWorkoutFeedback(prev => ({
+          ...prev,
+          [workoutKey]: {
+            feedback: 'rest',
+            date: new Date().toISOString(),
+            week: currentWeek,
+            day: currentDay
+          }
+        }));
+
+        const nextPosition = getNextIncompletePosition(updatedCompletedDays, currentWeek);
+        if (!nextPosition) {
+          setScreen('completion');
+          return;
+        }
+
+        if (nextPosition.week !== currentWeek) {
+          setCurrentWeek(nextPosition.week);
+        }
+        setCurrentDay(nextPosition.day);
+        setSuccess('Recovery day logged.');
+        setTimeout(() => setSuccess(''), 2000);
+      };
+
       // Save completed cycle to history and start new cycle
       const handleStartNewCycle = () => {
         // Calculate final stats
-        const actualWorkouts = Object.values(workoutFeedback).filter(f => f.feedback !== 'skipped').length;
-        const consistencyRate = Math.round((actualWorkouts / 64) * 100);
+        const actualWorkouts = getWorkoutCountFromFeedback(workoutFeedback);
+        const consistencyRate = Math.round((actualWorkouts / totalWorkouts) * 100);
         const perfectWorkouts = Object.values(workoutFeedback).filter(f => f.feedback === 'perfect').length;
         const progressionWorkouts = Object.values(workoutFeedback).filter(f => f.feedback === 'easy').length;
         const achievements = getAchievements();
 
         // Create history entry
         const cycleHistory = {
+          schemaVersion: 2,
           cycleNumber: currentCycleNumber,
           completedDate: new Date().toISOString(),
           totalWorkouts: actualWorkouts,
+          targetWorkouts: totalWorkouts,
           consistencyRate,
           perfectWorkouts,
           progressionWorkouts,
           achievements,
           goals: {...goals},
+          planSnapshot: {
+            focus: planConfig.focus,
+            sessionLength: planConfig.sessionLength,
+            trainingEnvironment: planConfig.trainingEnvironment,
+            scheduleTemplate: planConfig.scheduleTemplate
+          },
           completedDays: [...completedDays],
           workoutFeedback: {...workoutFeedback}
         };
@@ -3305,12 +4113,12 @@
       // Calculate achievements
       const getAchievements = () => {
         const achievements = [];
-        const workoutCount = Object.values(workoutFeedback).filter(f => f.feedback !== 'skipped').length;
+        const workoutCount = getWorkoutCountFromFeedback(workoutFeedback);
         
-        if (workoutCount >= 5) achievements.push({ icon: '🔥', text: 'Week 1 Warrior', desc: 'Completed first week' });
-        if (workoutCount >= 10) achievements.push({ icon: '💪', text: 'Two Week Titan', desc: 'Completed 2 weeks' });
-        if (workoutCount >= 20) achievements.push({ icon: '⚡', text: 'Consistency King', desc: 'Completed 4 weeks' });
-        if (workoutCount >= 64) achievements.push({ icon: '🏆', text: 'Full Program Champion', desc: 'Completed all 12 weeks' });
+        if (workoutCount >= workoutsPerWeek) achievements.push({ icon: '🔥', text: 'Week 1 Warrior', desc: 'Completed your first planned week' });
+        if (workoutCount >= workoutsPerWeek * 2) achievements.push({ icon: '💪', text: 'Two Week Titan', desc: 'Completed 2 planned weeks' });
+        if (workoutCount >= workoutsPerWeek * 4) achievements.push({ icon: '⚡', text: 'Consistency King', desc: 'Completed 4 planned weeks' });
+        if (workoutCount >= totalWorkouts) achievements.push({ icon: '🏆', text: 'Full Program Champion', desc: 'Completed all 12 weeks' });
         
         const perfectWorkouts = Object.values(workoutFeedback).filter(f => f.feedback === 'perfect').length;
         if (perfectWorkouts >= 5) achievements.push({ icon: '🎯', text: 'Perfect Form Master', desc: '5+ perfect workouts' });
@@ -3378,7 +4186,7 @@
                     onChange={(e) => setLocalGoals({...localGoals, consistencyGoal: parseInt(e.target.value)})}
                     className="w-full"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Complete {Math.round(64 * localGoals.consistencyGoal / 100)} of 64 workouts</p>
+                  <p className="text-xs text-gray-500 mt-1">Complete {Math.round(totalWorkouts * localGoals.consistencyGoal / 100)} of {totalWorkouts} workouts</p>
                 </div>
 
                 <div>
@@ -3462,22 +4270,20 @@
             setShowSkipRestModal(false);
             setSkipRestWarningLevel(0);
 
-            // Then handle day/week progression
-            if (currentDay === 7) {
-              // Last day of week - check for week progression
-              if (currentWeek === 12) {
-                // Last week completed - show celebration
-                setTimeout(() => setScreen('completion'), 100);
-              } else {
-                // Move to next week, day 1
-                setTimeout(() => {
-                  setCurrentWeek(currentWeek + 1);
-                  setCurrentDay(1);
-                }, 100);
-              }
+            const updatedCompletedDays = completedDays.includes(dayKey)
+              ? completedDays
+              : [...completedDays, dayKey];
+            const nextPosition = getNextIncompletePosition(updatedCompletedDays, currentWeek);
+
+            if (!nextPosition) {
+              setTimeout(() => setScreen('completion'), 100);
+            } else if (nextPosition.week !== currentWeek) {
+              setTimeout(() => {
+                setCurrentWeek(nextPosition.week);
+                setCurrentDay(nextPosition.day);
+              }, 100);
             } else {
-              // Move to next day within same week
-              setTimeout(() => setCurrentDay(currentDay + 1), 100);
+              setTimeout(() => setCurrentDay(nextPosition.day), 100);
             }
           }
         };
@@ -3550,9 +4356,9 @@
 
       const CompletionScreen = () => {
         const achievements = getAchievements();
-        const actualWorkouts = Object.values(workoutFeedback).filter(f => f.feedback !== 'skipped').length;
+        const actualWorkouts = getWorkoutCountFromFeedback(workoutFeedback);
         const skippedRestDays = Object.values(workoutFeedback).filter(f => f.feedback === 'skipped').length;
-        const consistencyRate = Math.round((actualWorkouts / 64) * 100);
+        const consistencyRate = Math.round((actualWorkouts / totalWorkouts) * 100);
         const perfectWorkouts = Object.values(workoutFeedback).filter(f => f.feedback === 'perfect').length;
         const progressionWorkouts = Object.values(workoutFeedback).filter(f => f.feedback === 'easy').length;
 
@@ -3579,7 +4385,7 @@
               <h2 className="text-2xl font-bold mb-2" style={{color: '#f97316'}}>
                 Cycle {currentCycleNumber} Complete
               </h2>
-              <p className="text-sm text-gray-400 mb-6">12 Weeks • 64 Workouts</p>
+              <p className="text-sm text-gray-400 mb-6">12 Weeks • {totalWorkouts} Workouts</p>
               
               <p className="text-xl text-gray-300 mb-8">
                 From broken to built. You showed up, you pushed through, you earned this.
@@ -3629,7 +4435,7 @@
                   )}
                   <div className="mt-4 p-3 rounded-lg" style={{background:'rgba(34,197,94,0.12)', border:'1px solid rgba(34,197,94,0.18)'}}>
                     <div className="text-sm font-semibold text-green-300">
-                      ✓ Consistency Goal: {actualWorkouts}/{Math.round(64 * goals.consistencyGoal / 100)} workouts ({consistencyRate >= goals.consistencyGoal ? 'ACHIEVED!' : 'Keep going!'})
+                      ✓ Consistency Goal: {actualWorkouts}/{Math.round(totalWorkouts * goals.consistencyGoal / 100)} workouts ({consistencyRate >= goals.consistencyGoal ? 'ACHIEVED!' : 'Keep going!'})
                     </div>
                   </div>
                 </div>
@@ -3691,7 +4497,7 @@
       return (
         <div className="max-w-md mx-auto min-h-screen shadow-2xl" style={{background:'linear-gradient(180deg, rgba(8,8,8,0.98) 0%, rgba(14,14,14,0.98) 100%)', boxShadow:'0 30px 80px rgba(0,0,0,0.32)'}}>
           {/* Purchase Gate - Show if not purchased */}
-          {purchaseChecked && !hasPurchased && !isAuthScreen && (
+          {bootReady && purchaseChecked && !hasPurchased && !isAuthScreen && (
             <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)'}}>
               <div className="max-w-md w-full text-center">
                 <h2 className="text-3xl font-bold mb-2 text-white">Dev<span style={{color:'#f97316'}}>Dad</span> Strength</h2>
@@ -3752,7 +4558,7 @@
           )}
 
           {/* Main App - Show only if purchased or purchase not checked yet */}
-          {(screen === 'booting' || !purchaseChecked || hasPurchased || isAuthScreen) && (
+          {(screen === 'booting' || !bootReady || !purchaseChecked || hasPurchased || isAuthScreen) && (
             <>
           {showGoalsModal && <GoalsModal />}
           {showSkipRestModal && <SkipRestDayModal />}
@@ -3851,7 +4657,7 @@
                   <div className="space-y-2 text-sm text-gray-300">
                     <div className="flex items-center gap-2">
                       <span className="feature-check">✓</span>
-                      <span>30 minutes, 4 days/week (fits your schedule)</span>
+                      <span>30-minute sessions with a 3 or 4 day weekly setup</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="feature-check">✓</span>
@@ -4021,6 +4827,7 @@
           {contentScreen === 'progress' && <ProgressScreen />}
           {contentScreen === 'more' && <MoreScreen />}
           {contentScreen === 'history' && <HistoryScreen />}
+          {contentScreen === 'plan-setup' && <PlanSetupScreen />}
           {contentScreen === 'profile' && <ProfileScreen />}
           {contentScreen === 'settings' && <SettingsScreen />}
           {contentScreen === 'help' && <HelpCenterScreen />}
@@ -4064,17 +4871,11 @@
       }
 
       function HomeScreen() {
-        const weekCompletedDays = completedDays.filter(d => d.startsWith(`w${currentWeek}`)).length;
         const actualWorkoutCount = getActualWorkoutCount();
-        // Progressive rest days:
-        // Phase 1-2 (Weeks 1-8): Rest days 4, 7 = 5 workouts/week
-        // Phase 3 (Weeks 9-12): Rest day 7 only = 6 workouts/week
-        const isRestDay = currentWeek <= 8 
-          ? (currentDay === 4 || currentDay === 7)  // Phase 1-2
-          : (currentDay === 7);                      // Phase 3
-        
+        const planSummary = getPlanConfigSummary(planConfig);
         const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
-        const currentDayExercises = workoutInfo ? exercises[workoutInfo.exerciseDay] || exercises.day1 : exercises.day1;
+        const isRestDay = !workoutInfo;
+        const currentDayExercises = workoutInfo ? programExercises[workoutInfo.exerciseDay] || programExercises.day1 : programExercises.day1;
         
         return (
           <div className="app-screen">
@@ -4107,10 +4908,17 @@
             <MotionSection delay={40} className="p-6 overflow-x-auto">
               <div className="flex gap-3">
                 {[1, 2, 3, 4, 5, 6, 7].map(day => {
-                  const dayKey = `w${currentWeek}d${day}`;
+                  const dayStatus = getDayStatus(day, currentWeek);
                   const isActive = day === currentDay;
-                  const isCompleted = completedDays.includes(dayKey);
+                  const isCompleted = dayStatus.isCompleted;
                   const isLocked = day > currentDay && !isCompleted;
+                  const icon = isCompleted
+                    ? '✓'
+                    : isLocked
+                    ? '🔒'
+                    : dayStatus.isRecoveryDay
+                    ? '🛌'
+                    : '💪';
                   
                   return (
                     <div 
@@ -4125,8 +4933,8 @@
                         </>
                       ) : (
                         <>
-                          <div className="text-2xl mb-1">{isLocked ? '🔒' : '💪'}</div>
-                          <div className="text-xs">Day {day}</div>
+                          <div className="text-2xl mb-1">{icon}</div>
+                          <div className="text-xs">{dayStatus.isRecoveryDay ? `Rest ${day}` : `Day ${day}`}</div>
                         </>
                       )}
                     </div>
@@ -4140,7 +4948,8 @@
               <div className="flex gap-4">
                 <div className="card metric-card flex-1">
                   <div className="text-sm text-orange-400 mb-1">Program</div>
-                  <div className="text-lg font-bold text-white">Build Strength</div>
+                  <div className="text-lg font-bold text-white">{planSummary.focus}</div>
+                  <div className="text-xs text-gray-500 mt-1">{planSummary.scheduleTemplate}</div>
                 </div>
                 <div className="card metric-card flex-1">
                   <div className="text-sm text-orange-400 mb-1">Current Week</div>
@@ -4149,6 +4958,38 @@
                   </div>
                 </div>
               </div>
+            </MotionSection>
+
+            <MotionSection delay={115} className="px-6 mb-6">
+              <button
+                type="button"
+                className="card w-full text-left"
+                onClick={() => setScreen('plan-setup')}
+                aria-label="Open plan setup"
+              >
+                <div className="flex justify-between items-start gap-3 mb-3">
+                  <div>
+                    <div className="section-label">CURRENT SETUP</div>
+                    <div className="text-lg font-bold text-white">{planSummary.sessionLength} • {planSummary.trainingEnvironment}</div>
+                  </div>
+                  <span className="text-gray-500">›</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="panel-muted rounded-xl px-3 py-3">
+                    <div className="text-[11px] uppercase tracking-[0.14em] text-gray-500 mb-1">Equipment</div>
+                    <div className="font-semibold text-orange-100">{planSummary.equipment}</div>
+                  </div>
+                  <div className="panel-muted rounded-xl px-3 py-3">
+                    <div className="text-[11px] uppercase tracking-[0.14em] text-gray-500 mb-1">Recovery</div>
+                    <div className="font-semibold text-orange-100">{planSummary.recoveryMode}</div>
+                  </div>
+                </div>
+                {onboardingIntake.seededAt && (
+                  <div className="mt-3 text-xs text-gray-400">
+                    Seeded from your quiz on {getSeededAtLabel(onboardingIntake.seededAt)}.
+                  </div>
+                )}
+              </button>
             </MotionSection>
 
             {/* Progress */}
@@ -4174,7 +5015,7 @@
                 </div>
                 {goals.consistencyGoal && (
                   <div className="mt-2 text-xs text-gray-400">
-                    Goal: {Math.round((actualWorkoutCount / (64 * goals.consistencyGoal / 100)) * 100)}% of consistency target
+                    Goal: {Math.round((actualWorkoutCount / Math.max(1, totalWorkouts * goals.consistencyGoal / 100)) * 100)}% of consistency target
                   </div>
                 )}
               </button>
@@ -4191,19 +5032,21 @@
                 <div className="card hero-card mb-4 text-center">
                   <div className="text-5xl mb-4">😴</div>
                   <h4 className="font-bold text-lg mb-2">Rest Day</h4>
-                  <p className="text-gray-400">Recovery is part of the system. Take it easy today.</p>
-                  {currentWeek <= 8 ? (
-                    <div className="dev-badge mt-4">Phase 1-2: 5 workouts/week • Light walk optional</div>
-                  ) : (
-                    <div className="dev-badge mt-4">Phase 3: 6 workouts/week • Stay hydrated</div>
-                  )}
+                  <p className="text-gray-400">{getRecoveryDayLabel(currentDay, planConfig)} Recovery is part of the system.</p>
+                  <div className="dev-badge mt-4">{planSummary.scheduleTemplate} • Walk, mobility, or full rest</div>
+                  <button
+                    className="nav-cta mt-4"
+                    onClick={handleRestDayComplete}
+                  >
+                    Log Recovery Day
+                  </button>
                   <button 
                     className="btn-secondary mt-4"
                     onClick={() => setShowSkipRestModal(true)}
                   >
                     Skip Rest Day
                   </button>
-                  <p className="text-xs text-gray-500 mt-2">Not recommended - rest helps you get stronger</p>
+                  <p className="text-xs text-gray-500 mt-2">Use skip only if you plan to train anyway. Logging recovery keeps your week moving without treating rest like a missed day.</p>
                 </div>
               ) : (
                 <div className="card hero-card mb-4">
@@ -4215,7 +5058,7 @@
                       <h4 className="font-bold text-lg mb-1 text-orange-100">
                         Day {currentDay}: {getWorkoutInfo(currentDay, currentWeek)?.type || 'Workout'}
                       </h4>
-                      <p className="text-xs text-gray-400">30 min • {currentDayExercises.length} exercises</p>
+                      <p className="text-xs text-gray-400">{planSummary.sessionLength} • {currentDayExercises.length} exercises</p>
                       <div className="dev-badge mt-2">Pause-friendly • Baby-proof</div>
                     </div>
                   </div>
@@ -4254,6 +5097,9 @@
                       <div className="flex-1">
                         <h4 className="font-semibold text-orange-100 text-sm">{ex.name}</h4>
                         <p className="text-xs text-gray-300">{ex.sets}</p>
+                        {ex.planNote && (
+                          <p className="text-xs mt-1 text-gray-500">{ex.planNote}</p>
+                        )}
                         {doesExerciseTrackLoad(ex) && Array.isArray(exerciseWeights[ex.name]) && exerciseWeights[ex.name].length > 0 && (
                           <p className="text-xs mt-1" style={{color:'#f97316'}}>Last: {exerciseWeights[ex.name][exerciseWeights[ex.name].length - 1].weight} {settings.units}</p>
                         )}
@@ -4289,8 +5135,26 @@
         const [actualTimeInput, setActualTimeInput] = useState('');
         
         const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
-        const exerciseDay = workoutInfo?.exerciseDay || 'day1';
-        const dayExercises = exercises[exerciseDay] || exercises.day1;
+        if (!workoutInfo) {
+          return (
+            <div className="app-screen px-6 py-8">
+              <div className="card hero-card max-w-md mx-auto text-center">
+                <div className="text-5xl mb-4">🛌</div>
+                <h2 className="text-2xl font-bold text-white mb-2">Recovery Day</h2>
+                <p className="text-sm text-gray-400 mb-4">{getRecoveryDayLabel(currentDay, planConfig)}</p>
+                <button className="nav-cta mb-3" onClick={() => setScreen('home')}>
+                  Back To Home
+                </button>
+                <button className="btn-secondary" onClick={handleRestDayComplete}>
+                  Log Recovery Day
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        const exerciseDay = workoutInfo.exerciseDay;
+        const dayExercises = programExercises[exerciseDay] || programExercises.day1;
         const exercise = dayExercises[currentExercise];
         const isLastExercise = currentExercise === dayExercises.length - 1;
         const youtubeId = getExerciseYoutubeId(exercise);
@@ -4702,6 +5566,9 @@
                   <div>
                     <div className="text-sm text-gray-400 mb-1">Planned duration</div>
                     <div className="font-semibold text-white">{formatTime(plannedDurationSeconds || getDefaultDuration())}</div>
+                    {exercise.planNote && (
+                      <div className="text-xs text-gray-500 mt-1">{exercise.planNote}</div>
+                    )}
                   </div>
                   {!showTimeInput ? (
                     <button 
@@ -4844,7 +5711,22 @@
         const [selectedFeedback, setSelectedFeedback] = useState(null);
         const actualWorkoutCount = getActualWorkoutCount();
         const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
-        const todayExercises = workoutInfo ? (exercises[workoutInfo.exerciseDay] || exercises.day1) : exercises.day1;
+        if (!workoutInfo) {
+          return (
+            <div className="app-screen px-6 py-8">
+              <div className="card hero-card max-w-md mx-auto text-center">
+                <div className="text-5xl mb-4">🛌</div>
+                <h2 className="text-2xl font-bold text-white mb-2">No Workout To Save</h2>
+                <p className="text-sm text-gray-400 mb-4">This day is currently a recovery day under your saved plan setup.</p>
+                <button className="nav-cta" onClick={() => setScreen('home')}>
+                  Back To Home
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        const todayExercises = programExercises[workoutInfo.exerciseDay] || programExercises.day1;
         const [weightInputs, setWeightInputs] = useState(() => {
           const init = {};
           todayExercises.forEach(ex => {
@@ -5063,6 +5945,7 @@
         const perfectWorkouts = Object.values(workoutFeedback).filter(f => f.feedback === 'perfect').length;
         const needsAdjustment = Object.values(workoutFeedback).filter(f => f.feedback === 'hard').length;
         const readyForProgress = Object.values(workoutFeedback).filter(f => f.feedback === 'easy').length;
+        const planSummary = getPlanConfigSummary(planConfig);
         const [activeTab, setActiveTab] = React.useState('workouts');
 
         // Strength progress data
@@ -5142,7 +6025,7 @@
                     </div>
                   )}
                   <div className="mt-3 text-sm font-semibold text-orange-300">
-                    Consistency Target: {actualWorkoutCount}/{Math.round(64 * goals.consistencyGoal / 100)} workouts
+                    Consistency Target: {actualWorkoutCount}/{Math.round(totalWorkouts * goals.consistencyGoal / 100)} workouts
                   </div>
                 </MotionSection>
               )}
@@ -5155,6 +6038,8 @@
                     const dayKey = `w${currentWeek}d${day}`;
                     const isCompleted = completedDays.includes(dayKey);
                     const feedback = workoutFeedback[`week${currentWeek}_day${day}`];
+                    const workoutInfo = getWorkoutInfo(day, currentWeek);
+                    const isWorkoutDay = Boolean(workoutInfo);
                     
                     return (
                       <div key={day} className="flex items-center gap-3">
@@ -5162,18 +6047,24 @@
                           {isCompleted ? '✓' : day}
                         </div>
                         <div className="flex-1">
-                          <div className="text-sm font-semibold text-gray-300">Day {day}</div>
+                          <div className="text-sm font-semibold text-gray-300">Day {day} {isWorkoutDay ? `• ${workoutInfo.type}` : '• Recovery'}</div>
                           {feedback && (
                             <div className="text-xs text-gray-500">
                               {feedback.feedback === 'perfect' && '✓ Perfect form'}
                               {feedback.feedback === 'hard' && '↑ Needs adjustment'}
                               {feedback.feedback === 'easy' && '↓ Ready to progress'}
+                              {feedback.feedback === 'rest' && '✓ Recovery day logged'}
                               {feedback.feedback === 'skipped' && '⏩ Rest day skipped'}
+                            </div>
+                          )}
+                          {!feedback && !isWorkoutDay && (
+                            <div className="text-xs text-gray-500">
+                              Planned recovery day
                             </div>
                           )}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {isCompleted ? (feedback?.feedback === 'skipped' ? 'Skipped' : '30 min') : '-'}
+                          {isCompleted ? (feedback?.feedback === 'skipped' ? 'Skipped' : isWorkoutDay ? planSummary.sessionLength : 'Recovery') : '-'}
                         </div>
                       </div>
                     );
@@ -5188,9 +6079,9 @@
                   {currentPhase} (Weeks {currentWeek <= 4 ? '1-4' : currentWeek <= 8 ? '5-8' : '9-12'})
                 </div>
                 <div className="text-xs text-gray-500">
-                  {currentPhase === 'Foundation' && 'Focus: Form and movement patterns • 5 workouts/week'}
-                  {currentPhase === 'Build' && 'Focus: Adding weight and volume • 5 workouts/week'}
-                  {currentPhase === 'Peak' && 'Focus: Maximum strength development • 6 workouts/week'}
+                  {currentPhase === 'Foundation' && `Focus: Form and movement patterns • ${planSummary.scheduleTemplate}`}
+                  {currentPhase === 'Build' && `Focus: Adding weight and volume • ${planSummary.scheduleTemplate}`}
+                  {currentPhase === 'Peak' && `Focus: Maximum strength development • ${planSummary.scheduleTemplate}`}
                 </div>
               </MotionSection>
 
@@ -5343,6 +6234,7 @@
 
       function HistoryScreen() {
         const actualWorkoutCount = getActualWorkoutCount();
+        const planSummary = getPlanConfigSummary(planConfig);
         return (
           <div className="app-screen">
             <SubpageHeader title="Program History" subtitle="Every completed cycle, milestone, and trend in one archive." onBack={() => setScreen('more')} />
@@ -5354,17 +6246,24 @@
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-bold" style={{color: '#f97316'}}>🔥 Cycle {currentCycleNumber} (In Progress)</h3>
                   </div>
+                  <div className="panel-muted p-3 rounded-xl mb-3">
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-1">Active Plan</div>
+                    <div className="font-semibold text-white">{planSummary.focus}</div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {planSummary.scheduleTemplate} • {planSummary.sessionLength} • {planSummary.trainingEnvironment}
+                    </div>
+                  </div>
                   <div className="grid grid-cols-3 gap-2 text-center text-sm">
                     <div>
                       <div className="font-bold text-white">{actualWorkoutCount}</div>
-                      <div className="text-xs text-gray-500">Workouts</div>
+                      <div className="text-xs text-gray-500">of {totalWorkouts} workouts</div>
                     </div>
                     <div>
                       <div className="font-bold text-white">Week {currentWeek}</div>
                       <div className="text-xs text-gray-500">Current</div>
                     </div>
                     <div>
-                      <div className="font-bold text-white">{Math.round((actualWorkoutCount / 64) * 100)}%</div>
+                      <div className="font-bold text-white">{Math.round((actualWorkoutCount / totalWorkouts) * 100)}%</div>
                       <div className="text-xs text-gray-500">Progress</div>
                     </div>
                   </div>
@@ -5390,6 +6289,8 @@
                       day: 'numeric',
                       year: 'numeric'
                     });
+                    const planSnapshot = getStoredPlanSnapshot(cycle);
+                    const targetWorkouts = Number(cycle.targetWorkouts) || cycle.totalWorkouts;
 
                     return (
                       <div key={cycle.cycleNumber} className="card mb-4">
@@ -5401,13 +6302,21 @@
                           <div className="text-3xl">🏆</div>
                         </div>
 
+                        <div className="panel-muted p-3 rounded-xl mb-3">
+                          <div className="text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-1">Plan Snapshot</div>
+                          <div className="font-semibold text-white">{planSnapshot.focus}</div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {planSnapshot.scheduleLabel || 'Saved cycle'}{planSnapshot.sessionLength ? ` • ${planSnapshot.sessionLength} min` : ''}
+                          </div>
+                        </div>
+
                         {/* Stats Grid */}
                         <div className="grid grid-cols-2 gap-3 mb-3">
                           <div className="panel-muted p-3 text-center">
                             <div className="text-2xl font-bold text-white">
                               {cycle.totalWorkouts}
                             </div>
-                            <div className="text-xs text-gray-500">Workouts</div>
+                            <div className="text-xs text-gray-500">of {targetWorkouts} workouts</div>
                           </div>
                           <div className="panel-muted p-3 text-center">
                             <div className="text-2xl font-bold text-white">
@@ -5494,6 +6403,7 @@
       function MoreScreen() {
         const compactRowStyle = { padding: '14px 16px', marginBottom: '10px' };
         const compactSectionStyle = { margin: '18px 0 10px 0' };
+        const planSummary = getPlanConfigSummary(planConfig);
 
         return (
           <div className="app-screen">
@@ -5518,6 +6428,17 @@
                 <div className="flex items-center gap-3">
                   <span className="text-xl">🎯</span>
                   <span className="font-semibold">Goals</span>
+                </div>
+                <span className="text-gray-400">›</span>
+              </button>
+
+              <button className="surface-row" style={compactRowStyle} onClick={() => setScreen('plan-setup')}>
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">🧭</span>
+                  <div className="text-left">
+                    <div className="font-semibold">Plan Setup</div>
+                    <div className="text-xs text-gray-500 mt-1">{planSummary.sessionLength} • {planSummary.trainingEnvironment}</div>
+                  </div>
                 </div>
                 <span className="text-gray-400">›</span>
               </button>
@@ -5618,13 +6539,312 @@
         );
       }
 
+      function PlanSetupScreen() {
+        const planSummary = getPlanConfigSummary(planConfig);
+        const intakeAnswers = onboardingIntake.quizAnswers || {};
+        const seededDateLabel = getSeededAtLabel(onboardingIntake.seededAt);
+        const [draftConfig, setDraftConfig] = useState(() => normalizePlanConfigDraft(planConfig));
+        const quizSeedConfig = buildPlanConfigFromIntake(onboardingIntake);
+        const setupStatusLabel = planConfig.seededFromQuiz ? 'Currently unchanged from quiz defaults.' : planConfig.lastAdjustedAt ? `Last adjusted ${getSeededAtLabel(planConfig.lastAdjustedAt)}.` : 'Using the current stored setup.';
+        const hasQuizSeed = Boolean(quizSeedConfig);
+
+        useEffect(() => {
+          setDraftConfig(normalizePlanConfigDraft(planConfig));
+        }, [planConfig]);
+
+        const normalizedDraft = normalizePlanConfigDraft(draftConfig);
+        const hasDraftChanges = JSON.stringify(normalizedDraft) !== JSON.stringify(normalizePlanConfigDraft(planConfig));
+        const focusOptions = ['Build strength', 'Build muscle', 'Lose fat', 'Stay consistent'];
+        const sessionLengthOptions = [15, 30, 45, 60];
+        const environmentOptions = ['Home only', 'Gym only', 'Both'];
+        const recoveryOptions = [
+          { value: 'light', label: 'Light start' },
+          { value: 'moderate', label: 'Moderate start' },
+          { value: 'normal', label: 'Normal start' }
+        ];
+        const scheduleOptions = [
+          { value: '3-day', label: '3 workouts/week' },
+          { value: '4-day', label: '4 workouts/week' }
+        ];
+        const equipmentOptions = ['Bodyweight only', 'Dumbbells', 'Barbell', 'Pull-up bar', 'Bench', 'Bands', 'Kettlebell', 'No equipment yet'];
+
+        const updateDraftConfig = (patch) => {
+          setDraftConfig(prev => normalizePlanConfigDraft({
+            ...prev,
+            ...patch
+          }));
+        };
+
+        const toggleEquipment = (equipmentName) => {
+          const currentEquipment = Array.isArray(draftConfig.availableEquipment) ? draftConfig.availableEquipment : [];
+          const hasEquipment = currentEquipment.includes(equipmentName);
+          const nextEquipment = hasEquipment
+            ? currentEquipment.filter(item => item !== equipmentName)
+            : [...currentEquipment.filter(item => item !== 'No equipment yet'), equipmentName];
+
+          if (equipmentName === 'No equipment yet' && !hasEquipment) {
+            updateDraftConfig({ availableEquipment: ['No equipment yet'] });
+            return;
+          }
+
+          if (equipmentName === 'Bodyweight only' && !hasEquipment) {
+            updateDraftConfig({ availableEquipment: ['Bodyweight only', ...nextEquipment.filter(item => item !== 'Bodyweight only')] });
+            return;
+          }
+
+          updateDraftConfig({
+            availableEquipment: nextEquipment.length ? nextEquipment : ['Bodyweight only']
+          });
+        };
+
+        const handleSavePlanSetup = () => {
+          const nextConfig = {
+            ...normalizedDraft,
+            seededFromQuiz: false,
+            lastAdjustedAt: new Date().toISOString()
+          };
+          setPlanConfig(nextConfig);
+          setGoals(prev => syncGoalsWithPlanConfig(prev, nextConfig));
+          setError('');
+          setSuccess('Plan setup updated.');
+          setTimeout(() => setSuccess(''), 2500);
+        };
+
+        const handleResetPlanSetup = () => {
+          const resetConfig = hasQuizSeed ? quizSeedConfig : defaultPlanConfig;
+          const normalizedResetConfig = normalizePlanConfigDraft({
+            ...resetConfig,
+            seededFromQuiz: hasQuizSeed,
+            lastAdjustedAt: new Date().toISOString()
+          });
+          setDraftConfig(normalizedResetConfig);
+          setPlanConfig(normalizedResetConfig);
+          setGoals(prev => syncGoalsWithPlanConfig(prev, normalizedResetConfig));
+          setError('');
+          setSuccess(hasQuizSeed ? 'Quiz defaults reapplied.' : 'System defaults restored.');
+          setTimeout(() => setSuccess(''), 2500);
+        };
+
+        const getOptionButtonStyle = (active) => active
+          ? {
+              background: 'linear-gradient(135deg, rgba(249,115,22,0.22) 0%, rgba(249,115,22,0.12) 100%)',
+              border: '1px solid rgba(249,115,22,0.42)',
+              color: '#fff7ed'
+            }
+          : {
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: '#d4d4d4'
+            };
+
+        return (
+          <div className="app-screen">
+            <SubpageHeader title="Plan Setup" subtitle="The current defaults steering your training inside the app." onBack={() => setScreen('more')} />
+
+            <div className="p-6 pb-24">
+              {success && <div className="success-box mb-4">{success}</div>}
+
+              <div className="card hero-card mb-4">
+                <div className="section-label">ACTIVE CONFIG</div>
+                <h2 className="text-2xl font-bold text-white mb-2">{planSummary.focus}</h2>
+                <p className="text-sm text-gray-400 mb-4">
+                  {planSummary.scheduleTemplate} • {planSummary.sessionLength} • {planSummary.trainingEnvironment}
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="panel-muted rounded-xl px-4 py-3">
+                    <div className="text-[11px] uppercase tracking-[0.16em] text-gray-500 mb-1">Equipment</div>
+                    <div className="font-semibold text-orange-100">{planSummary.equipment}</div>
+                  </div>
+                  <div className="panel-muted rounded-xl px-4 py-3">
+                    <div className="text-[11px] uppercase tracking-[0.16em] text-gray-500 mb-1">Recovery Mode</div>
+                    <div className="font-semibold text-orange-100">{planSummary.recoveryMode}</div>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-400 mt-4">
+                  These are starter defaults. They should inform the app, not lock you into permanent assumptions.
+                </div>
+                <div className="text-xs text-orange-200 mt-2">
+                  {setupStatusLabel}
+                </div>
+              </div>
+
+              {onboardingIntake.seededAt && (
+                <div className="card mb-4" style={{background:'linear-gradient(180deg, rgba(249,115,22,0.1) 0%, rgba(255,255,255,0.03) 100%)', border:'1px solid rgba(249,115,22,0.16)'}}>
+                  <div className="section-label" style={{color:'#fdba74'}}>SEEDED FROM QUIZ</div>
+                  <div className="text-sm text-gray-300 mb-3">
+                    Imported on {seededDateLabel || 'your first app session'} and kept as initial defaults only.
+                  </div>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Goal</span>
+                      <span className="font-semibold text-white text-right">{intakeAnswers.goal || 'Not captured'}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Available Time</span>
+                      <span className="font-semibold text-white text-right">{intakeAnswers.time || 'Not captured'}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Training Location</span>
+                      <span className="font-semibold text-white text-right">{intakeAnswers.location || 'Not captured'}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Equipment</span>
+                      <span className="font-semibold text-white text-right">{getEquipmentSummaryLabel(intakeAnswers.equipment || [])}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Sleep Baseline</span>
+                      <span className="font-semibold text-white text-right">{intakeAnswers.sleep || 'Not captured'}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Primary Constraint</span>
+                      <span className="font-semibold text-white text-right">{intakeAnswers.challenge || 'Not captured'}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="card">
+                <div className="section-label">ADJUST SETUP</div>
+                <div className="text-sm text-gray-300 mb-4">
+                  Update the defaults the app should assume going forward. This affects summaries, cues, and the shape of your in-app setup state.
+                </div>
+
+                <div className="mb-5">
+                  <div className="text-xs uppercase tracking-[0.16em] text-gray-500 mb-2">Focus</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {focusOptions.map(option => (
+                      <button
+                        key={option}
+                        type="button"
+                        className="rounded-xl px-3 py-3 text-sm font-semibold text-left"
+                        style={getOptionButtonStyle(normalizedDraft.focus === option)}
+                        onClick={() => updateDraftConfig({ focus: option })}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-5">
+                  <div className="text-xs uppercase tracking-[0.16em] text-gray-500 mb-2">Session Length</div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {sessionLengthOptions.map(option => (
+                      <button
+                        key={option}
+                        type="button"
+                        className="rounded-xl px-3 py-3 text-sm font-semibold"
+                        style={getOptionButtonStyle(normalizedDraft.sessionLength === option)}
+                        onClick={() => updateDraftConfig({ sessionLength: option })}
+                      >
+                        {option}m
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-5">
+                  <div className="text-xs uppercase tracking-[0.16em] text-gray-500 mb-2">Training Environment</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {environmentOptions.map(option => (
+                      <button
+                        key={option}
+                        type="button"
+                        className="rounded-xl px-3 py-3 text-sm font-semibold"
+                        style={getOptionButtonStyle(normalizedDraft.trainingEnvironment === option)}
+                        onClick={() => updateDraftConfig({ trainingEnvironment: option })}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-5">
+                  <div className="text-xs uppercase tracking-[0.16em] text-gray-500 mb-2">Equipment Available</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {equipmentOptions.map(option => (
+                      <button
+                        key={option}
+                        type="button"
+                        className="rounded-xl px-3 py-3 text-sm font-semibold text-left"
+                        style={getOptionButtonStyle(normalizedDraft.availableEquipment.includes(option))}
+                        onClick={() => toggleEquipment(option)}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-5">
+                  <div className="text-xs uppercase tracking-[0.16em] text-gray-500 mb-2">Recovery Starting Point</div>
+                  <div className="grid grid-cols-1 gap-2">
+                    {recoveryOptions.map(option => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className="rounded-xl px-3 py-3 text-sm font-semibold text-left"
+                        style={getOptionButtonStyle(normalizedDraft.recoveryMode === option.value)}
+                        onClick={() => updateDraftConfig({ recoveryMode: option.value })}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-2">
+                  <div className="text-xs uppercase tracking-[0.16em] text-gray-500 mb-2">Weekly Template</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {scheduleOptions.map(option => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className="rounded-xl px-3 py-3 text-sm font-semibold"
+                        style={getOptionButtonStyle(normalizedDraft.scheduleTemplate === option.value)}
+                        onClick={() => updateDraftConfig({ scheduleTemplate: option.value })}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="section-label">SAVE OR RESET</div>
+                <div className="text-sm text-gray-300 mb-4">
+                  Save updates when your real setup changes. You can also reapply your quiz defaults once if you want to start over from that baseline.
+                </div>
+                <button
+                  className="nav-cta mb-3"
+                  onClick={handleSavePlanSetup}
+                  disabled={!hasDraftChanges}
+                  style={!hasDraftChanges ? {opacity: 0.55} : undefined}
+                >
+                  Save Plan Setup
+                </button>
+                <button className="btn-secondary mb-3" onClick={() => setDraftConfig(normalizePlanConfigDraft(planConfig))} disabled={!hasDraftChanges}>
+                  Discard Draft Changes
+                </button>
+                <button className="btn-secondary" onClick={handleResetPlanSetup}>
+                  {hasQuizSeed ? 'Reapply Quiz Defaults' : 'Reset to System Defaults'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
       function ProfileScreen() {
         const actualWorkoutCount = getActualWorkoutCount();
         const fileInputRef = React.useRef(null);
         const accountEmail = currentUser?.email || email || '';
+        const planSummary = getPlanConfigSummary(planConfig);
         // Real streak: consecutive calendar days with at least one completed workout
         const calculateStreak = () => {
-          const completed = Object.values(workoutFeedback).filter(f => f.feedback !== 'skipped' && f.date);
+          const completed = Object.values(workoutFeedback).filter(f => isWorkoutFeedbackType(f?.feedback) && f.date);
           if (completed.length === 0) return 0;
 
           // Unique calendar dates, sorted newest first
@@ -5848,6 +7068,26 @@
                     {goals.customGoal ? ' ✓ Personal' : ''}
                     {!goals.strengthGoal && !goals.targetWeight && !goals.customGoal ? 'Not set' : ''}
                   </span>
+                  <span className="text-gray-400">›</span>
+                </div>
+              </button>
+
+              <div className="section-label">PLAN SETUP</div>
+              <button
+                className="surface-row"
+                onClick={() => setScreen('plan-setup')}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">🧭</span>
+                  <div className="text-left">
+                    <div className="font-semibold">{planSummary.focus}</div>
+                    <div className="text-xs text-gray-500">
+                      {planSummary.sessionLength} • {planSummary.trainingEnvironment}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">{planSummary.equipment}</span>
                   <span className="text-gray-400">›</span>
                 </div>
               </button>
@@ -6082,7 +7322,7 @@
           },
           {
             q: "Can I skip rest days?",
-            a: "We don't recommend it, but the app has a 'Skip Rest Day' option with warnings. Rest days are crucial for muscle recovery and preventing injury. Overtraining can hurt your progress."
+            a: "Use 'Log Recovery Day' for planned rest. Skip is only there if you decide to train anyway. Rest days are crucial for muscle recovery and preventing injury, so overusing skip will usually hurt your progress."
           },
           {
             q: "How do I increase weight safely?",
@@ -6412,6 +7652,9 @@
               <div className="card hero-card mb-5 text-center">
                 <div className="text-5xl mb-3">{getExerciseVideoEmoji(selectedExercise)}</div>
                 <div className="dev-badge">{selectedExercise.sets}</div>
+                {selectedExercise.planNote && (
+                  <div className="text-xs text-gray-500 mt-2">{selectedExercise.planNote}</div>
+                )}
               </div>
 
               <div className="card hero-card mb-5 text-center" style={{overflow:'hidden'}}>
@@ -6461,7 +7704,7 @@
                     setScreen('workout');
                     setWorkoutStarted(true);
                     const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
-                    const currentDayExercises = workoutInfo ? exercises[workoutInfo.exerciseDay] || exercises.day1 : exercises.day1;
+                    const currentDayExercises = workoutInfo ? programExercises[workoutInfo.exerciseDay] || programExercises.day1 : programExercises.day1;
                     const exerciseIndex = currentDayExercises.findIndex(ex => ex.id === selectedExercise.id);
                     setCurrentExercise(exerciseIndex >= 0 ? exerciseIndex : 0);
                   }}

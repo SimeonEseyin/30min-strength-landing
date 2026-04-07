@@ -111,6 +111,16 @@ function defaultUserData() {
       snapshot: '',
       updatedAt: null,
     },
+    planConfig: {
+      focus: 'Build strength',
+      sessionLength: 30,
+      trainingEnvironment: 'Home only',
+      availableEquipment: ['Dumbbells'],
+      recoveryMode: 'normal',
+      scheduleTemplate: '3-day',
+      seededFromQuiz: false,
+      lastAdjustedAt: null,
+    },
     intake: {
       source: '',
       capturedAt: null,
@@ -339,6 +349,13 @@ function getUserData(store, email) {
     coachCache: {
       ...defaultUserData().coachCache,
       ...((store.userData[normalizedEmail] || {}).coachCache || {}),
+    },
+    planConfig: {
+      ...defaultUserData().planConfig,
+      ...((store.userData[normalizedEmail] || {}).planConfig || {}),
+      availableEquipment: Array.isArray(((store.userData[normalizedEmail] || {}).planConfig || {}).availableEquipment)
+        ? ((store.userData[normalizedEmail] || {}).planConfig || {}).availableEquipment
+        : defaultUserData().planConfig.availableEquipment,
     },
     intake: {
       ...defaultUserData().intake,
