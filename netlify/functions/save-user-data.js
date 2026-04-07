@@ -34,8 +34,62 @@ function sanitizeProgress(progress) {
   };
 }
 
+function sanitizeAchievement(achievement) {
+  if (!isPlainObject(achievement)) return null;
+
+  return {
+    icon: sanitizeString(achievement.icon || '', 8),
+    text: sanitizeString(achievement.text || '', 80),
+    desc: sanitizeString(achievement.desc || '', 180),
+  };
+}
+
+function sanitizePlanSnapshot(planSnapshot) {
+  if (!isPlainObject(planSnapshot)) return null;
+
+  const sessionLength = parseInt(planSnapshot.sessionLength, 10);
+  const validSessionLengths = new Set([15, 30, 45, 60]);
+  const validScheduleTemplates = new Set(['3-day', '4-day']);
+
+  return {
+    focus: sanitizeString(planSnapshot.focus || 'Build strength', 80) || 'Build strength',
+    sessionLength: validSessionLengths.has(sessionLength) ? sessionLength : 30,
+    trainingEnvironment: sanitizeString(planSnapshot.trainingEnvironment || 'Home only', 40) || 'Home only',
+    scheduleTemplate: validScheduleTemplates.has(String(planSnapshot.scheduleTemplate || ''))
+      ? String(planSnapshot.scheduleTemplate)
+      : '3-day',
+  };
+}
+
+function sanitizeHistoryEntry(entry) {
+  if (!isPlainObject(entry)) return null;
+
+  const totalWorkouts = Math.max(0, Math.min(84, parseInt(entry.totalWorkouts, 10) || 0));
+  const targetWorkouts = Math.max(totalWorkouts, Math.min(84, parseInt(entry.targetWorkouts, 10) || totalWorkouts));
+
+  return {
+    schemaVersion: Math.max(1, Math.min(2, parseInt(entry.schemaVersion, 10) || 1)),
+    cycleNumber: Math.max(1, parseInt(entry.cycleNumber, 10) || 1),
+    completedDate: /^\d{4}-\d{2}-\d{2}T/.test(String(entry.completedDate || '')) ? entry.completedDate : new Date().toISOString(),
+    totalWorkouts,
+    targetWorkouts,
+    consistencyRate: Math.max(0, Math.min(100, parseInt(entry.consistencyRate, 10) || 0)),
+    perfectWorkouts: Math.max(0, Math.min(totalWorkouts, parseInt(entry.perfectWorkouts, 10) || 0)),
+    progressionWorkouts: Math.max(0, Math.min(totalWorkouts, parseInt(entry.progressionWorkouts, 10) || 0)),
+    achievements: Array.isArray(entry.achievements)
+      ? entry.achievements.map(sanitizeAchievement).filter(Boolean).slice(0, 16)
+      : [],
+    goals: sanitizeGoals(entry.goals || {}),
+    planSnapshot: sanitizePlanSnapshot(entry.planSnapshot),
+    completedDays: Array.isArray(entry.completedDays) ? entry.completedDays.slice(-200) : [],
+    workoutFeedback: isPlainObject(entry.workoutFeedback) ? entry.workoutFeedback : {},
+  };
+}
+
 function sanitizeHistory(history) {
-  return Array.isArray(history) ? history.slice(-24) : [];
+  return Array.isArray(history)
+    ? history.map(sanitizeHistoryEntry).filter(Boolean).slice(-24)
+    : [];
 }
 
 function sanitizeSettings(settings) {
@@ -112,6 +166,39 @@ function sanitizeCoachCache(coachCache) {
     },
     snapshot: sanitizeString(coachCache.snapshot || '', 4000),
     updatedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(coachCache.updatedAt || '')) ? coachCache.updatedAt : new Date().toISOString(),
+  };
+}
+
+function sanitizePlanConfig(planConfig) {
+  if (!isPlainObject(planConfig)) {
+    return {
+      focus: 'Build strength',
+      sessionLength: 30,
+      trainingEnvironment: 'Home only',
+      availableEquipment: ['Dumbbells'],
+      recoveryMode: 'normal',
+      scheduleTemplate: '3-day',
+      seededFromQuiz: false,
+      lastAdjustedAt: null,
+    };
+  }
+
+  const sessionLength = parseInt(planConfig.sessionLength, 10);
+  const validSessionLengths = new Set([15, 30, 45, 60]);
+  const validRecoveryModes = new Set(['light', 'moderate', 'normal']);
+  const validScheduleTemplates = new Set(['3-day', '4-day']);
+
+  return {
+    focus: sanitizeString(planConfig.focus || 'Build strength', 80) || 'Build strength',
+    sessionLength: validSessionLengths.has(sessionLength) ? sessionLength : 30,
+    trainingEnvironment: sanitizeString(planConfig.trainingEnvironment || 'Home only', 40) || 'Home only',
+    availableEquipment: Array.isArray(planConfig.availableEquipment)
+      ? planConfig.availableEquipment.map(item => sanitizeString(item, 40)).filter(Boolean).slice(0, 8)
+      : ['Dumbbells'],
+    recoveryMode: validRecoveryModes.has(String(planConfig.recoveryMode || '')) ? String(planConfig.recoveryMode) : 'normal',
+    scheduleTemplate: validScheduleTemplates.has(String(planConfig.scheduleTemplate || '')) ? String(planConfig.scheduleTemplate) : '3-day',
+    seededFromQuiz: Boolean(planConfig.seededFromQuiz),
+    lastAdjustedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(planConfig.lastAdjustedAt || '')) ? planConfig.lastAdjustedAt : null,
   };
 }
 
@@ -200,6 +287,7 @@ exports.handler = async (event) => {
       profile: payload.profile ? sanitizeProfile(payload.profile) : existing.profile,
       weights: payload.weights ? sanitizeWeights(payload.weights) : existing.weights,
       coachCache: payload.coachCache ? sanitizeCoachCache(payload.coachCache) : existing.coachCache,
+      planConfig: payload.planConfig ? sanitizePlanConfig(payload.planConfig) : existing.planConfig,
       intake: payload.intake ? sanitizeIntake(payload.intake) : existing.intake,
       updatedAt: new Date().toISOString(),
     };
