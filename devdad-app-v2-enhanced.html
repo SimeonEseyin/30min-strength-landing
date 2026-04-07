@@ -22,25 +22,20 @@
   <style>
     body {
       font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
-      background:
-        radial-gradient(circle at top, rgba(249, 115, 22, 0.14), transparent 26%),
-        radial-gradient(circle at 20% 20%, rgba(44, 95, 141, 0.22), transparent 28%),
-        linear-gradient(180deg, #050505 0%, #0a0a0a 28%, #101010 100%);
+      background: var(--bg-atmosphere);
       color: var(--text-primary);
     }
 
-    /* Noise texture overlay */
     body::before {
       content: '';
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-      opacity: 0.03;
+      inset: 0;
+      background-image: var(--bg-grid-overlay);
+      background-size: 24px 24px, 24px 24px, auto;
+      background-position: 0 0, 0 0, 0 0;
+      opacity: 0.36;
       pointer-events: none;
-      z-index: 1000;
+      z-index: 0;
     }
 
     :root {
@@ -64,6 +59,18 @@
       --motion-slow: 560ms;
       --ease-out-premium: cubic-bezier(0.22, 1, 0.36, 1);
       --ease-bounce-soft: cubic-bezier(0.2, 0.9, 0.24, 1.08);
+      --bg-atmosphere:
+        radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
+        radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
+        radial-gradient(circle at 24% 20%, rgba(44, 95, 141, 0.16) 0%, rgba(44, 95, 141, 0) 30%),
+        radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
+        linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
+      --bg-grid-overlay:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.1) 22%, rgba(0,0,0,0.32) 70%, rgba(0,0,0,0.6) 100%);
+      --bg-app-shell:
+        linear-gradient(180deg, rgba(8,8,8,0.88) 0%, rgba(14,14,14,0.9) 100%);
     }
 
     .btn-primary {
@@ -450,6 +457,8 @@
       padding-bottom: 96px;
       color: var(--text-primary);
       animation: page-enter 520ms var(--ease-out-premium) both;
+      position: relative;
+      z-index: 1;
     }
 
     .screen-header {
@@ -637,6 +646,8 @@
       align-items: center;
       justify-content: center;
       padding: 24px;
+      position: relative;
+      z-index: 1;
     }
 
     .auth-card {
@@ -4495,10 +4506,10 @@
       const contentScreen = screen === 'exercise-detail' ? (detailReturnScreen || (workoutStarted ? 'workout' : 'home')) : screen;
 
       return (
-        <div className="max-w-md mx-auto min-h-screen shadow-2xl" style={{background:'linear-gradient(180deg, rgba(8,8,8,0.98) 0%, rgba(14,14,14,0.98) 100%)', boxShadow:'0 30px 80px rgba(0,0,0,0.32)'}}>
+        <div className="max-w-md mx-auto min-h-screen shadow-2xl" style={{background:'var(--bg-app-shell)', boxShadow:'0 30px 80px rgba(0,0,0,0.32)', position:'relative', zIndex:1}}>
           {/* Purchase Gate - Show if not purchased */}
           {bootReady && purchaseChecked && !hasPurchased && !isAuthScreen && (
-            <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)'}}>
+            <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{background: 'var(--bg-atmosphere)'}}>
               <div className="max-w-md w-full text-center">
                 <h2 className="text-3xl font-bold mb-2 text-white">Dev<span style={{color:'#f97316'}}>Dad</span> Strength</h2>
                 <p className="mb-8" style={{color:'#a3a3a3'}}>The 30-Minute Strength System</p>
@@ -4850,7 +4861,7 @@
 
         return (
           <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center"
-               style={{background:'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)'}}>
+               style={{background:'var(--bg-atmosphere)'}}>
             <div className="text-6xl mb-6">👋</div>
             <h2 className="text-3xl font-bold mb-2 text-white">
               Welcome back, {name.split(' ')[0]}.

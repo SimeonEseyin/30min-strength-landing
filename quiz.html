@@ -24,6 +24,21 @@
             --accent-glow: rgba(249, 115, 22, 0.4);
             --success: #22c55e;
             --border: #333333;
+            --bg-atmosphere:
+                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
+                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
+                radial-gradient(circle at 24% 20%, rgba(44, 95, 141, 0.16) 0%, rgba(44, 95, 141, 0) 30%),
+                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
+                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
+            --bg-grid-overlay:
+                linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                linear-gradient(to bottom,
+                    rgba(0,0,0,0.18) 0%,
+                    rgba(0,0,0,0.1) 22%,
+                    rgba(0,0,0,0.32) 70%,
+                    rgba(0,0,0,0.6) 100%
+                );
         }
 
         * {
@@ -34,11 +49,7 @@
 
         body {
             font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
-            background:
-                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
-                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
-                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
-                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
+            background: var(--bg-atmosphere);
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.6;
@@ -49,15 +60,7 @@
             content: '';
             position: fixed;
             inset: 0;
-            background-image:
-                linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-                linear-gradient(to bottom,
-                    rgba(0,0,0,0.18) 0%,
-                    rgba(0,0,0,0.1) 22%,
-                    rgba(0,0,0,0.32) 70%,
-                    rgba(0,0,0,0.6) 100%
-                );
+            background-image: var(--bg-grid-overlay);
             background-size: 24px 24px, 24px 24px, auto;
             background-position: 0 0, 0 0, 0 0;
             pointer-events: none;
@@ -214,11 +217,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background:
-                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
-                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
-                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
-                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
+            background: var(--bg-atmosphere);
             z-index: -2;
         }
 
@@ -229,66 +228,34 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-image:
-                linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-                linear-gradient(to bottom,
-                    rgba(0,0,0,0.28) 0%,
-                    rgba(0,0,0,0.18) 22%,
-                    rgba(0,0,0,0.44) 70%,
-                    rgba(0,0,0,0.76) 100%
-                );
+            background-image: var(--bg-grid-overlay);
             background-size: 24px 24px, 24px 24px, auto;
             background-position: 0 0, 0 0, 0 0;
             z-index: -1;
         }
 
         .step.bg-fitness::before {
-            background:
-                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
-                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
-                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
-                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
+            background: var(--bg-atmosphere);
         }
 
         .step.bg-dad::before {
-            background:
-                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
-                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
-                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
-                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
+            background: var(--bg-atmosphere);
         }
 
         .step.bg-gym::before {
-            background:
-                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
-                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
-                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
-                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
+            background: var(--bg-atmosphere);
         }
 
         .step.bg-home::before {
-            background:
-                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
-                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
-                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
-                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
+            background: var(--bg-atmosphere);
         }
 
         .step.bg-strength::before {
-            background:
-                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
-                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
-                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
-                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
+            background: var(--bg-atmosphere);
         }
 
         .step.bg-time::before {
-            background:
-                radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
-                radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
-                radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
-                linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
+            background: var(--bg-atmosphere);
         }
 
         .step-visual {
