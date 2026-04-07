@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'devdad-shell-v2';
+const CACHE_VERSION = 'devdad-shell-v3';
 const APP_SHELL = '/devdad-app-v2-enhanced.html';
 const CORE_ASSETS = [
   '/',
@@ -93,6 +93,56 @@ self.addEventListener('fetch', (event) => {
         .catch(() => cached);
 
       return cached || networkPromise;
+    })
+  );
+});
+
+self.addEventListener('push', (event) => {
+  let payload = {};
+
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch (error) {
+    payload = {
+      body: event.data ? event.data.text() : ''
+    };
+  }
+
+  const title = payload.title || 'DevDad reminder';
+  const options = {
+    body: payload.body || 'Your next workout is ready.',
+    icon: payload.icon || '/icons/web-app-manifest-192x192.png',
+    badge: payload.badge || '/icons/favicon-96x96.png',
+    tag: payload.tag || 'devdad-daily-reminder',
+    renotify: Boolean(payload.renotify),
+    data: {
+      url: payload.url || '/app'
+    }
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const targetUrl = new URL(event.notification?.data?.url || '/app', self.location.origin).href;
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async (clientList) => {
+      for (const client of clientList) {
+        if (!client.url.startsWith(self.location.origin)) continue;
+
+        if ('navigate' in client && client.url !== targetUrl) {
+          await client.navigate(targetUrl);
+        }
+
+        if ('focus' in client) {
+          return client.focus();
+        }
+      }
+
+      return clients.openWindow(targetUrl);
     })
   );
 });

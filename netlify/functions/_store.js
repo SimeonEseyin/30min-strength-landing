@@ -97,6 +97,8 @@ function defaultUserData() {
     settings: {
       units: 'lbs',
       darkMode: false,
+      notificationEnabled: false,
+      notificationTimezone: 'UTC',
       notificationTime: '07:00',
     },
     profile: {
@@ -138,6 +140,7 @@ function defaultStore() {
     entitlements: {},
     sessions: {},
     userData: {},
+    pushSubscriptions: {},
   };
 }
 
@@ -230,6 +233,7 @@ function mergeDefaults(store) {
   if (!merged.entitlements || typeof merged.entitlements !== 'object') merged.entitlements = {};
   if (!merged.sessions || typeof merged.sessions !== 'object') merged.sessions = {};
   if (!merged.userData || typeof merged.userData !== 'object') merged.userData = {};
+  if (!merged.pushSubscriptions || typeof merged.pushSubscriptions !== 'object') merged.pushSubscriptions = {};
 
   return merged;
 }
