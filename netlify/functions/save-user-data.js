@@ -64,6 +64,106 @@ function sanitizeWeights(weights) {
   return isPlainObject(weights) ? weights : {};
 }
 
+function sanitizeCoachSuggestion(suggestion) {
+  if (!isPlainObject(suggestion)) return null;
+
+  const targetWeight = Number(suggestion.targetWeight);
+  return {
+    exerciseName: sanitizeString(suggestion.exerciseName || '', 120),
+    action: sanitizeString(suggestion.action || '', 32),
+    targetWeight: Number.isFinite(targetWeight) ? targetWeight : null,
+    units: sanitizeString(suggestion.units || '', 16),
+    reason: sanitizeString(suggestion.reason || '', 240),
+  };
+}
+
+function sanitizeCoachCache(coachCache) {
+  if (!isPlainObject(coachCache)) {
+    return {
+      coach: null,
+      snapshot: '',
+      updatedAt: null,
+    };
+  }
+
+  const coach = isPlainObject(coachCache.coach) ? coachCache.coach : null;
+  if (!coach) {
+    return {
+      coach: null,
+      snapshot: '',
+      updatedAt: null,
+    };
+  }
+
+  const suggestions = Array.isArray(coach.suggestions)
+    ? coach.suggestions.map(sanitizeCoachSuggestion).filter(Boolean).slice(0, 3)
+    : [];
+
+  return {
+    coach: {
+      headline: sanitizeString(coach.headline || '', 160),
+      summary: sanitizeString(coach.summary || '', 320),
+      sessionFocus: sanitizeString(coach.sessionFocus || '', 240),
+      recoveryNote: sanitizeString(coach.recoveryNote || '', 240),
+      recommendationType: sanitizeString(coach.recommendationType || '', 32),
+      confidence: sanitizeString(coach.confidence || '', 16),
+      suggestions,
+      source: sanitizeString(coach.source || '', 32),
+    },
+    snapshot: sanitizeString(coachCache.snapshot || '', 4000),
+    updatedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(coachCache.updatedAt || '')) ? coachCache.updatedAt : new Date().toISOString(),
+  };
+}
+
+function sanitizeQuizAnswers(quizAnswers) {
+  if (!isPlainObject(quizAnswers)) return null;
+
+  return {
+    goal: sanitizeString(quizAnswers.goal || '', 80),
+    time: sanitizeString(quizAnswers.time || '', 40),
+    location: sanitizeString(quizAnswers.location || '', 40),
+    sleep: sanitizeString(quizAnswers.sleep || '', 40),
+    challenge: sanitizeString(quizAnswers.challenge || '', 80),
+    equipment: Array.isArray(quizAnswers.equipment)
+      ? quizAnswers.equipment.map(item => sanitizeString(item, 40)).filter(Boolean).slice(0, 8)
+      : [],
+  };
+}
+
+function sanitizeQuizPreview(preview) {
+  if (!isPlainObject(preview)) return null;
+
+  const frequency = parseInt(preview.frequency, 10);
+  const minutes = parseInt(preview.minutes, 10);
+  return {
+    frequency: Number.isFinite(frequency) ? Math.max(1, Math.min(7, frequency)) : 3,
+    minutes: Number.isFinite(minutes) ? Math.max(10, Math.min(120, minutes)) : 30,
+    setup: sanitizeString(preview.setup || '', 80),
+    recovery: sanitizeString(preview.recovery || '', 160),
+    challenge: sanitizeString(preview.challenge || '', 160),
+  };
+}
+
+function sanitizeIntake(intake) {
+  if (!isPlainObject(intake)) {
+    return {
+      source: '',
+      capturedAt: null,
+      seededAt: null,
+      quizAnswers: null,
+      preview: null,
+    };
+  }
+
+  return {
+    source: sanitizeString(intake.source || '', 32),
+    capturedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(intake.capturedAt || '')) ? intake.capturedAt : null,
+    seededAt: /^\d{4}-\d{2}-\d{2}T/.test(String(intake.seededAt || '')) ? intake.seededAt : null,
+    quizAnswers: sanitizeQuizAnswers(intake.quizAnswers),
+    preview: sanitizeQuizPreview(intake.preview),
+  };
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return json(405, { error: 'Method Not Allowed' });
@@ -99,6 +199,8 @@ exports.handler = async (event) => {
       settings: payload.settings ? sanitizeSettings(payload.settings) : existing.settings,
       profile: payload.profile ? sanitizeProfile(payload.profile) : existing.profile,
       weights: payload.weights ? sanitizeWeights(payload.weights) : existing.weights,
+      coachCache: payload.coachCache ? sanitizeCoachCache(payload.coachCache) : existing.coachCache,
+      intake: payload.intake ? sanitizeIntake(payload.intake) : existing.intake,
       updatedAt: new Date().toISOString(),
     };
 
