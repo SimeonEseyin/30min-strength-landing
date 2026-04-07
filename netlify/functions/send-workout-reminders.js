@@ -5,8 +5,6 @@ const {
   sendPushRequest,
 } = require('./_push');
 
-const REMINDER_WINDOW_MINUTES = 20;
-
 function getLocalTimeParts(date, timeZone) {
   try {
     const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -93,7 +91,6 @@ exports.handler = async () => {
 
         const isDue =
           localParts.minutes >= targetMinutes &&
-          localParts.minutes < (targetMinutes + REMINDER_WINDOW_MINUTES) &&
           entry.lastSentLocalDate !== localParts.localDate;
 
         if (!isDue) {
