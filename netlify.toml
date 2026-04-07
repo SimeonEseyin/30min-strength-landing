@@ -7,7 +7,7 @@
   node_bundler = "esbuild"
 
 [functions."send-workout-reminders"]
-  schedule = "*/15 * * * *"
+  schedule = "*/5 * * * *"
 
 [[redirects]]
   from = "/app"
