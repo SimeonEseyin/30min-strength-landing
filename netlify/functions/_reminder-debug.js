@@ -80,7 +80,7 @@ function evaluateReminderDue({ now, settings, subscriptionEntry }) {
   };
 }
 
-exports.handler = async () => ({
+const handler = async () => ({
   statusCode: 404,
   headers: {
     'Content-Type': 'application/json; charset=utf-8',
@@ -93,6 +93,7 @@ exports.handler = async () => ({
 });
 
 module.exports = {
+  handler,
   getLocalTimeParts,
   getScheduledMinutes,
   evaluateReminderDue,
