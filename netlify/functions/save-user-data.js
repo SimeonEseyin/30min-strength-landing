@@ -102,6 +102,14 @@ function sanitizeSettings(settings) {
   };
 }
 
+function reminderScheduleChanged(previousSettings = {}, nextSettings = {}) {
+  return (
+    Boolean(previousSettings.notificationEnabled) !== Boolean(nextSettings.notificationEnabled) ||
+    String(previousSettings.notificationTime || '') !== String(nextSettings.notificationTime || '') ||
+    String(previousSettings.notificationTimezone || '') !== String(nextSettings.notificationTimezone || '')
+  );
+}
+
 function sanitizeProfile(profile) {
   const avatarDataUrl = String(profile?.avatarDataUrl || '').trim();
   const safeAvatarDataUrl = /^data:image\/(?:png|jpeg|jpg|webp|gif);base64,[a-z0-9+/=]+$/i.test(avatarDataUrl) && avatarDataUrl.length <= 200_000
@@ -281,11 +289,12 @@ exports.handler = async (event) => {
 
   const updatedData = await updateStore(store => {
     const existing = getUserData(store, session.email);
+    const nextSettings = payload.settings ? sanitizeSettings(payload.settings) : existing.settings;
     const next = {
       ...existing,
       progress: payload.progress ? sanitizeProgress(payload.progress) : existing.progress,
       history: payload.history ? sanitizeHistory(payload.history) : existing.history,
-      settings: payload.settings ? sanitizeSettings(payload.settings) : existing.settings,
+      settings: nextSettings,
       profile: payload.profile ? sanitizeProfile(payload.profile) : existing.profile,
       weights: payload.weights ? sanitizeWeights(payload.weights) : existing.weights,
       coachCache: payload.coachCache ? sanitizeCoachCache(payload.coachCache) : existing.coachCache,
@@ -293,6 +302,22 @@ exports.handler = async (event) => {
       intake: payload.intake ? sanitizeIntake(payload.intake) : existing.intake,
       updatedAt: new Date().toISOString(),
     };
+
+    if (payload.settings && reminderScheduleChanged(existing.settings, nextSettings)) {
+      const currentSubscriptions = Array.isArray(store.pushSubscriptions?.[session.email])
+        ? store.pushSubscriptions[session.email]
+        : [];
+
+      store.pushSubscriptions[session.email] = currentSubscriptions.map((entry) => ({
+        ...entry,
+        lastSentAt: null,
+        lastSentLocalDate: null,
+        lastAttemptAt: null,
+        lastAttemptStatus: null,
+        lastAttemptReason: null,
+        updatedAt: new Date().toISOString()
+      }));
+    }
 
     store.userData[session.email] = next;
     return next;

@@ -2546,6 +2546,10 @@
       const lastSavedPayload = React.useRef('');
       const lastAiSnapshot = React.useRef('');
       const reminderTimeoutRef = React.useRef(null);
+      const [showNotificationDebugTools] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return new URLSearchParams(window.location.search).get('debug') === '1';
+      });
       const [notificationPermission, setNotificationPermission] = useState(() => {
         if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported';
         return window.Notification.permission || 'default';
@@ -7727,14 +7731,16 @@
                       Enable Browser Notifications
                     </button>
                   )}
-                  <button
-                    className="btn-secondary flex-1"
-                    onClick={handleSendTestReminder}
-                    disabled={notificationPermission === 'unsupported'}
-                    style={notificationPermission === 'unsupported' ? {opacity: 0.45} : {}}
-                  >
-                    Send Push Test
-                  </button>
+                  {showNotificationDebugTools && (
+                    <button
+                      className="btn-secondary flex-1"
+                      onClick={handleSendTestReminder}
+                      disabled={notificationPermission === 'unsupported'}
+                      style={notificationPermission === 'unsupported' ? {opacity: 0.45} : {}}
+                    >
+                      Send Push Test
+                    </button>
+                  )}
                 </div>
               </div>
 
