@@ -108,13 +108,16 @@ self.addEventListener('push', (event) => {
     };
   }
 
+  const hasStructuredPayload = Boolean(payload && typeof payload === 'object' && Object.keys(payload).length);
+  const fallbackTag = `devdad-reminder-${Date.now()}`;
+
   const title = payload.title || 'DevDad reminder';
   const options = {
     body: payload.body || 'Your next workout is ready.',
     icon: payload.icon || '/icons/web-app-manifest-192x192.png',
     badge: payload.badge || '/icons/favicon-96x96.png',
-    tag: payload.tag || 'devdad-daily-reminder',
-    renotify: Boolean(payload.renotify),
+    tag: payload.tag || fallbackTag,
+    renotify: hasStructuredPayload ? Boolean(payload.renotify) : true,
     data: {
       url: payload.url || '/app'
     }
