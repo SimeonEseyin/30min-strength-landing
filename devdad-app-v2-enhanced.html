@@ -7465,6 +7465,34 @@
             }
           }
 
+          try {
+            await persistUserData({
+              progress: {
+                currentWeek,
+                currentDay,
+                completedDays,
+                workoutFeedback,
+                goals,
+                currentCycleNumber,
+                lastUpdated: new Date().toISOString()
+              },
+              history: programHistory,
+              settings: nextSettings,
+              profile: userProfile,
+              weights: exerciseWeights,
+              coachCache: {
+                coach: aiCoach,
+                snapshot: lastAiSnapshot.current,
+                updatedAt: aiCoach ? new Date().toISOString() : null
+              },
+              planConfig,
+              intake: onboardingIntake
+            });
+          } catch (error) {
+            setSettingsError(error.message || 'Could not save settings right now.');
+            return;
+          }
+
           setSettings(nextSettings);
           if (nextSettings.notificationEnabled && pushStatus && !pushStatus.configured) {
             setSuccess('Settings saved.');
