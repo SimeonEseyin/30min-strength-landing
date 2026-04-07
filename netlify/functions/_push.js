@@ -89,7 +89,7 @@ function createVapidJwt(audience) {
   return `${unsignedToken}.${base64UrlEncode(signature)}`;
 }
 
-async function sendPushRequest(subscription, payload = null) {
+async function sendPushRequest(subscription) {
   const endpoint = new URL(subscription.endpoint);
   const jwt = createVapidJwt(endpoint.origin);
 
@@ -100,33 +100,8 @@ async function sendPushRequest(subscription, payload = null) {
       TTL: '3600',
       Urgency: 'normal'
     },
-    body: payload ? JSON.stringify(payload) : ''
+    body: ''
   });
-}
-
-function buildReminderPayload(userData) {
-  const week = Math.max(1, parseInt(userData?.progress?.currentWeek, 10) || 1);
-  const day = Math.max(1, parseInt(userData?.progress?.currentDay, 10) || 1);
-
-  return {
-    title: 'Time for your 30-minute session',
-    body: `Week ${week}, Day ${day} is ready. Open DevDad and get the work in.`,
-    url: '/app',
-    tag: 'devdad-daily-reminder',
-    icon: '/icons/web-app-manifest-192x192.png',
-    badge: '/icons/favicon-96x96.png'
-  };
-}
-
-function buildTestPushPayload() {
-  return {
-    title: 'DevDad push is working',
-    body: 'This is a server push test. Closed-app reminders are wired correctly on this device.',
-    url: '/app',
-    tag: 'devdad-test-push',
-    icon: '/icons/web-app-manifest-192x192.png',
-    badge: '/icons/favicon-96x96.png'
-  };
 }
 
 module.exports = {
@@ -134,6 +109,4 @@ module.exports = {
   getSubject,
   isConfigured,
   sendPushRequest,
-  buildReminderPayload,
-  buildTestPushPayload,
 };
