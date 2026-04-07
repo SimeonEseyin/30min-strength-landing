@@ -36,6 +36,25 @@
       --accent-glow: rgba(249, 115, 22, 0.4);
       --border: #262626;
       --success: #22c55e;
+      --bg-atmosphere:
+        radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 36%),
+        radial-gradient(circle at 82% 16%, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0) 28%),
+        radial-gradient(circle at 24% 20%, rgba(44, 95, 141, 0.16) 0%, rgba(44, 95, 141, 0) 30%),
+        radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 34%),
+        linear-gradient(155deg, #141414 0%, #0c0c0c 58%, #171717 100%);
+      --bg-grid-overlay:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom,
+          rgba(0,0,0,0.18) 0%,
+          rgba(0,0,0,0.1) 22%,
+          rgba(0,0,0,0.32) 70%,
+          rgba(0,0,0,0.6) 100%
+        );
+      --bg-glass:
+        linear-gradient(180deg, rgba(16, 16, 16, 0.84) 0%, rgba(10, 10, 10, 0.74) 100%);
+      --bg-section-soft:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%);
     }
 
     * {
@@ -48,21 +67,20 @@
       font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
       line-height: 1.6;
       color: var(--text-primary);
-      background: var(--bg-primary);
+      background: var(--bg-atmosphere);
+      min-height: 100vh;
+      position: relative;
     }
 
-    /* Noise texture overlay */
     body::before {
       content: '';
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-      opacity: 0.03;
+      inset: 0;
+      background-image: var(--bg-grid-overlay);
+      background-size: 24px 24px, 24px 24px, auto;
+      background-position: 0 0, 0 0, 0 0;
       pointer-events: none;
-      z-index: 1000;
+      z-index: -1;
     }
 
     .container {
@@ -73,9 +91,10 @@
 
     /* Header */
     .header {
-      background: var(--bg-primary);
+      background: rgba(12, 12, 12, 0.72);
       padding: 20px 0;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(12px);
       position: sticky;
       top: 0;
       z-index: 100;
@@ -153,11 +172,28 @@
 
     /* Hero Section */
     .hero {
-      background: var(--bg-secondary);
+      background: transparent;
       color: var(--text-primary);
       padding: 100px 20px;
       text-align: center;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top center, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 44%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.015) 0%, rgba(255, 255, 255, 0) 100%);
+      pointer-events: none;
+    }
+
+    .hero .container {
+      position: relative;
+      z-index: 1;
     }
 
     .hero h1 {
@@ -226,13 +262,15 @@
     /* Section */
     .section {
       padding: 80px 20px;
-      background: var(--bg-primary);
+      background: transparent;
+      position: relative;
     }
 
     .section-alt {
-      background: var(--bg-secondary);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
+      background: var(--bg-section-soft);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(4px);
     }
 
     .section-title {
@@ -325,7 +363,9 @@
 
     /* Pricing Section */
     .pricing {
-      background: var(--bg-primary);
+      background: var(--bg-section-soft);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .pricing-cards {
