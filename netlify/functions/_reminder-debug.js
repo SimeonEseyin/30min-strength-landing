@@ -80,6 +80,18 @@ function evaluateReminderDue({ now, settings, subscriptionEntry }) {
   };
 }
 
+exports.handler = async () => ({
+  statusCode: 404,
+  headers: {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+  },
+  body: JSON.stringify({
+    error: 'Not Found',
+    message: 'Use /.netlify/functions/reminder-debug instead of /.netlify/functions/_reminder-debug.'
+  })
+});
+
 module.exports = {
   getLocalTimeParts,
   getScheduledMinutes,
