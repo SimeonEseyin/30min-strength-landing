@@ -3,7 +3,6 @@ const { updateStore, getUserData } = require('./_store');
 const {
   isConfigured,
   sendPushRequest,
-  buildReminderPayload,
 } = require('./_push');
 
 const REMINDER_WINDOW_MINUTES = 20;

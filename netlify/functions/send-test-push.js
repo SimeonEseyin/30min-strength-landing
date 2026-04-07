@@ -4,7 +4,6 @@ const { normalizeEmail, updateStore } = require('./_store');
 const {
   isConfigured,
   sendPushRequest,
-  buildTestPushPayload,
 } = require('./_push');
 
 exports.handler = async (event) => {
@@ -40,7 +39,6 @@ exports.handler = async (event) => {
       };
     }
 
-    const payload = buildTestPushPayload();
     const nextSubscriptions = [];
     let sent = 0;
     let removed = 0;
@@ -49,7 +47,7 @@ exports.handler = async (event) => {
       if (!entry?.subscription?.endpoint) continue;
 
       try {
-        const response = await sendPushRequest(entry.subscription, payload);
+        const response = await sendPushRequest(entry.subscription);
         const accepted = response.status === 201 || response.status === 202;
 
         if (!accepted) {
