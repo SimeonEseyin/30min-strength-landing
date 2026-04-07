@@ -1879,7 +1879,7 @@
       const [purchaseChecked, setPurchaseChecked] = useState(false);
       
       // Navigation & UI State
-      const [screen, setScreen] = useState('welcome');
+      const [screen, setScreen] = useState('booting');
       const [showGoalsModal, setShowGoalsModal] = useState(false);
       
       // Workout State
@@ -1944,6 +1944,13 @@
       const [daysSinceLastWorkout, setDaysSinceLastWorkout] = useState(0);
       const [aiCoach, setAiCoach] = useState(null);
       const [aiCoachStatus, setAiCoachStatus] = useState('idle');
+      const [onboardingIntake, setOnboardingIntake] = useState({
+        source: '',
+        capturedAt: null,
+        seededAt: null,
+        quizAnswers: null,
+        preview: null
+      });
 
       // Exercise details state
       const [selectedExercise, setSelectedExercise] = useState(null);
@@ -1966,6 +1973,14 @@
         avatarDataUrl: ''
       };
 
+      const defaultOnboardingIntake = {
+        source: '',
+        capturedAt: null,
+        seededAt: null,
+        quizAnswers: null,
+        preview: null
+      };
+
       const totalWeeks = 12;
       const currentPhase = currentWeek <= 4 ? 'Foundation' : currentWeek <= 8 ? 'Build' : 'Peak';
       // Phase 1-2: 5 workouts/week × 8 weeks = 40
@@ -1975,6 +1990,182 @@
       const hydrationReady = React.useRef(false);
       const lastSavedPayload = React.useRef('');
       const lastAiSnapshot = React.useRef('');
+
+      function getCoachCacheKey(emailAddress = '') {
+        const normalizedEmail = String(emailAddress || '').trim().toLowerCase();
+        return normalizedEmail ? `devdad_ai_coach_${normalizedEmail}` : '';
+      }
+
+      function persistCoachCache(emailAddress, coach, snapshot) {
+        const cacheKey = getCoachCacheKey(emailAddress);
+        if (!cacheKey || typeof window === 'undefined' || !window.localStorage || !coach) return;
+
+        try {
+          window.localStorage.setItem(cacheKey, JSON.stringify({
+            coach,
+            snapshot,
+            updatedAt: new Date().toISOString()
+          }));
+        } catch (error) {
+        }
+      }
+
+      function restoreCoachCache(emailAddress) {
+        const cacheKey = getCoachCacheKey(emailAddress);
+        if (!cacheKey || typeof window === 'undefined' || !window.localStorage) return false;
+
+        try {
+          const raw = window.localStorage.getItem(cacheKey);
+          if (!raw) return false;
+
+          const parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed !== 'object' || !parsed.coach) return false;
+
+          setAiCoach(parsed.coach);
+          setAiCoachStatus('ready');
+          lastAiSnapshot.current = typeof parsed.snapshot === 'string' ? parsed.snapshot : '';
+          return true;
+        } catch (error) {
+          return false;
+        }
+      }
+
+      function clearCoachCache(emailAddress) {
+        const cacheKey = getCoachCacheKey(emailAddress);
+        if (!cacheKey || typeof window === 'undefined' || !window.localStorage) return;
+
+        try {
+          window.localStorage.removeItem(cacheKey);
+        } catch (error) {
+        }
+      }
+
+      function readStoredQuizProfile() {
+        if (typeof window === 'undefined' || !window.sessionStorage) return null;
+
+        try {
+          const raw = window.sessionStorage.getItem('devdadQuizProfile');
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          return parsed && typeof parsed === 'object' ? parsed : null;
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function clearStoredQuizProfile(expectedEmail = '') {
+        if (typeof window === 'undefined' || !window.sessionStorage) return;
+
+        const existing = readStoredQuizProfile();
+        const normalizedExpected = String(expectedEmail || '').trim().toLowerCase();
+        const normalizedExisting = String(existing?.email || '').trim().toLowerCase();
+        if (normalizedExpected && normalizedExisting && normalizedExpected !== normalizedExisting) return;
+
+        try {
+          window.sessionStorage.removeItem('devdadQuizProfile');
+        } catch (error) {
+        }
+      }
+
+      function getQuizProfileForEmail(emailAddress) {
+        const profile = readStoredQuizProfile();
+        if (!profile) return null;
+
+        const normalizedEmail = String(emailAddress || '').trim().toLowerCase();
+        const normalizedProfileEmail = String(profile.email || '').trim().toLowerCase();
+        if (!normalizedEmail || !normalizedProfileEmail || normalizedEmail !== normalizedProfileEmail) {
+          return null;
+        }
+
+        return profile;
+      }
+
+      function hasCustomizedGoals(data) {
+        const storedGoals = data?.progress?.goals || {};
+        return Boolean(
+          storedGoals.targetWeight ||
+          storedGoals.strengthGoal ||
+          storedGoals.customGoal ||
+          Number(storedGoals.consistencyGoal || defaultGoals.consistencyGoal) !== defaultGoals.consistencyGoal
+        );
+      }
+
+      function deriveSeedGoalsFromQuiz(profile) {
+        const answers = profile?.answers || {};
+        const goal = String(answers.goal || '').trim();
+        const timeValue = String(answers.time || '').trim();
+        const equipment = Array.isArray(answers.equipment) ? answers.equipment : [];
+        const minutesMatch = timeValue.match(/\d+/);
+        const minutes = minutesMatch ? parseInt(minutesMatch[0], 10) : 30;
+        const hasDumbbells = equipment.includes('Dumbbells');
+        const hasBarbell = equipment.includes('Barbell');
+        const hasPullupBar = equipment.includes('Pull-up bar');
+
+        let customGoal = 'Build a training rhythm that fits family life.';
+        let strengthGoal = '';
+
+        if (goal === 'Build strength') {
+          customGoal = 'Build practical strength with short, repeatable sessions.';
+          strengthGoal = hasBarbell ? 'Add weight to your main barbell lifts each week' : hasDumbbells ? 'Own your main dumbbell lifts with stronger sets each week' : 'Progress your key movements week by week';
+        } else if (goal === 'Build muscle') {
+          customGoal = 'Add lean muscle without needing long gym sessions.';
+          strengthGoal = hasDumbbells ? 'Increase your dumbbell loads and reps over 12 weeks' : 'Build visible muscle with progressive full-body training';
+        } else if (goal === 'Lose fat') {
+          customGoal = 'Lean out while keeping strength and consistency high.';
+          strengthGoal = hasPullupBar ? 'Keep getting stronger on bodyweight and pull movements' : 'Maintain strength while leaning down';
+        } else if (goal === 'Stay consistent') {
+          customGoal = 'Make training automatic even on busy weeks.';
+          strengthGoal = 'Finish each week with momentum, not decision fatigue';
+        }
+
+        let consistencyGoal = 80;
+        if (minutes <= 15) consistencyGoal = 65;
+        else if (minutes >= 45) consistencyGoal = 90;
+
+        return {
+          ...defaultGoals,
+          strengthGoal,
+          customGoal,
+          consistencyGoal
+        };
+      }
+
+      function shouldApplyQuizSeed(data, profile) {
+        if (!profile || !profile.answers) return false;
+        if (data?.intake?.seededAt) return false;
+        if (hasMeaningfulUserData(data)) return false;
+        if (hasCustomizedGoals(data)) return false;
+        return true;
+      }
+
+      function applyQuizSeedToUserData(data, profile) {
+        const baseData = data || buildDefaultUserData();
+        return {
+          ...baseData,
+          progress: {
+            ...baseData.progress,
+            goals: {
+              ...baseData.progress.goals,
+              ...deriveSeedGoalsFromQuiz(profile)
+            }
+          },
+          intake: {
+            ...defaultOnboardingIntake,
+            source: 'quiz',
+            capturedAt: profile.capturedAt || new Date().toISOString(),
+            seededAt: new Date().toISOString(),
+            quizAnswers: {
+              goal: profile.answers.goal || '',
+              time: profile.answers.time || '',
+              location: profile.answers.location || '',
+              sleep: profile.answers.sleep || '',
+              challenge: profile.answers.challenge || '',
+              equipment: Array.isArray(profile.answers.equipment) ? profile.answers.equipment : []
+            },
+            preview: profile.preview || null
+          }
+        };
+      }
 
       function buildDefaultUserData() {
         return {
@@ -1995,6 +2186,12 @@
           },
           profile: defaultUserProfile,
           weights: {},
+          coachCache: {
+            coach: null,
+            snapshot: '',
+            updatedAt: null
+          },
+          intake: defaultOnboardingIntake,
           updatedAt: null
         };
       }
@@ -2089,6 +2286,11 @@
         setUserProfile(safeData.profile || defaultUserProfile);
         setExerciseWeights(safeData.weights || {});
         setDaysSinceLastWorkout(getDaysSinceFromFeedback(progress.workoutFeedback || {}));
+        const persistedCoachCache = safeData.coachCache || buildDefaultUserData().coachCache;
+        setAiCoach(persistedCoachCache.coach || null);
+        setAiCoachStatus(persistedCoachCache.coach ? 'ready' : 'idle');
+        lastAiSnapshot.current = persistedCoachCache.snapshot || '';
+        setOnboardingIntake(safeData.intake || defaultOnboardingIntake);
       }
 
       function getLegacyUserData(emailAddress) {
@@ -2143,6 +2345,8 @@
           settings: storedSettings || buildDefaultUserData().settings,
           profile: profile || defaultUserProfile,
           weights: weights || {},
+          coachCache: buildDefaultUserData().coachCache,
+          intake: defaultOnboardingIntake,
           updatedAt: null
         };
       }
@@ -2173,7 +2377,13 @@
           history: programHistory,
           settings,
           profile: userProfile,
-          weights: exerciseWeights
+          weights: exerciseWeights,
+          coachCache: {
+            coach: aiCoach,
+            snapshot: lastAiSnapshot.current,
+            updatedAt: aiCoach ? new Date().toISOString() : null
+          },
+          intake: onboardingIntake
         };
 
         const serialized = JSON.stringify(payload);
@@ -2192,6 +2402,7 @@
 
         let serverData = null;
         let usedFallback = false;
+        let appliedQuizSeed = false;
 
         for (let attempt = 0; attempt <= retries; attempt++) {
           try {
@@ -2225,23 +2436,39 @@
             await persistUserData(legacyData);
             return {
               daysSince: getDaysSinceFromFeedback(legacyData.progress.workoutFeedback),
-              usedFallback
+              usedFallback,
+              appliedQuizSeed
             };
           }
         }
 
+        const storedQuizProfile = getQuizProfileForEmail(emailAddress);
+        if (shouldApplyQuizSeed(serverData, storedQuizProfile)) {
+          serverData = applyQuizSeedToUserData(serverData, storedQuizProfile);
+          appliedQuizSeed = true;
+          clearStoredQuizProfile(emailAddress);
+        } else if (serverData?.intake?.seededAt) {
+          clearStoredQuizProfile(emailAddress);
+        }
+
         hydrateUserData(serverData);
         hydrationReady.current = true;
+        if (appliedQuizSeed) {
+          await persistUserData(serverData);
+        }
         lastSavedPayload.current = JSON.stringify({
           progress: serverData.progress || buildDefaultUserData().progress,
           history: serverData.history || [],
           settings: serverData.settings || buildDefaultUserData().settings,
           profile: serverData.profile || defaultUserProfile,
-          weights: serverData.weights || {}
+          weights: serverData.weights || {},
+          coachCache: serverData.coachCache || buildDefaultUserData().coachCache,
+          intake: serverData.intake || defaultOnboardingIntake
         });
         return {
           daysSince: getDaysSinceFromFeedback((serverData.progress || {}).workoutFeedback || {}),
-          usedFallback
+          usedFallback,
+          appliedQuizSeed
         };
       }
 
@@ -2261,8 +2488,12 @@
         setUserProfile(defaultUserProfile);
         setExerciseWeights({});
         setDaysSinceLastWorkout(0);
+        setAiCoach(null);
+        setAiCoachStatus('idle');
+        setOnboardingIntake(defaultOnboardingIntake);
         hydrationReady.current = false;
         lastSavedPayload.current = '';
+        lastAiSnapshot.current = '';
       }
 
       function getActualWorkoutCount(feedback = workoutFeedback) {
@@ -2379,6 +2610,8 @@
         async function bootstrapApp() {
           const urlParams = new URLSearchParams(window.location.search);
           const sessionId = urlParams.get('session_id');
+          const storedQuizProfile = readStoredQuizProfile();
+          const storedQuizEmail = String(storedQuizProfile?.email || '').trim().toLowerCase();
           let checkoutVerified = false;
           let checkoutEmail = '';
 
@@ -2421,6 +2654,7 @@
               setEmail(sessionResult.user.email);
               setSuccess('');
               setHasPurchased(Boolean(sessionResult.user.hasPurchased) || checkoutVerified);
+              restoreCoachCache(sessionResult.user.email);
 
               const { daysSince } = await loadUserData(sessionResult.user.email, { allowUnauthorizedFallback: true });
               if (cancelled) return;
@@ -2430,6 +2664,10 @@
               setCurrentUser(null);
               setIsLoggedIn(false);
               setHasPurchased(checkoutVerified);
+              if (storedQuizEmail) {
+                setEmail(storedQuizEmail);
+                setLoginEmail(storedQuizEmail);
+              }
               setScreen('welcome');
             }
           } catch (error) {
@@ -2437,6 +2675,10 @@
               setCurrentUser(null);
               setIsLoggedIn(false);
               setHasPurchased(checkoutVerified);
+              if (storedQuizEmail) {
+                setEmail(storedQuizEmail);
+                setLoginEmail(storedQuizEmail);
+              }
               setScreen('welcome');
             }
           } finally {
@@ -2553,7 +2795,13 @@
           history: programHistory,
           settings,
           profile: userProfile,
-          weights: exerciseWeights
+          weights: exerciseWeights,
+          coachCache: {
+            coach: aiCoach,
+            snapshot: lastAiSnapshot.current,
+            updatedAt: aiCoach ? new Date().toISOString() : null
+          },
+          intake: onboardingIntake
         };
 
         const serialized = JSON.stringify(payload);
@@ -2575,6 +2823,8 @@
         settings,
         userProfile,
         exerciseWeights,
+        aiCoach,
+        onboardingIntake,
         isLoggedIn,
         currentUser
       ]);
@@ -2596,6 +2846,7 @@
             setAiCoach(result.coach || null);
             setAiCoachStatus('ready');
             lastAiSnapshot.current = serializedSnapshot;
+            persistCoachCache(currentUser?.email, result.coach || null, serializedSnapshot);
           } catch (error) {
             setAiCoachStatus('error');
           }
@@ -2753,11 +3004,12 @@
           setIsLoggedIn(true);
           setEmail(authenticatedUser.email);
           setHasPurchased(Boolean(authenticatedUser.hasPurchased));
-          await loadUserData(authenticatedUser.email, { allowUnauthorizedFallback: true });
+          restoreCoachCache(authenticatedUser.email);
+          const { appliedQuizSeed } = await loadUserData(authenticatedUser.email, { allowUnauthorizedFallback: true });
           setSuccess('Account created successfully!');
 
           setTimeout(() => {
-            setShowGoalsModal(true);
+            setShowGoalsModal(!appliedQuizSeed);
             setScreen('home');
             setError('');
             setSuccess('');
@@ -2812,6 +3064,7 @@
           setIsLoggedIn(true);
           setEmail(authenticatedUser.email);
           setHasPurchased(Boolean(authenticatedUser.hasPurchased));
+          restoreCoachCache(authenticatedUser.email);
           const { daysSince } = await loadUserData(authenticatedUser.email, { allowUnauthorizedFallback: true });
 
           setSuccess('Login successful!');
@@ -2890,6 +3143,7 @@
           setIsLoggedIn(true);
           setEmail(authenticatedUser.email);
           setHasPurchased(Boolean(authenticatedUser.hasPurchased));
+          restoreCoachCache(authenticatedUser.email);
           const { daysSince } = await loadUserData(authenticatedUser.email, { allowUnauthorizedFallback: true });
 
           setSuccess(result.message || 'Password reset successfully!');
@@ -3498,10 +3752,22 @@
           )}
 
           {/* Main App - Show only if purchased or purchase not checked yet */}
-          {(!purchaseChecked || hasPurchased || isAuthScreen) && (
+          {(screen === 'booting' || !purchaseChecked || hasPurchased || isAuthScreen) && (
             <>
           {showGoalsModal && <GoalsModal />}
           {showSkipRestModal && <SkipRestDayModal />}
+
+          {screen === 'booting' && (
+            <div className="auth-shell">
+              <div className="auth-card text-center">
+                <div className="screen-kicker">DevDad Strength</div>
+                <div className="hero-logo mb-4">Dev<span style={{color: '#f97316'}}>Dad</span></div>
+                <div className="mx-auto mb-6" style={{width:'54px', height:'54px', border:'4px solid rgba(255,255,255,0.08)', borderTopColor:'#f97316', borderRadius:'999px', animation:'spin 1s linear infinite'}} />
+                <h2 className="text-2xl font-bold text-white mb-2">Loading your dashboard</h2>
+                <p className="hero-copy" style={{maxWidth:'28rem', margin:'0 auto'}}>Checking your session and restoring your training progress.</p>
+              </div>
+            </div>
+          )}
 
           {screen === 'welcome' && (
             <div className="auth-shell">

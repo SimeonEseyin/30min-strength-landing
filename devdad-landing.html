@@ -1029,6 +1029,12 @@
         </div>
       </div>
 
+      <div id="quizCheckoutRecap" style="display:none; margin: 16px 0; padding: 14px 16px; border-radius: 16px; background: #f6f3ea; border: 1px solid rgba(30, 30, 30, 0.08);">
+        <div style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #7c6c4e; margin-bottom: 8px;">Based On Your Quiz</div>
+        <div id="quizCheckoutRecapGoal" style="font-weight: 700; color: #1f2937; margin-bottom: 4px;">Goal</div>
+        <div id="quizCheckoutRecapSetup" style="color: #4b5563; font-size: 14px; line-height: 1.5;">Starter setup</div>
+      </div>
+
       <form id="checkoutForm" onsubmit="processCheckout(event)">
         <div class="form-group">
           <label>Email Address</label>
@@ -1062,6 +1068,38 @@
     let deferredInstallPrompt = null;
     const installButton = document.getElementById('installAppButton');
     const installLink = document.getElementById('installAppLink');
+
+    function readQuizProfile() {
+      try {
+        const raw = sessionStorage.getItem('devdadQuizProfile');
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function updateQuizCheckoutRecap(profile) {
+      const recap = document.getElementById('quizCheckoutRecap');
+      const goalLine = document.getElementById('quizCheckoutRecapGoal');
+      const setupLine = document.getElementById('quizCheckoutRecapSetup');
+      if (!recap || !goalLine || !setupLine) return;
+
+      if (!profile || !profile.answers) {
+        recap.style.display = 'none';
+        return;
+      }
+
+      const goal = profile.answers.goal || 'Your starter plan';
+      const minutes = profile.preview?.minutes || 30;
+      const frequency = profile.preview?.frequency || 3;
+      const setup = profile.preview?.setup || 'home-friendly';
+
+      goalLine.textContent = `${goal} focus`;
+      setupLine.textContent = `${frequency} workouts/week • ${minutes} min • ${setup} setup`;
+      recap.style.display = 'block';
+    }
 
     function getInstallInstructions() {
       const userAgent = navigator.userAgent || '';
@@ -1150,6 +1188,7 @@
       const urlParams = new URLSearchParams(window.location.search);
       let quizEmail = urlParams.get('email') || sessionStorage.getItem('quizEmail');
       let quizName  = urlParams.get('name')  || sessionStorage.getItem('quizName');
+      const quizProfile = readQuizProfile();
       const shouldOpenCheckout = urlParams.get('checkout') === '1';
       const hadSensitiveParams = urlParams.has('email') || urlParams.has('name') || urlParams.has('checkout');
 
@@ -1159,6 +1198,9 @@
         if (quizEmail) sessionStorage.setItem('quizEmail', quizEmail);
         if (quizName)  sessionStorage.setItem('quizName',  quizName);
       }
+
+      window.quizProfile = quizProfile;
+      updateQuizCheckoutRecap(quizProfile);
 
       if (hadSensitiveParams) {
         const cleanUrl = `${window.location.pathname}${window.location.hash || ''}`;
@@ -1185,6 +1227,7 @@
         const nameField   = document.getElementById('name');
         if (emailField && emailToFill) emailField.value = emailToFill;
         if (nameField  && nameToFill)  nameField.value  = nameToFill;
+        updateQuizCheckoutRecap(window.quizProfile || readQuizProfile());
       }, 100);
     }
 

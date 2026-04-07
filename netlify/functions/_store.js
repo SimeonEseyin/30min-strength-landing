@@ -106,6 +106,18 @@ function defaultUserData() {
       avatarDataUrl: '',
     },
     weights: {},
+    coachCache: {
+      coach: null,
+      snapshot: '',
+      updatedAt: null,
+    },
+    intake: {
+      source: '',
+      capturedAt: null,
+      seededAt: null,
+      quizAnswers: null,
+      preview: null,
+    },
     updatedAt: null,
   };
 }
@@ -324,6 +336,14 @@ function getUserData(store, email) {
     weights: ((store.userData[normalizedEmail] || {}).weights && typeof (store.userData[normalizedEmail] || {}).weights === 'object')
       ? (store.userData[normalizedEmail] || {}).weights
       : {},
+    coachCache: {
+      ...defaultUserData().coachCache,
+      ...((store.userData[normalizedEmail] || {}).coachCache || {}),
+    },
+    intake: {
+      ...defaultUserData().intake,
+      ...((store.userData[normalizedEmail] || {}).intake || {}),
+    },
   };
 }
 

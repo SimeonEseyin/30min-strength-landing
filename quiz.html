@@ -1131,29 +1131,29 @@
 
     <!-- Main Quiz Container -->
     <main class="quiz-container">
-        <!-- Step 1: Kids Age -->
-        <div class="step has-bg bg-dad active" data-step="1">
-            <h2 class="step-question-kids-age">PERSONALIZED WORKOUT PLAN. <br> HOW OLD ARE YOUR KIDS?</h2>
-            <p class="step-subtitle">This helps us understand your schedule</p>
-            <div class="options-grid two-col" data-field="kids_age">
-                <div class="option-card" data-value="0-6 months">
-                    <span class="option-text">0-6 months</span>
+        <!-- Step 1: Goal -->
+        <div class="step has-bg bg-fitness active" data-step="1">
+            <h2 class="step-question-fitness">What's your main goal right now?</h2>
+            <p class="step-subtitle">We'll use this to shape your starter plan</p>
+            <div class="options-grid" data-field="goal">
+                <div class="option-card" data-value="Build strength">
+                    <span class="option-text">Build strength</span>
                     <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
                 </div>
-                <div class="option-card" data-value="6-12 months">
-                    <span class="option-text">6-12 months</span>
+                <div class="option-card" data-value="Build muscle">
+                    <span class="option-text">Build muscle</span>
                     <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
                 </div>
-                <div class="option-card" data-value="1-2 years">
-                    <span class="option-text">1-2 years</span>
+                <div class="option-card" data-value="Lose fat">
+                    <span class="option-text">Lose fat</span>
                     <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
                 </div>
-                <div class="option-card" data-value="2+ years">
-                    <span class="option-text">2+ years</span>
+                <div class="option-card" data-value="Stay consistent">
+                    <span class="option-text">Stay consistent</span>
                     <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
                 </div>
             </div>
-            <p class="step-sub-subtitle">By selecting an option and continuing you agree to our <a href="terms.html">Terms of Service</a> | <a href="privacy.html">Privacy Policy</a>. Please review before continuing</p>
+            <p class="step-sub-subtitle">By continuing you agree to our <a href="terms.html">Terms of Service</a> | <a href="privacy.html">Privacy Policy</a>.</p>
         </div>
 
         <!-- Step 2: Interstitial - Social Proof -->
@@ -1182,35 +1182,10 @@
             </div>
         </div>
 
-        <!-- Step 3: Main Goal -->
+        <!-- Step 3: Available Time -->
         <div class="step has-bg bg-fitness" data-step="3">
-            <h2 class="step-question-fitness">What's your main fitness goal?</h2>
-            <p class="step-subtitle">We'll customize your plan accordingly</p>
-            
-            <div class="options-grid" data-field="goal">
-                <div class="option-card" data-value="Build muscle">
-                    <span class="option-text">Build muscle & strength</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-                <div class="option-card" data-value="Lose fat">
-                    <span class="option-text">Lose fat & get lean</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-                <div class="option-card" data-value="Stay consistent">
-                    <span class="option-text">Finally stay consistent</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-                <div class="option-card" data-value="All of the above">
-                    <span class="option-text">All of the above</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Step 4: Available Time -->
-        <div class="step" data-step="4">
-            <h2 class="step-question">How much time can you realistically workout?</h2>
-            <p class="step-subtitle">Be honest — we'll work with what you have</p>
+            <h2 class="step-question-fitness">How much time can you realistically train on most days?</h2>
+            <p class="step-subtitle">We'll keep the plan inside that window</p>
             
             <div class="options-grid two-col" data-field="time">
                 <div class="option-card" data-value="15 minutes">
@@ -1227,6 +1202,27 @@
                 </div>
                 <div class="option-card" data-value="60 minutes">
                     <span class="option-text">60 min</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Workout Location -->
+        <div class="step" data-step="4">
+            <h2 class="step-question">Where will you do most workouts?</h2>
+            <p class="step-subtitle">This decides which starter setup fits best</p>
+            
+            <div class="options-grid" data-field="location">
+                <div class="option-card" data-value="Home only">
+                    <span class="option-text">At home</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="Gym only">
+                    <span class="option-text">At a gym</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="Both">
+                    <span class="option-text">Both</span>
                     <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
                 </div>
             </div>
@@ -1264,61 +1260,15 @@
             </div>
         </div>
 
-        <!-- Step 6: Sleep -->
+        <!-- Step 6: Equipment -->
         <div class="step" data-step="6">
-            <h2 class="step-question">How much sleep do you usually get?</h2>
-            <p class="step-subtitle">This affects workout intensity recommendations</p>
+            <h2 class="step-question">What equipment do you have at home?</h2>
+            <p class="step-subtitle">Select all that apply</p>
 
             <div class="step sleep-image">
-                <img src="./site-images/sleep.JPG" alt="Dad resting before a workout" loading="lazy" decoding="async">
+                <img src="./site-images/sleep.JPG" alt="Workout setup at home" loading="lazy" decoding="async">
             </div>
 
-            <div class="options-grid two-col" data-field="sleep">
-                <div class="option-card" data-value="Less than 5 hours">
-                    <span class="option-text">Less than 5h</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-                <div class="option-card" data-value="5-6 hours">
-                    <span class="option-text">5-6 hours</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-                <div class="option-card" data-value="7-8 hours">
-                    <span class="option-text">7-8 hours</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-                <div class="option-card" data-value="More than 8 hours">
-                    <span class="option-text">More than 8h</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Step 7: Workout Location -->
-        <div class="step has-bg bg-gym" data-step="7">
-            <h2 class="step-question-gym">Where do you prefer to work out?</h2>
-            <p class="step-subtitle">We'll customize equipment recommendations</p>
-            
-            <div class="options-grid" data-field="location">
-                <div class="option-card" data-value="Home only">
-                    <span class="option-text">Home only</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-                <div class="option-card" data-value="Gym only">
-                    <span class="option-text">Commercial gym</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-                <div class="option-card" data-value="Both">
-                    <span class="option-text">Both home & gym</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Step 8: Equipment -->
-        <div class="step" data-step="8">
-            <h2 class="step-question">What equipment do you have access to?</h2>
-            <p class="step-subtitle">Select all that apply</p>
-            
             <div class="options-grid two-col" data-field="equipment" data-multi="true">
                 <div class="option-card multi" data-value="Dumbbells">
                     <span class="option-text">Dumbbells</span>
@@ -1342,6 +1292,60 @@
                 </div>
                 <div class="option-card multi" data-value="Bodyweight only">
                     <span class="option-text">Bodyweight only</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card multi" data-value="No equipment yet">
+                    <span class="option-text">No equipment yet</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 7: Sleep -->
+        <div class="step has-bg bg-gym" data-step="7">
+            <h2 class="step-question-gym">How has sleep been lately?</h2>
+            <p class="step-subtitle">Optional. We'll use it to make week 1 more realistic.</p>
+            
+            <div class="options-grid two-col" data-field="sleep">
+                <div class="option-card" data-value="Less than 5 hours">
+                    <span class="option-text">Rough: under 5h</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="5-6 hours">
+                    <span class="option-text">Okay: 5-6h</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="7-8 hours">
+                    <span class="option-text">Solid: 7-8h</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="More than 8 hours">
+                    <span class="option-text">Great: 8h+</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 8: Biggest Challenge -->
+        <div class="step" data-step="8">
+            <h2 class="step-question">What usually gets in the way?</h2>
+            <p class="step-subtitle">Optional. We'll tailor the coaching around this.</p>
+            
+            <div class="options-grid two-col" data-field="challenge">
+                <div class="option-card" data-value="No time">
+                    <span class="option-text">Not enough time</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="No energy">
+                    <span class="option-text">Too exhausted from parenting</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="No motivation">
+                    <span class="option-text">Can't stay motivated</span>
+                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                </div>
+                <div class="option-card" data-value="Don't know what to do">
+                    <span class="option-text">Not sure what to do</span>
                     <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
                 </div>
             </div>
@@ -1407,7 +1411,7 @@
         <!-- Step 11: Email -->
         <div class="step" data-step="11">
             <h2 class="step-question">Enter your email to unlock your personalized plan</h2>
-            <p class="step-subtitle">We'll save your quiz answers and pre-fill checkout if you decide to join today</p>
+            <p class="step-subtitle">We'll save your starter-plan answers and pre-fill checkout if you decide to join today</p>
             <div class="input-container">
                 <input type="email" class="text-input" id="emailInput" placeholder="your@email.com" required>
                 <p class="input-hint">We respect your privacy. No spam, ever.</p>
@@ -1422,7 +1426,7 @@
         <!-- Step 12: Name -->
         <div class="step" data-step="12">
             <h2 class="step-question">What's your first name?</h2>
-            <p class="step-subtitle">So we can personalize your experience</p>
+            <p class="step-subtitle">Optional. So we can personalize your experience.</p>
             
             <div class="input-container">
                 <input type="text" class="text-input" id="nameInput" placeholder="Your first name">
@@ -1471,8 +1475,8 @@
         <!-- Step 14: Results -->
         <div class="step" data-step="14" data-type="results">
             <div class="results-container">
-                <p class="results-greeting" id="resultsGreeting">Hey there,</p>
-                <h2 class="results-title">Your personalized <span style="color: var(--accent);">Dad Strength Plan</span> is ready!</h2>
+                <p class="results-greeting" id="resultsGreeting">Your starter plan is in.</p>
+                <h2 class="results-title">Your best-fit <span style="color: var(--accent);">Dad Strength Setup</span> is ready!</h2>
                 
                 <div class="results-chart">
                     <p class="chart-title">Your projected strength gains</p>
@@ -1495,21 +1499,29 @@
                 <div class="results-benefits">
                     <div class="benefit-row">
                         <svg class="benefit-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span class="benefit-text">Perfect for beginners</span>
+                        <span class="benefit-text"><span id="frequencyResult">3</span> focused workouts each week</span>
                     </div>
                     <div class="benefit-row">
                         <svg class="benefit-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span class="benefit-text">Customized to your <span id="timeResult">30</span>-minute blocks</span>
+                        <span class="benefit-text"><span id="timeResult">30</span>-minute sessions with a <span id="goalResult">Build muscle</span> focus</span>
                     </div>
                     <div class="benefit-row">
                         <svg class="benefit-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span class="benefit-text">Goal: <span id="goalResult">Build muscle & strength</span></span>
+                        <span class="benefit-text"><span id="setupResult">Home dumbbell</span> starter setup</span>
+                    </div>
+                    <div class="benefit-row">
+                        <svg class="benefit-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        <span class="benefit-text" id="recoveryResult">Normal starting intensity for week 1</span>
+                    </div>
+                    <div class="benefit-row">
+                        <svg class="benefit-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        <span class="benefit-text" id="challengeResult">Short, structured sessions to keep momentum high</span>
                     </div>
                 </div>
 
                 <div class="results-insight">
-                    <div class="results-insight-label">Best Next Step</div>
-                    <p class="results-insight-copy">Founding member access is live for $47 one time. Continue to checkout with your quiz answers pre-filled.</p>
+                    <div class="results-insight-label">What Happens Next</div>
+                    <p class="results-insight-copy">If you join, these answers will seed your account defaults once. After that, the app adapts to your real progress instead of locking you into quiz assumptions.</p>
                 </div>
             </div>
         </div>
@@ -1552,25 +1564,21 @@
         // Quiz State
         const state = {
             currentStep: 1,
-            totalSteps: 14,
+            totalSteps: 9,
             answers: {},
-            questionSteps: [1, 3, 4, 6, 7, 8, 9, 11, 12], // Steps that count for progress
+            stepSequence: [1, 3, 4, 6, 7, 8, 11, 13, 14],
+            questionSteps: [1, 3, 4, 6, 7, 8, 11],
         };
 
         // Progress labels for different sections
         const progressLabels = {
-            1: 'Your Profile',
-            2: 'Your Profile',
-            3: 'Your Goals',
-            4: 'Your Goals',
-            5: 'Your Goals',
-            6: 'Lifestyle',
-            7: 'Lifestyle',
-            8: 'Lifestyle',
-            9: 'Challenges',
-            10: 'Challenges',
+            1: 'Your Goal',
+            3: 'Your Time',
+            4: 'Your Setup',
+            6: 'Your Setup',
+            7: 'Your Recovery',
+            8: 'Your Coaching',
             11: 'Almost Done',
-            12: 'Almost Done',
             13: 'Creating Plan',
             14: 'Your Plan'
         };
@@ -1582,6 +1590,24 @@
         const ctaBtn = document.getElementById('ctaBtn');
         const skipBtn = document.getElementById('skipBtn');
         const steps = document.querySelectorAll('.step');
+        const optionalSteps = new Set([7, 8]);
+        const exclusiveMultiOptions = {
+            equipment: ['Bodyweight only', 'No equipment yet']
+        };
+
+        function getStepIndex(stepNum) {
+            return state.stepSequence.indexOf(stepNum);
+        }
+
+        function getNextStep(stepNum) {
+            const index = getStepIndex(stepNum);
+            return index >= 0 ? state.stepSequence[index + 1] || null : null;
+        }
+
+        function getPreviousStep(stepNum) {
+            const index = getStepIndex(stepNum);
+            return index > 0 ? state.stepSequence[index - 1] : null;
+        }
 
         // Initialize progress bar segments
         function initProgressBar() {
@@ -1596,7 +1622,9 @@
         // Update progress bar
         function updateProgress() {
             const segments = progressBar.querySelectorAll('.progress-segment');
-            const currentQuestionIndex = state.questionSteps.indexOf(state.currentStep);
+            const currentQuestionIndex = state.questionSteps.includes(state.currentStep)
+                ? state.questionSteps.indexOf(state.currentStep)
+                : state.questionSteps.length;
             
             segments.forEach((segment, i) => {
                 segment.classList.remove('active', 'completed');
@@ -1623,16 +1651,17 @@
             state.currentStep = stepNum;
             updateProgress();
 
+            const stepEl = document.querySelector(`[data-step="${stepNum}"]`);
+            const stepType = stepEl?.dataset.type;
+
             // Back button visibility
-            if (stepNum > 1 && stepNum < 13) {
+            if (getPreviousStep(stepNum) && stepType !== 'loading' && stepType !== 'results') {
                 backBtn.classList.add('visible');
             } else {
                 backBtn.classList.remove('visible');
             }
 
             // CTA button text
-            const stepEl = document.querySelector(`[data-step="${stepNum}"]`);
-            const stepType = stepEl?.dataset.type;
 
             if (stepType === 'loading') {
                 ctaBtn.style.display = 'none';
@@ -1644,17 +1673,13 @@
                 skipBtn.style.display = 'none';
                 updateResultsPage();
             } else if (stepNum === 11) {
-                ctaBtn.textContent = 'GET MY PLAN';
+                ctaBtn.textContent = 'SEE MY STARTER PLAN';
                 ctaBtn.style.display = 'block';
                 skipBtn.style.display = 'none';
-            } else if (stepNum === 12) {
-                ctaBtn.textContent = 'CONTINUE';
-                ctaBtn.style.display = 'block';
-                skipBtn.style.display = 'block';
             } else {
                 ctaBtn.textContent = 'CONTINUE';
                 ctaBtn.style.display = 'block';
-                skipBtn.style.display = 'none';
+                skipBtn.style.display = optionalSteps.has(stepNum) ? 'block' : 'none';
             }
 
             // Update CTA disabled state
@@ -1672,12 +1697,13 @@
             }
 
             if (state.currentStep === 11) {
-                const email = document.getElementById('emailInput').value;
-                ctaBtn.disabled = !email || !email.includes('@');
+                const emailInput = document.getElementById('emailInput');
+                emailInput.value = emailInput.value.trimStart();
+                ctaBtn.disabled = !isValidEmail(emailInput.value);
                 return;
             }
 
-            if (state.currentStep === 12) {
+            if (optionalSteps.has(state.currentStep)) {
                 ctaBtn.disabled = false;
                 return;
             }
@@ -1696,6 +1722,49 @@
             } else {
                 ctaBtn.disabled = false;
             }
+        }
+
+        function isValidEmail(value) {
+            const email = String(value || '').trim();
+            if (!email) return false;
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function syncMultiExclusiveSelection(grid, field, value, isSelected) {
+            const exclusiveValues = exclusiveMultiOptions[field] || [];
+            if (exclusiveValues.length === 0) return;
+
+            const isExclusiveValue = exclusiveValues.includes(value);
+            const cards = Array.from(grid.querySelectorAll('.option-card'));
+
+            if (isExclusiveValue && isSelected) {
+                cards.forEach(card => {
+                    if (card.dataset.value !== value) {
+                        card.classList.remove('selected');
+                    }
+                });
+                state.answers[field] = [value];
+                return;
+            }
+
+            if (!isExclusiveValue && isSelected) {
+                cards.forEach(card => {
+                    if (exclusiveValues.includes(card.dataset.value)) {
+                        card.classList.remove('selected');
+                    }
+                });
+                state.answers[field] = (state.answers[field] || []).filter(entry => !exclusiveValues.includes(entry));
+            }
+        }
+
+        function clearCurrentStepAnswer() {
+            const stepEl = document.querySelector(`[data-step="${state.currentStep}"]`);
+            const optionsGrid = stepEl?.querySelector('.options-grid');
+            if (!optionsGrid) return;
+
+            const field = optionsGrid.dataset.field;
+            delete state.answers[field];
+            optionsGrid.querySelectorAll('.option-card').forEach(card => card.classList.remove('selected'));
         }
 
         // Handle option selection
@@ -1717,18 +1786,12 @@
                 } else {
                     state.answers[field] = state.answers[field].filter(v => v !== value);
                 }
+                syncMultiExclusiveSelection(grid, field, value, card.classList.contains('selected'));
             } else {
                 // Single select
                 grid.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
                 card.classList.add('selected');
                 state.answers[field] = value;
-
-                // Auto-advance after selection (with delay)
-                setTimeout(() => {
-                    if (state.currentStep < state.totalSteps) {
-                        showStep(state.currentStep + 1);
-                    }
-                }, 300);
             }
 
             updateCtaState();
@@ -1759,20 +1822,96 @@
             }, 50);
         }
 
+        function getTimeMinutes(value) {
+            const timeMatch = String(value || '').match(/\d+/);
+            return timeMatch ? parseInt(timeMatch[0], 10) : 30;
+        }
+
+        function deriveWorkoutFrequency(minutes) {
+            return minutes >= 45 ? 4 : 3;
+        }
+
+        function buildSetupLabel(location, equipment) {
+            const gear = Array.isArray(equipment) ? equipment : [];
+            const hasDumbbells = gear.includes('Dumbbells');
+            const hasBarbell = gear.includes('Barbell');
+            const hasBands = gear.includes('Resistance bands');
+            const hasNoGear = gear.includes('No equipment yet') || gear.includes('Bodyweight only') || gear.length === 0;
+
+            if (location === 'Gym only') return 'Gym-based';
+            if (location === 'Both') return hasDumbbells ? 'Hybrid dumbbell + gym' : 'Hybrid home + gym';
+            if (hasBarbell) return 'Home barbell';
+            if (hasDumbbells) return 'Home dumbbell';
+            if (hasBands) return 'Home bands';
+            if (hasNoGear) return 'Bodyweight-first';
+            return 'Home-friendly';
+        }
+
+        function buildRecoveryMessage(sleep) {
+            if (sleep === 'Less than 5 hours') return 'Lower-volume week 1 to match rough sleep';
+            if (sleep === '5-6 hours') return 'Moderate starting intensity to stay recoverable';
+            return 'Normal starting intensity for week 1';
+        }
+
+        function buildChallengeMessage(challenge) {
+            if (challenge === 'No time') return 'Short, structured sessions to protect your schedule';
+            if (challenge === 'No energy') return 'Manageable first-week volume to avoid burnout';
+            if (challenge === 'No motivation') return 'Simple, repeatable sessions to build momentum fast';
+            if (challenge === "Don't know what to do") return 'Clear day-by-day structure so nothing is left to guesswork';
+            return 'Short, structured sessions to keep momentum high';
+        }
+
+        function buildQuizProfile() {
+            const answers = {
+                goal: state.answers.goal || '',
+                time: state.answers.time || '',
+                location: state.answers.location || '',
+                sleep: state.answers.sleep || '',
+                challenge: state.answers.challenge || '',
+                equipment: Array.isArray(state.answers.equipment) ? [...state.answers.equipment] : [],
+            };
+            const minutes = getTimeMinutes(answers.time);
+            return {
+                email: state.answers.email || '',
+                source: 'quiz',
+                capturedAt: new Date().toISOString(),
+                answers,
+                preview: {
+                    frequency: deriveWorkoutFrequency(minutes),
+                    minutes,
+                    setup: buildSetupLabel(answers.location, answers.equipment),
+                    recovery: buildRecoveryMessage(answers.sleep),
+                    challenge: buildChallengeMessage(answers.challenge),
+                }
+            };
+        }
+
+        function persistQuizProfile() {
+            const profile = buildQuizProfile();
+            try {
+                sessionStorage.setItem('devdadQuizProfile', JSON.stringify(profile));
+                if (profile.email) {
+                    sessionStorage.setItem('quizEmail', profile.email);
+                }
+                sessionStorage.removeItem('quizName');
+            } catch (error) {
+            }
+            return profile;
+        }
+
         // Update results page with answers
         function updateResultsPage() {
-            const name = state.answers.name || '';
-            const greeting = name ? `${name},` : 'Hey there,';
-            document.getElementById('resultsGreeting').textContent = greeting;
+            const minutes = getTimeMinutes(state.answers.time);
+            const frequency = deriveWorkoutFrequency(minutes);
+            const equipment = Array.isArray(state.answers.equipment) ? state.answers.equipment : [];
 
-            const timeMatch = state.answers.time?.match(/\d+/);
-            if (timeMatch) {
-                document.getElementById('timeResult').textContent = timeMatch[0];
-            }
-
-            if (state.answers.goal) {
-                document.getElementById('goalResult').textContent = state.answers.goal;
-            }
+            document.getElementById('resultsGreeting').textContent = 'Your starter plan is in.';
+            document.getElementById('timeResult').textContent = String(minutes);
+            document.getElementById('frequencyResult').textContent = String(frequency);
+            document.getElementById('goalResult').textContent = state.answers.goal || 'Build strength';
+            document.getElementById('setupResult').textContent = buildSetupLabel(state.answers.location, equipment);
+            document.getElementById('recoveryResult').textContent = buildRecoveryMessage(state.answers.sleep);
+            document.getElementById('challengeResult').textContent = buildChallengeMessage(state.answers.challenge);
         }
 
         // Submit form to Netlify
@@ -1818,8 +1957,6 @@
                 const formData = {
                     'form-name': 'waitlist',
                     'email': state.answers.email || '',
-                    'name': state.answers.name || '',
-                    'kids_age': state.answers.kids_age || '',
                     'goal': state.answers.goal || '',
                     'time': state.answers.time || '',
                     'sleep': state.answers.sleep || '',
@@ -1864,26 +2001,19 @@
         });
 
         document.getElementById('emailInput').addEventListener('input', (e) => {
-            state.answers.email = e.target.value;
+            state.answers.email = e.target.value.trim();
             updateCtaState();
         });
 
         document.getElementById('emailInput').addEventListener('change', (e) => {
-            state.answers.email = e.target.value;
+            state.answers.email = e.target.value.trim();
             updateCtaState();
         });
 
-        document.getElementById('nameInput').addEventListener('input', (e) => {
-            state.answers.name = e.target.value;
-        });
-
-        document.getElementById('nameInput').addEventListener('change', (e) => {
-            state.answers.name = e.target.value;
-        });
-
         backBtn.addEventListener('click', () => {
-            if (state.currentStep > 1) {
-                showStep(state.currentStep - 1);
+            const previousStep = getPreviousStep(state.currentStep);
+            if (previousStep) {
+                showStep(previousStep);
             }
         });
 
@@ -1893,14 +2023,9 @@
 
             // Capture email on step 11 before advancing
             if (state.currentStep === 11) {
-                const emailValue = document.getElementById('emailInput').value;
+                const emailValue = document.getElementById('emailInput').value.trim();
                 state.answers.email = emailValue;
-            }
-
-            // Capture name on step 12 before advancing
-            if (state.currentStep === 12) {
-                const nameValue = document.getElementById('nameInput').value;
-                state.answers.name = nameValue;
+                document.getElementById('emailInput').value = emailValue;
             }
 
             if (stepType === 'results') {
@@ -1911,10 +2036,10 @@
                 // Submit form and wait for response
                 submitForm()
                     .then(() => {
+                        persistQuizProfile();
                         // Redirect to landing page with data pre-filled
                         const email = encodeURIComponent(state.answers.email || '');
-                        const name = encodeURIComponent(state.answers.name || '');
-                        window.location.href = `devdad-landing.html?from=quiz&checkout=1&email=${email}&name=${name}`;
+                        window.location.href = `devdad-landing.html?from=quiz&checkout=1&email=${email}`;
                     })
                     .catch((error) => {
                         // Error - remove loading state, user can try again
@@ -1924,21 +2049,23 @@
                 return;
             }
 
-            if (state.currentStep < state.totalSteps) {
-                showStep(state.currentStep + 1);
+            const nextStep = getNextStep(state.currentStep);
+            if (nextStep) {
+                showStep(nextStep);
             }
         });
 
         skipBtn.addEventListener('click', () => {
-            if (state.currentStep < state.totalSteps) {
-                showStep(state.currentStep + 1);
+            clearCurrentStepAnswer();
+            const nextStep = getNextStep(state.currentStep);
+            if (nextStep) {
+                showStep(nextStep);
             }
         });
 
         // Initialize
         initProgressBar();
-        updateProgress();
-        updateCtaState();
+        showStep(state.stepSequence[0]);
     </script>
 </body>
 </html>
