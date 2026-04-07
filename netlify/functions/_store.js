@@ -12,7 +12,6 @@ const rootDir = path.resolve(__dirname, '..', '..');
 const tempDataDir = path.join(process.env.TMPDIR || '/tmp', 'devdad-data');
 const STORE_BLOB_KEY = 'store';
 const STORE_NAMESPACE = 'devdad-data';
-const BLOB_WRITE_RETRIES = 5;
 
 function getPreferredDataDir() {
   if (process.env.DEVDAD_DATA_DIR) {
@@ -274,23 +273,14 @@ async function updateStore(mutator) {
     const blobStore = getBlobStore();
     if (blobStore) {
       try {
-        for (let attempt = 0; attempt < BLOB_WRITE_RETRIES; attempt++) {
-          const existing = await blobStore.getWithMetadata(STORE_BLOB_KEY, {
-            consistency: 'strong',
-            type: 'json',
-          });
-          const store = mergeDefaults(existing?.data || defaultStore());
-          const result = await mutator(store);
-          const writeResult = existing
-            ? await blobStore.setJSON(STORE_BLOB_KEY, store, { onlyIfMatch: existing.etag })
-            : await blobStore.setJSON(STORE_BLOB_KEY, store, { onlyIfNew: true });
-
-          if (writeResult.modified) {
-            return result;
-          }
-        }
-
-        throw new Error('Store write conflict. Please retry.');
+        const existing = await blobStore.get(STORE_BLOB_KEY, {
+          consistency: 'strong',
+          type: 'json',
+        });
+        const store = mergeDefaults(existing || defaultStore());
+        const result = await mutator(store);
+        await blobStore.setJSON(STORE_BLOB_KEY, store);
+        return result;
       } catch (error) {
         if (!canUseLocalFileStore() || !shouldFallbackFromBlobError(error)) {
           throw error;
