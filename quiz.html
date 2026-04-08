@@ -182,7 +182,7 @@
         .quiz-container {
             max-width: 480px;
             margin: 0 auto;
-            padding: 140px 20px 120px;
+            padding: 156px 20px 120px;
             min-height: 100vh;
         }
 
@@ -198,8 +198,8 @@
 
         .step.has-bg {
             position: relative;
-            margin: -140px -20px -120px;
-            padding: 140px 20px 120px;
+            margin: -156px -20px -120px;
+            padding: 156px 20px 120px;
             min-height: 100vh;
             display: none;
         }
@@ -307,7 +307,7 @@
             font-weight: 400;
             line-height: 1.3;
             margin-bottom: 12px;
-            margin-top: -100px;
+            margin-top: 0;
             text-align: center;
             letter-spacing: 0.01em;
             color: var(--text-primary);
@@ -319,7 +319,7 @@
             font-weight: 400;
             line-height: 1.3;
             margin-bottom: 12px;
-            margin-top: -120px;
+            margin-top: 0;
             text-align: center;
             letter-spacing: 0.01em;
             color: var(--text-primary);
@@ -331,7 +331,7 @@
             font-weight: 400;
             line-height: 1.3;
             margin-bottom: 12px;
-            margin-top: -180px;
+            margin-top: 0;
             text-align: center;
             letter-spacing: 0.01em;
             color: var(--text-primary);
@@ -391,7 +391,7 @@
 
         .option-card {
             background: var(--bg-card);
-            border: none;
+            border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 20px;
             padding: 20px 20px;
             cursor: pointer;
@@ -407,20 +407,22 @@
 
         .option-card.selected {
             background: var(--bg-selected);
+            border-color: rgba(249, 115, 22, 0.55);
+            box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.16);
         }
 
         .option-card.selected .option-text {
-            color: var(--text-dark);
+            color: #111111;
         }
 
         .option-card.selected .option-check {
-            background: #706b62;
-            border-color: #706b62;
+            background: var(--accent);
+            border-color: var(--accent);
         }
 
         .option-card.selected .option-check svg {
             opacity: 1;
-            fill: var(--bg-selected);
+            fill: #111111;
         }
 
         .option-text {
@@ -448,6 +450,11 @@
             fill: var(--text-primary);
             opacity: 0;
             transition: opacity 0.2s;
+        }
+
+        .step.has-bg > * {
+            position: relative;
+            z-index: 1;
         }
 
         /* Multi-select checkbox style */
@@ -1152,6 +1159,13 @@
         @media (max-width: 380px) {
             .step-question {
                 font-size: 28px;
+            }
+
+            .step-question-kids-age,
+            .step-question-fitness,
+            .step-question-gym {
+                font-size: 28px;
+                margin-top: 0;
             }
             
             .interstitial-title {

@@ -796,7 +796,7 @@
       <a href="index.html" class="logo" style="text-decoration: none;">DEV<span>DAD</span></a>
       <nav class="header-nav">
         <a href="index.html">Home</a>
-        <a href="quiz.html">Quiz</a>
+        <a href="#pricing">Pricing</a>
         <a href="/app">Already Purchased? Log In</a>
         <button type="button" id="installAppButton" class="header-btn">Install App</button>
         <a href="#pricing" class="header-btn">Get Started</a>
@@ -942,6 +942,16 @@
           <span>$455</span>
         </div>
         <div class="savings">One-time payment. No subscription. No gym. 🔥</div>
+      </div>
+
+      <div style="max-width: 760px; margin: 28px auto 0; padding: 22px 24px; border-radius: 18px; background: var(--bg-secondary); border: 1px solid var(--border); text-align: left;">
+        <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px;">Need a Fit Check?</div>
+        <h3 style="font-size: 28px; line-height: 1.15; margin-bottom: 10px;">Not sure this matches your schedule or equipment?</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 16px;">Take the 60-second quiz to see whether the system fits your setup before you buy. It is there to reduce hesitation, not replace pricing.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+          <a href="quiz.html" class="header-btn" style="text-decoration: none;">Take the Fit Quiz</a>
+          <span style="font-size: 14px; color: var(--text-muted);">Best for dads deciding between “this looks good” and “this will actually work for me.”</span>
+        </div>
       </div>
     </div>
   </section>
@@ -1221,10 +1231,43 @@
       navigator.serviceWorker.register('/sw.js').catch(() => {});
     }
 
+    async function redirectMembersToAppIfNeeded() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasCheckoutFlow = urlParams.get('checkout') === '1' || urlParams.has('session_id');
+      const isStandalone = window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+      if (hasCheckoutFlow) return false;
+
+      if (isStandalone) {
+        window.location.replace('/app');
+        return true;
+      }
+
+      try {
+        const response = await fetch('/.netlify/functions/auth-session', {
+          method: 'GET',
+          credentials: 'include',
+          headers: { Accept: 'application/json' }
+        });
+
+        if (!response.ok) return false;
+        const session = await response.json();
+        if (session?.user?.hasPurchased) {
+          window.location.replace('/app');
+          return true;
+        }
+      } catch (error) {
+      }
+
+      return false;
+    }
+
     updateInstallCtas();
 
     // Pre-fill checkout from quiz URL params
-    window.addEventListener('DOMContentLoaded', function() {
+    window.addEventListener('DOMContentLoaded', async function() {
+      if (await redirectMembersToAppIfNeeded()) return;
+
       const urlParams = new URLSearchParams(window.location.search);
       let quizEmail = urlParams.get('email') || sessionStorage.getItem('quizEmail');
       let quizName  = urlParams.get('name')  || sessionStorage.getItem('quizName');

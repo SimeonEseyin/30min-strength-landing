@@ -1520,7 +1520,40 @@
             navigator.serviceWorker.register('/sw.js').catch(() => {});
         }
 
+        async function redirectMembersToAppIfNeeded() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasCheckoutFlow = urlParams.get('checkout') === '1' || urlParams.has('session_id');
+            const isStandalone = window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+            if (hasCheckoutFlow) return false;
+
+            if (isStandalone) {
+                window.location.replace('/app');
+                return true;
+            }
+
+            try {
+                const response = await fetch('/.netlify/functions/auth-session', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { Accept: 'application/json' }
+                });
+
+                if (!response.ok) return false;
+                const session = await response.json();
+                if (session?.user?.hasPurchased) {
+                    window.location.replace('/app');
+                    return true;
+                }
+            } catch (error) {
+            }
+
+            return false;
+        }
+
         updateInstallCtas();
+
+        redirectMembersToAppIfNeeded();
 
         // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
