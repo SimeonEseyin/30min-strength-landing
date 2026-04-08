@@ -2658,6 +2658,7 @@
         lastAdjustedAt: null
       };
 
+      const isAuthScreen = ['welcome', 'signup', 'login', 'reset-password'].includes(screen);
       const totalWeeks = 12;
       const currentPhase = currentWeek <= 4 ? 'Foundation' : currentWeek <= 8 ? 'Build' : 'Peak';
       const workoutsPerWeek = planConfig.scheduleTemplate === '4-day' ? 4 : 3;
@@ -4945,7 +4946,6 @@
       };
 
       // Render current screen
-      const isAuthScreen = ['welcome', 'signup', 'login', 'reset-password'].includes(screen);
       const contentScreen = screen === 'exercise-detail' ? (detailReturnScreen || (workoutStarted ? 'workout' : 'home')) : screen;
 
       return (
