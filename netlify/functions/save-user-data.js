@@ -98,7 +98,7 @@ function sanitizeHistory(history) {
 function sanitizeSettings(settings) {
   return {
     units: settings?.units === 'kg' ? 'kg' : 'lbs',
-    darkMode: Boolean(settings?.darkMode),
+    darkMode: true,
     notificationEnabled: Boolean(settings?.notificationEnabled),
     notificationTimezone: String(settings?.notificationTimezone || '').trim().slice(0, 100) || 'UTC',
     notificationTime: /^\d{2}:\d{2}$/.test(String(settings?.notificationTime || '')) ? settings.notificationTime : '07:00',

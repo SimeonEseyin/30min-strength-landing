@@ -1340,6 +1340,21 @@
       return match ? parseInt(match[1], 10) : null;
     }
 
+    function isUnilateralPrescription(setsText = '') {
+      return /\beach\b|\bper side\b|\beach side\b/i.test(String(setsText));
+    }
+
+    function getExercisePlannedSeconds(exercise = {}) {
+      const perSetSeconds = parseDurationToSeconds(exercise?.duration);
+      const setCount = Math.max(1, getSetCount(exercise?.sets) || 1);
+      const unilateralMultiplier = isUnilateralPrescription(exercise?.sets) ? 2 : 1;
+      const betweenSetResetSeconds = setCount > 1
+        ? (exercise?.tracksLoad === false ? 20 : 30) * (setCount - 1)
+        : 0;
+
+      return Math.max(20, (perSetSeconds * setCount * unilateralMultiplier) + betweenSetResetSeconds);
+    }
+
     function updateSetCount(setsText = '', nextCount = null) {
       if (!nextCount) return setsText;
       if (/^\d+\s+sets/i.test(String(setsText))) {
@@ -2249,10 +2264,21 @@
     }
 
       function SubpageHeader({ title, subtitle, onBack }) {
+        const handleBack = () => {
+          if (typeof window !== 'undefined' && window.history.state?.appScreen && window.history.length > 1) {
+            window.history.back();
+            return;
+          }
+
+          if (typeof onBack === 'function') {
+            onBack();
+          }
+        };
+
         return (
           <div className="screen-header">
           <div className="flex items-start gap-3">
-            <button type="button" className="back-button" onClick={onBack} aria-label="Go back">
+            <button type="button" className="back-button" onClick={handleBack} aria-label="Go back">
               ←
             </button>
             <div>
@@ -2313,6 +2339,8 @@
       }
 
       function CoachInsightCard({ coach, status, compact = false }) {
+        const [isExpanded, setIsExpanded] = React.useState(false);
+
         if (status === 'loading' && !coach) {
           return (
             <div className={`card ${compact ? 'mb-4' : 'mb-6'}`}>
@@ -2342,6 +2370,101 @@
           );
         }
 
+        const coachLabel = coach.source === 'openai' ? 'AI Coach' : 'Smart Coach';
+        const hasSuggestions = Array.isArray(coach.suggestions) && coach.suggestions.length > 0;
+
+        if (compact) {
+          return (
+            <div
+              className="mb-4"
+              style={{
+                background:'linear-gradient(180deg, rgba(34,197,94,0.12) 0%, rgba(255,255,255,0.04) 100%)',
+                border:'1px solid rgba(34,197,94,0.16)',
+                borderRadius:'24px',
+                padding:'16px 18px'
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  aria-hidden="true"
+                  className="flex items-center justify-center rounded-full"
+                  style={{
+                    width:'38px',
+                    height:'38px',
+                    background:'rgba(249,115,22,0.16)',
+                    border:'1px solid rgba(249,115,22,0.22)',
+                    fontSize:'18px',
+                    flexShrink:0
+                  }}
+                >
+                  💬
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-3 mb-1">
+                    <div className="text-[11px] uppercase tracking-[0.18em]" style={{color:'#86efac'}}>
+                      {coachLabel}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsExpanded((value) => !value)}
+                      className="text-xs font-semibold"
+                      style={{color:'#fdba74'}}
+                    >
+                      {isExpanded ? 'Hide details' : 'Why this?'}
+                    </button>
+                  </div>
+                  <div className="font-semibold text-white leading-snug">{coach.headline}</div>
+                  <p className="text-sm text-gray-300 mt-1">{coach.summary}</p>
+
+                  {coach.sessionFocus && (
+                    <div className="text-xs mt-2" style={{color:'#d1fae5'}}>
+                      Today: {coach.sessionFocus}
+                    </div>
+                  )}
+
+                  {isExpanded && (
+                    <div
+                      className="mt-3 rounded-2xl px-4 py-3"
+                      style={{background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)'}}
+                    >
+                      {coach.source !== 'openai' && (
+                        <div className="text-[11px] uppercase tracking-[0.18em] text-gray-500 mb-3">
+                          Built from your workout history, recovery cadence, and logged loads
+                        </div>
+                      )}
+
+                      {coach.recoveryNote && <div className="text-xs text-gray-400 mb-3">{coach.recoveryNote}</div>}
+
+                      {hasSuggestions ? (
+                        <div className="space-y-3">
+                          {coach.suggestions.map((suggestion, idx) => (
+                            <div key={`${suggestion.exerciseName}-${idx}`} className="rounded-2xl px-4 py-3" style={{background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)'}}>
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1">
+                                  <div className="font-semibold text-white">{suggestion.exerciseName}</div>
+                                  <div className="text-xs text-gray-400 mt-1">{suggestion.reason}</div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-[10px] uppercase tracking-[0.18em] text-gray-500">{suggestion.action}</div>
+                                  <div className="font-bold" style={{color:'#86efac'}}>
+                                    {Number.isFinite(suggestion.targetWeight) ? `${suggestion.targetWeight} ${suggestion.units}` : 'Log first set'}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-300">Log more sessions and weights to unlock more specific next-step guidance.</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        }
+
         return (
           <div
             className={`card ${compact ? 'mb-4' : 'mb-6'}`}
@@ -2353,7 +2476,7 @@
                 <h3 className="text-lg font-bold text-white">{coach.headline}</h3>
               </div>
               <div className="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]" style={{background:'rgba(255,255,255,0.06)', color:'#d1fae5', border:'1px solid rgba(255,255,255,0.08)'}}>
-                {coach.source === 'openai' ? 'AI Coach' : 'Smart Coach'}
+                {coachLabel}
               </div>
             </div>
 
@@ -2370,7 +2493,7 @@
               {coach.recoveryNote && <div className="text-xs text-gray-400 mt-2">{coach.recoveryNote}</div>}
             </div>
 
-            {Array.isArray(coach.suggestions) && coach.suggestions.length > 0 && (
+            {hasSuggestions && (
               <div className="space-y-3">
                 {coach.suggestions.map((suggestion, idx) => (
                   <div key={`${suggestion.exerciseName}-${idx}`} className="rounded-2xl px-4 py-3" style={{background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)'}}>
@@ -2448,7 +2571,7 @@
       // Settings State
       const [settings, setSettings] = useState({
         units: 'lbs', // 'lbs' or 'kg'
-        darkMode: false,
+        darkMode: true,
         notificationEnabled: false,
         notificationTimezone: 'UTC',
         notificationTime: '07:00'
@@ -2510,7 +2633,7 @@
 
       const defaultSettings = {
         units: 'lbs',
-        darkMode: false,
+        darkMode: true,
         notificationEnabled: false,
         notificationTimezone: getBrowserTimeZone(),
         notificationTime: '07:00'
@@ -2546,6 +2669,8 @@
       const hydrationReady = React.useRef(false);
       const lastSavedPayload = React.useRef('');
       const lastAiSnapshot = React.useRef('');
+      const navHistoryReady = React.useRef(false);
+      const suppressHistoryPush = React.useRef(false);
       const [showNotificationDebugTools] = useState(() => {
         if (typeof window === 'undefined') return false;
         return new URLSearchParams(window.location.search).get('debug') === '1';
@@ -2846,7 +2971,7 @@
         return {
           ...defaultSettings,
           units: draft.units === 'kg' ? 'kg' : 'lbs',
-          darkMode: Boolean(draft.darkMode),
+          darkMode: true,
           notificationEnabled: Boolean(draft.notificationEnabled),
           notificationTimezone: normalizedTimezone,
           notificationTime: normalizedTime
@@ -3869,6 +3994,57 @@
         isLoggedIn,
         currentUser
       ]);
+
+      useEffect(() => {
+        if (typeof window === 'undefined') return undefined;
+
+        const handlePopState = (event) => {
+          const nextScreen = event.state?.appScreen;
+          if (typeof nextScreen !== 'string') return;
+          suppressHistoryPush.current = true;
+          setScreen(nextScreen);
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => {
+          window.removeEventListener('popstate', handlePopState);
+        };
+      }, []);
+
+      useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const appHistoryEnabled = bootReady && purchaseChecked && hasPurchased && !isAuthScreen;
+
+        if (!appHistoryEnabled) {
+          navHistoryReady.current = false;
+          suppressHistoryPush.current = false;
+          return;
+        }
+
+        const nextState = {
+          ...(window.history.state && typeof window.history.state === 'object' ? window.history.state : {}),
+          appScreen: screen
+        };
+
+        if (!navHistoryReady.current) {
+          window.history.replaceState(nextState, '', window.location.pathname + window.location.search);
+          navHistoryReady.current = true;
+          return;
+        }
+
+        if (suppressHistoryPush.current) {
+          suppressHistoryPush.current = false;
+          window.history.replaceState(nextState, '', window.location.pathname + window.location.search);
+          return;
+        }
+
+        if (window.history.state?.appScreen === screen) {
+          return;
+        }
+
+        window.history.pushState(nextState, '', window.location.pathname + window.location.search);
+      }, [screen, bootReady, purchaseChecked, hasPurchased, isAuthScreen]);
 
       useEffect(() => {
         const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
@@ -5154,6 +5330,7 @@
         const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
         const isRestDay = !workoutInfo;
         const currentDayExercises = workoutInfo ? programExercises[workoutInfo.exerciseDay] || programExercises.day1 : programExercises.day1;
+        const plannedSessionMinutes = Math.max(1, Math.ceil(currentDayExercises.reduce((sum, exerciseItem) => sum + getExercisePlannedSeconds(exerciseItem), 0) / 60));
         
         return (
           <div className="app-screen">
@@ -5336,7 +5513,7 @@
                       <h4 className="font-bold text-lg mb-1 text-orange-100">
                         Day {currentDay}: {getWorkoutInfo(currentDay, currentWeek)?.type || 'Workout'}
                       </h4>
-                      <p className="text-xs text-gray-400">{planSummary.sessionLength} • {currentDayExercises.length} exercises</p>
+                      <p className="text-xs text-gray-400">~{plannedSessionMinutes} min planned • {currentDayExercises.length} exercises</p>
                       <div className="dev-badge mt-2">Pause-friendly • Baby-proof</div>
                     </div>
                   </div>
@@ -5406,6 +5583,7 @@
         const [showTimeInput, setShowTimeInput] = useState(false);
         const [isTimerRunning, setIsTimerRunning] = useState(false);
         const [isTimerHudMinimized, setIsTimerHudMinimized] = useState(false);
+        const [trackActualTime, setTrackActualTime] = useState(false);
         
         // Stopwatch state (actual time tracking)
         const [actualTimeElapsed, setActualTimeElapsed] = useState(0);
@@ -5461,27 +5639,11 @@
 
         // Parse exercise duration from "0:45" format to seconds
         const getDefaultDuration = () => {
-          if (!exercise || !exercise.duration) {
-            return 45;
-          }
-          try {
-            const parts = exercise.duration.split(':');
-            const mins = parseInt(parts[0]) || 0;
-            const secs = parseInt(parts[1]) || 0;
-            const total = mins * 60 + secs;
-            return total > 0 ? total : 45;
-          } catch (error) {
-            return 45;
-          }
+          return getExercisePlannedSeconds(exercise);
         };
 
         const getExerciseDurationSeconds = (exerciseItem) => {
-          if (!exerciseItem?.duration) return 45;
-          const parts = String(exerciseItem.duration).split(':');
-          const mins = parseInt(parts[0], 10) || 0;
-          const secs = parseInt(parts[1], 10) || 0;
-          const total = mins * 60 + secs;
-          return total > 0 ? total : 45;
+          return getExercisePlannedSeconds(exerciseItem);
         };
 
         const plannedSecondsRemaining = dayExercises
@@ -5525,6 +5687,7 @@
             // Reset input states
             setShowTimeInput(false);
             setShowActualTimeInput(false);
+            setTrackActualTime(false);
             setCustomTime('');
             setActualTimeInput('');
           } else {
@@ -5602,20 +5765,26 @@
           isTimerRunningRef.current = false;
         };
 
-        // Start both timers together
+        // Start the planned timer and, if enabled, the optional actual timer
         const handleStartBoth = () => {
           setIsTimerRunning(true);
-          setIsStopwatchRunning(true);
           isTimerRunningRef.current = true;
-          isStopwatchRunningRef.current = true;
+
+          if (trackActualTime) {
+            setIsStopwatchRunning(true);
+            isStopwatchRunningRef.current = true;
+          }
         };
 
-        // Pause both timers together
+        // Pause the planned timer and optional actual timer
         const handlePauseBoth = () => {
           setIsTimerRunning(false);
-          setIsStopwatchRunning(false);
           isTimerRunningRef.current = false;
-          isStopwatchRunningRef.current = false;
+
+          if (trackActualTime) {
+            setIsStopwatchRunning(false);
+            isStopwatchRunningRef.current = false;
+          }
         };
 
         // Reset both timers
@@ -5638,19 +5807,11 @@
           isTimerRunningRef.current = false;
           isStopwatchRunningRef.current = false;
           
-          // Always show modal to confirm actual time if stopwatch was used
-          if (actualTimeElapsed > 0) {
+          if (trackActualTime && actualTimeElapsed > 0) {
             setShowActualTimeInput(true);
             setActualTimeInput(actualTimeElapsed.toString());
           } else {
-            // If stopwatch wasn't used, ask if they want to input time manually
-            const useStopwatch = confirm('You didn\'t use the stopwatch. Would you like to input the actual time spent on this exercise?');
-            if (useStopwatch) {
-              setShowActualTimeInput(true);
-              setActualTimeInput('');
-            } else {
-              proceedToNext(null);
-            }
+            proceedToNext(null);
           }
         };
 
@@ -5737,7 +5898,7 @@
               </div>
 
               <div className="absolute left-1/2 -translate-x-1/2 bottom-4 w-[calc(100%-2rem)] max-w-sm">
-                {exerciseTimeLeft === 0 && actualTimeElapsed > 0 && (
+                {exerciseTimeLeft === 0 && trackActualTime && actualTimeElapsed > 0 && (
                   <div className="mb-2 mx-auto w-fit rounded-full px-3 py-1 text-[11px] font-semibold" style={{background:'rgba(34,197,94,0.14)', color:'#86efac', border:'1px solid rgba(34,197,94,0.2)', backdropFilter:'blur(10px)'}}>
                     Planned complete. Actual: {formatTime(actualTimeElapsed)}
                   </div>
@@ -5747,19 +5908,12 @@
                   {isTimerHudMinimized ? (
                     <div className="flex items-center gap-3">
                       <div className="min-w-0 flex-1 rounded-2xl px-3 py-2" style={{background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.12)'}}>
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <div className="text-[10px] uppercase tracking-[0.18em] text-gray-400">Planned</div>
-                            <div className={`text-lg font-bold ${isTimerRunning ? 'timer-running' : ''}`} style={{color: exerciseTimeLeft === 0 ? '#22c55e' : '#fb923c'}} key={exerciseTimeLeft}>
-                              {formatTime(exerciseTimeLeft)}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-[10px] uppercase tracking-[0.18em] text-gray-400">Actual</div>
-                            <div className={`text-lg font-bold ${isStopwatchRunning ? 'timer-running' : ''}`} style={{color: '#3b82f6'}} key={actualTimeElapsed}>
-                              {formatTime(actualTimeElapsed)}
-                            </div>
-                          </div>
+                        <div className="text-[10px] uppercase tracking-[0.18em] text-gray-400">Planned</div>
+                        <div className={`text-lg font-bold ${isTimerRunning ? 'timer-running' : ''}`} style={{color: exerciseTimeLeft === 0 ? '#22c55e' : '#fb923c'}} key={exerciseTimeLeft}>
+                          {formatTime(exerciseTimeLeft)}
+                        </div>
+                        <div className="text-[10px] text-gray-500">
+                          {isTimerRunning ? 'Running' : exerciseTimeLeft < (plannedDurationSeconds || getDefaultDuration()) ? 'Paused' : 'Ready'}
                         </div>
                       </div>
 
@@ -5783,15 +5937,17 @@
                         </div>
                       </div>
 
-                      <div className="min-w-0 flex-1 rounded-2xl px-3 py-2" style={{background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.12)'}}>
-                        <div className="text-[10px] uppercase tracking-[0.18em] text-gray-400">Actual</div>
-                        <div className={`text-2xl font-bold ${isStopwatchRunning ? 'timer-running' : ''}`} style={{color: '#3b82f6'}} key={actualTimeElapsed}>
-                          {formatTime(actualTimeElapsed)}
+                      {trackActualTime && (
+                        <div className="min-w-0 flex-1 rounded-2xl px-3 py-2" style={{background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.12)'}}>
+                          <div className="text-[10px] uppercase tracking-[0.18em] text-gray-400">Actual</div>
+                          <div className={`text-2xl font-bold ${isStopwatchRunning ? 'timer-running' : ''}`} style={{color: '#3b82f6'}} key={actualTimeElapsed}>
+                            {formatTime(actualTimeElapsed)}
+                          </div>
+                          <div className="text-[10px] text-gray-500">
+                            {isStopwatchRunning ? 'Running' : actualTimeElapsed > 0 ? 'Paused' : 'Ready'}
+                          </div>
                         </div>
-                        <div className="text-[10px] text-gray-500">
-                          {isStopwatchRunning ? 'Running' : actualTimeElapsed > 0 ? 'Paused' : 'Ready'}
-                        </div>
-                      </div>
+                      )}
 
                       <button 
                         className="px-4 py-3 rounded-2xl font-semibold text-sm"
@@ -5819,6 +5975,16 @@
                         ↺
                       </button>
 
+                      {!trackActualTime && (
+                        <button
+                          className="px-3 py-3 rounded-2xl font-semibold text-sm"
+                          style={{background:'rgba(59,130,246,0.10)', color:'#bfdbfe', border:'1px solid rgba(59,130,246,0.24)'}}
+                          onClick={() => setTrackActualTime(true)}
+                        >
+                          Track Actual
+                        </button>
+                      )}
+
                       <button
                         className="px-3 py-3 rounded-2xl font-semibold text-sm"
                         style={{background:'rgba(255,255,255,0.03)', color:'#e5e7eb', border:'1px solid rgba(255,255,255,0.14)'}}
@@ -5843,10 +6009,14 @@
               <div className="card hero-card mb-6">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <div className="text-sm text-gray-400 mb-1">Planned duration</div>
+                    <div className="text-sm text-gray-400 mb-1">Planned exercise block</div>
                     <div className="font-semibold text-white">{formatTime(plannedDurationSeconds || getDefaultDuration())}</div>
                     {exercise.planNote && (
                       <div className="text-xs text-gray-500 mt-1">{exercise.planNote}</div>
+                    )}
+                    <div className="text-xs text-gray-500 mt-1">Includes programmed sets and quick resets between sets.</div>
+                    {trackActualTime && (
+                      <div className="text-xs mt-1" style={{color:'#93c5fd'}}>Actual timing is being tracked for this exercise.</div>
                     )}
                   </div>
                   {!showTimeInput ? (
@@ -5921,7 +6091,7 @@
             </div>
 
             {/* Actual Time Input Modal */}
-            {showActualTimeInput && (
+            {showActualTimeInput && trackActualTime && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-6">
                 <div className="modal-content" style={{background:'linear-gradient(180deg, rgba(20,20,20,0.98) 0%, rgba(10,10,10,0.98) 100%)', border:'1px solid rgba(255,255,255,0.08)', color:'white'}}>
                   <h3 className="text-xl font-bold mb-4" style={{color: '#f97316'}}>
@@ -5932,7 +6102,7 @@
                     <p className="text-gray-300 mb-2">{exercise.name}</p>
                     <div className="grid grid-cols-2 gap-3 text-center">
                       <div className="panel-muted p-3 rounded-lg">
-                        <div className="text-xs text-gray-500 mb-1">Planned Time</div>
+                        <div className="text-xs text-gray-500 mb-1">Planned Block</div>
                         <div className="font-bold" style={{color: '#fb923c'}}>
                           {formatTime(plannedDurationSeconds || getDefaultDuration())}
                         </div>
@@ -6082,14 +6252,7 @@
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="card hero-card w-full max-w-md mb-6">
-                <div className="text-sm text-gray-300">
-                  <span className="text-2xl mb-2 block">⏱️</span>
-                  <strong>Tip:</strong> Use the stopwatch during exercises to track your actual workout time!
-                </div>
-              </div>
-            )}
+            ) : null}
             
             {/* Weight log */}
             <div className="card w-full max-w-md mb-6">
@@ -6795,7 +6958,7 @@
                   <span className="font-semibold">Settings</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">{settings.units.toUpperCase()} • {settings.darkMode ? 'Dark' : 'Light'}</span>
+                  <span className="text-xs text-gray-500">{settings.units.toUpperCase()} • Dark</span>
                   <span className="text-gray-400">›</span>
                 </div>
               </button>
@@ -7610,29 +7773,6 @@
                 </div>
               </div>
 
-              {/* Dark Mode */}
-              <div className="section-label">APPEARANCE</div>
-              <div className="card mb-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-semibold">Dark Mode</div>
-                    <div className="text-xs text-gray-500">Coming soon</div>
-                  </div>
-                  <button
-                    className={`w-14 h-8 rounded-full transition-colors ${
-                      localSettings.darkMode ? 'bg-green-500' : 'bg-gray-300'
-                    }`}
-                    onClick={() => setLocalSettings({...localSettings, darkMode: !localSettings.darkMode})}
-                    disabled
-                    style={{opacity: 0.5}}
-                  >
-                    <div className={`w-6 h-6 bg-white rounded-full transform transition-transform ${
-                      localSettings.darkMode ? 'translate-x-7' : 'translate-x-1'
-                    }`} style={{marginTop: '4px'}}></div>
-                  </button>
-                </div>
-              </div>
-
               {/* Notifications */}
               <div className="section-label">NOTIFICATIONS</div>
               <div className="card mb-6">
@@ -7827,7 +7967,7 @@
                 <p className="text-sm text-gray-300 mb-3">
                   Email us at <a href="mailto:devdad.desk@gmail.com" className="font-semibold text-orange-300">devdad.desk@gmail.com</a>
                 </p>
-                <p className="text-xs text-gray-500">We respond within 24-48 hours</p>
+                <p className="text-xs text-gray-500">We usually respond within a couple of business days.</p>
               </div>
 
               {/* FAQs */}
@@ -7853,29 +7993,29 @@
 
               {/* Resources */}
               <div className="section-label text-orange-400">RESOURCES</div>
-              <button className="surface-row">
+              <a className="surface-row" href="/exercise-library.html" target="_blank" rel="noreferrer">
                 <div className="flex items-center gap-3">
                   <span className="text-xl">📹</span>
                   <span className="font-semibold">Exercise Video Library</span>
                 </div>
                 <span className="text-gray-400">›</span>
-              </button>
+              </a>
 
-              <button className="surface-row">
+              <a className="surface-row" href="/program-guide.html" target="_blank" rel="noreferrer">
                 <div className="flex items-center gap-3">
                   <span className="text-xl">📄</span>
                   <span className="font-semibold">Program PDF Guide</span>
                 </div>
                 <span className="text-gray-400">›</span>
-              </button>
+              </a>
 
-              <button className="surface-row">
+              <a className="surface-row" href="/founding-member-updates.html" target="_blank" rel="noreferrer">
                 <div className="flex items-center gap-3">
                   <span className="text-xl">✉️</span>
                   <span className="font-semibold">Founding Member Updates</span>
                 </div>
                 <span className="text-gray-400">›</span>
-              </button>
+              </a>
 
               {/* About */}
               <div className="section-label text-orange-400">ABOUT</div>

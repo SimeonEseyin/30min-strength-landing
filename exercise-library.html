@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercise Library | DevDad Strength</title>
+    <meta name="theme-color" content="#f97316">
+    <link rel="icon" href="/icons/favicon.ico" sizes="any">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #a3a3a3;
+            --text-muted: #737373;
+            --accent: #f97316;
+            --accent-hover: #fb923c;
+            --border: #262626;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(249, 115, 22, 0.12), transparent 32%),
+                linear-gradient(180deg, #101010 0%, #0a0a0a 100%);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 880px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        header {
+            padding: 24px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 0.05em;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .back-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .content {
+            padding: 72px 0;
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        .lede {
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin-bottom: 32px;
+        }
+
+        .notice,
+        .card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 18px;
+        }
+
+        .notice strong {
+            color: var(--accent);
+        }
+
+        h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.7rem;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        h3 {
+            font-size: 1.05rem;
+            margin-bottom: 8px;
+        }
+
+        p, li {
+            color: var(--text-secondary);
+        }
+
+        ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+
+        li + li {
+            margin-top: 8px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 28px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 18px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.04);
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 720px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-inner">
+                <a href="/app" class="logo">DEV<span>DAD</span></a>
+                <a href="/app" class="back-link">← Back to App</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="container">
+            <h1>Exercise Library</h1>
+            <p class="lede">Use this page as a quick reference for the main movement buckets inside the program. For the full coaching notes and exercise-specific cues, open the exercise detail view inside the app.</p>
+
+            <div class="notice">
+                <p><strong>Best use:</strong> Find the movement pattern you need, then review the matching in-app exercise card before you train. The app remains the source of truth for the exact exercise assigned to your current day.</p>
+            </div>
+
+            <div class="grid">
+                <section class="card">
+                    <h2>Lower Body</h2>
+                    <ul>
+                        <li>Goblet squat and split squat patterns for leg strength and control.</li>
+                        <li>Romanian deadlift and hinge work for glutes, hamstrings, and posture.</li>
+                        <li>Lunge and step-up variations for unilateral balance and knee stability.</li>
+                    </ul>
+                </section>
+
+                <section class="card">
+                    <h2>Push</h2>
+                    <ul>
+                        <li>Floor press and bench-style pressing patterns for chest and triceps.</li>
+                        <li>Overhead pressing variations for shoulder strength and stability.</li>
+                        <li>Push-up patterns where bodyweight options fit the plan best.</li>
+                    </ul>
+                </section>
+
+                <section class="card">
+                    <h2>Pull</h2>
+                    <ul>
+                        <li>One-arm rows and chest-supported rows for upper back strength.</li>
+                        <li>Rear-delt and scapular stability work to support posture and shoulder health.</li>
+                        <li>Grip-focused pulling work to reinforce load control at home.</li>
+                    </ul>
+                </section>
+
+                <section class="card">
+                    <h2>Core and Carry</h2>
+                    <ul>
+                        <li>Plank, dead bug, and anti-rotation work for trunk stability.</li>
+                        <li>Loaded carries and bracing drills to tie full-body strength together.</li>
+                        <li>Simple finishers that build work capacity without dragging workouts out.</li>
+                    </ul>
+                </section>
+            </div>
+
+            <section class="card">
+                <h2>How to Use It</h2>
+                <ul>
+                    <li>Open your assigned day in the app first.</li>
+                    <li>Tap any exercise for the detailed coaching notes and demo links.</li>
+                    <li>Use the timer and feedback flow to log whether the load was too easy, solid, or too hard.</li>
+                    <li>If a movement bothers you, reduce load first and use the exercise detail view before substituting anything.</li>
+                </ul>
+            </section>
+
+            <div class="footer-links">
+                <a class="btn btn-primary" href="/app">Open the App</a>
+                <a class="btn btn-secondary" href="/program-guide.html">View Program Guide</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
