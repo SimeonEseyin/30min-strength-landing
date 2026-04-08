@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'devdad-shell-v3';
+const CACHE_VERSION = 'devdad-shell-v4';
 const APP_SHELL = '/devdad-app-v2-enhanced.html';
 const CORE_ASSETS = [
   '/',
@@ -113,7 +113,7 @@ self.addEventListener('push', (event) => {
 
   const title = payload.title || 'DevDad reminder';
   const options = {
-    body: payload.body || 'Your next workout is ready.',
+    body: payload.body || 'Open DevDad to keep your plan moving today.',
     icon: payload.icon || '/icons/web-app-manifest-192x192.png',
     badge: payload.badge || '/icons/favicon-96x96.png',
     tag: payload.tag || fallbackTag,

@@ -84,6 +84,7 @@ function defaultUserData() {
       currentDay: 1,
       completedDays: [],
       workoutFeedback: {},
+      lastWorkoutStartedAt: null,
       goals: {
         targetWeight: '',
         strengthGoal: '',
@@ -129,6 +130,27 @@ function defaultUserData() {
       seededAt: null,
       quizAnswers: null,
       preview: null,
+    },
+    notificationHistory: {
+      firstWorkout: {
+        lastSentAt: null,
+        lastSentLocalDate: null,
+      },
+      incompleteWorkout: {
+        lastSentAt: null,
+        lastSentLocalDate: null,
+        lastStartedAt: null,
+      },
+      inactive: {
+        lastSentAt: null,
+        lastSentLocalDate: null,
+        lastCompletedAt: null,
+      },
+      weeklyCatchup: {
+        lastSentAt: null,
+        lastSentLocalDate: null,
+        lastWeekKey: null,
+      },
     },
     updatedAt: null,
   };
@@ -364,6 +386,26 @@ function getUserData(store, email) {
     intake: {
       ...defaultUserData().intake,
       ...((store.userData[normalizedEmail] || {}).intake || {}),
+    },
+    notificationHistory: {
+      ...defaultUserData().notificationHistory,
+      ...((store.userData[normalizedEmail] || {}).notificationHistory || {}),
+      firstWorkout: {
+        ...defaultUserData().notificationHistory.firstWorkout,
+        ...((((store.userData[normalizedEmail] || {}).notificationHistory || {}).firstWorkout) || {}),
+      },
+      incompleteWorkout: {
+        ...defaultUserData().notificationHistory.incompleteWorkout,
+        ...((((store.userData[normalizedEmail] || {}).notificationHistory || {}).incompleteWorkout) || {}),
+      },
+      inactive: {
+        ...defaultUserData().notificationHistory.inactive,
+        ...((((store.userData[normalizedEmail] || {}).notificationHistory || {}).inactive) || {}),
+      },
+      weeklyCatchup: {
+        ...defaultUserData().notificationHistory.weeklyCatchup,
+        ...((((store.userData[normalizedEmail] || {}).notificationHistory || {}).weeklyCatchup) || {}),
+      },
     },
   };
 }

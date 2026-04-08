@@ -5,6 +5,11 @@ const {
   sendPushRequest,
 } = require('./_push');
 const { evaluateReminderDue } = require('./_reminder-debug');
+const {
+  buildReminderPayload,
+  getReminderMode,
+  updateNotificationHistory,
+} = require('./_reminder-modes');
 
 exports.handler = async () => {
   if (!isConfigured()) {
@@ -26,13 +31,18 @@ exports.handler = async () => {
       if (!subscriptions.length) continue;
 
       const userData = getUserData(store, email);
+      const userRecord = store.users[email] || {};
       const settings = userData.settings || {};
+      const reminderMode = getReminderMode(userData, userRecord, now);
+      const reminderPayload = buildReminderPayload(reminderMode, userData);
 
       if (!settings.notificationEnabled) {
         continue;
       }
 
       const nextSubscriptions = [];
+      let sentLocalDate = null;
+      let userSentAny = false;
 
       for (const entry of subscriptions) {
         if (!entry || !entry.subscription || !entry.subscription.endpoint) continue;
@@ -55,7 +65,7 @@ exports.handler = async () => {
         }
 
         try {
-          const response = await sendPushRequest(entry.subscription);
+          const response = await sendPushRequest(entry.subscription, reminderPayload);
           const accepted = response.status === 201 || response.status === 202;
 
           if (!accepted) {
@@ -65,6 +75,8 @@ exports.handler = async () => {
           }
 
           sent += 1;
+          userSentAny = true;
+          sentLocalDate = sentLocalDate || evaluation.local.localDate;
           nextSubscriptions.push({
             ...entry,
             updatedAt: now.toISOString(),
@@ -72,7 +84,7 @@ exports.handler = async () => {
             lastSentLocalDate: evaluation.local.localDate,
             lastAttemptAt: now.toISOString(),
             lastAttemptStatus: `sent:${response.status}`,
-            lastAttemptReason: 'sent'
+            lastAttemptReason: reminderMode.type
           });
         } catch (error) {
           const statusCode = error?.statusCode || error?.status;
@@ -85,12 +97,24 @@ exports.handler = async () => {
             ...entry,
             lastAttemptAt: now.toISOString(),
             lastAttemptStatus: `error:${statusCode || 'unknown'}`,
-            lastAttemptReason: error?.message || 'push-send-failed'
+            lastAttemptReason: `${reminderMode.type}:${error?.message || 'push-send-failed'}`
           });
         }
       }
 
       store.pushSubscriptions[email] = nextSubscriptions;
+      if (userSentAny) {
+        store.userData[email] = {
+          ...userData,
+          notificationHistory: updateNotificationHistory(
+            userData.notificationHistory || {},
+            reminderMode,
+            now.toISOString(),
+            sentLocalDate
+          ),
+          updatedAt: now.toISOString(),
+        };
+      }
     }
 
     return {
