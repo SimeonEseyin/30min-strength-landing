@@ -2411,6 +2411,7 @@
       const [workoutStarted, setWorkoutStarted] = useState(false);
       const [currentExercise, setCurrentExercise] = useState(0);
       const [workoutFeedback, setWorkoutFeedback] = useState({});
+      const [lastWorkoutStartedAt, setLastWorkoutStartedAt] = useState(null);
 
       
       // Goals State
@@ -2816,6 +2817,7 @@
             currentDay: 1,
             completedDays: [],
             workoutFeedback: {},
+            lastWorkoutStartedAt: null,
             goals: defaultGoals,
             currentCycleNumber: 1,
             lastUpdated: null
@@ -3157,6 +3159,7 @@
         setCurrentDay(progress.currentDay || 1);
         setCompletedDays(progress.completedDays || []);
         setWorkoutFeedback(progress.workoutFeedback || {});
+        setLastWorkoutStartedAt(progress.lastWorkoutStartedAt || null);
         setGoals(progress.goals || defaultGoals);
         setCurrentCycleNumber(progress.currentCycleNumber || 1);
         setProgramHistory(Array.isArray(safeData.history) ? safeData.history : []);
@@ -3250,6 +3253,7 @@
             currentDay,
             completedDays,
             workoutFeedback,
+            lastWorkoutStartedAt,
             goals,
             currentCycleNumber,
             lastUpdated: new Date().toISOString()
@@ -3359,6 +3363,7 @@
         setCurrentDay(1);
         setCompletedDays([]);
         setWorkoutFeedback({});
+        setLastWorkoutStartedAt(null);
         setGoals(defaultGoals);
         setProgramHistory([]);
         setCurrentCycleNumber(1);
@@ -3374,6 +3379,9 @@
         lastSavedPayload.current = '';
         lastAiSnapshot.current = '';
         clearScheduledReminder();
+      }
+
+      function clearScheduledReminder() {
       }
 
       function getActualWorkoutCount(feedback = workoutFeedback) {
@@ -3779,6 +3787,7 @@
             currentDay,
             completedDays,
             workoutFeedback,
+            lastWorkoutStartedAt,
             goals,
             currentCycleNumber,
             lastUpdated: new Date().toISOString()
@@ -3809,6 +3818,7 @@
         currentDay,
         completedDays,
         workoutFeedback,
+        lastWorkoutStartedAt,
         goals,
         currentCycleNumber,
         programHistory,
@@ -3864,6 +3874,7 @@
         const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
         if (!workoutInfo && (screen === 'workout' || screen === 'complete' || workoutStarted)) {
           setWorkoutStarted(false);
+          setLastWorkoutStartedAt(null);
           setCurrentExercise(0);
           if (screen === 'workout' || screen === 'complete') {
             setScreen('home');
@@ -4283,6 +4294,8 @@
           setCompletedDays(updatedCompletedDays);
         }
 
+        setWorkoutStarted(false);
+        setLastWorkoutStartedAt(null);
         const nextPosition = getNextIncompletePosition(updatedCompletedDays, currentWeek);
         if (!nextPosition) {
           setScreen('completion');
@@ -4295,7 +4308,6 @@
         setCurrentDay(nextPosition.day);
         
         setScreen('home');
-        setWorkoutStarted(false);
       };
 
       const handleRestDayComplete = () => {
@@ -4316,6 +4328,8 @@
           }
         }));
 
+        setWorkoutStarted(false);
+        setLastWorkoutStartedAt(null);
         const nextPosition = getNextIncompletePosition(updatedCompletedDays, currentWeek);
         if (!nextPosition) {
           setScreen('completion');
@@ -4532,6 +4546,7 @@
             // Close modal first
             setShowSkipRestModal(false);
             setSkipRestWarningLevel(0);
+            setLastWorkoutStartedAt(null);
 
             const updatedCompletedDays = completedDays.includes(dayKey)
               ? completedDays
@@ -5331,6 +5346,7 @@
                     onClick={() => {
                       setScreen('workout');
                       setWorkoutStarted(true);
+                      setLastWorkoutStartedAt(new Date().toISOString());
                       setCurrentExercise(0);
                     }}
                   >
@@ -7420,6 +7436,7 @@
                 currentDay,
                 completedDays,
                 workoutFeedback,
+                lastWorkoutStartedAt,
                 goals,
                 currentCycleNumber,
                 lastUpdated: new Date().toISOString()
@@ -8153,6 +8170,7 @@
                   onClick={() => {
                     setScreen('workout');
                     setWorkoutStarted(true);
+                    setLastWorkoutStartedAt(new Date().toISOString());
                     const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
                     const currentDayExercises = workoutInfo ? programExercises[workoutInfo.exerciseDay] || programExercises.day1 : programExercises.day1;
                     const exerciseIndex = currentDayExercises.findIndex(ex => ex.id === selectedExercise.id);

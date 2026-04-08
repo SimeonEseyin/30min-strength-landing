@@ -47,7 +47,13 @@ exports.handler = async (event) => {
       if (!entry?.subscription?.endpoint) continue;
 
       try {
-        const response = await sendPushRequest(entry.subscription);
+        const response = await sendPushRequest(entry.subscription, {
+          title: 'DevDad push test',
+          body: 'Notifications are working on this device.',
+          tag: 'devdad-push-test',
+          url: '/app',
+          renotify: true
+        });
         const accepted = response.status === 201 || response.status === 202;
 
         if (!accepted) {

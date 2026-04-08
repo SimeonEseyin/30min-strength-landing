@@ -28,6 +28,9 @@ function sanitizeProgress(progress) {
     currentDay: Math.max(1, Math.min(7, parseInt(progress?.currentDay, 10) || 1)),
     completedDays: Array.isArray(progress?.completedDays) ? progress.completedDays.slice(-200) : [],
     workoutFeedback: isPlainObject(progress?.workoutFeedback) ? progress.workoutFeedback : {},
+    lastWorkoutStartedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(progress?.lastWorkoutStartedAt || ''))
+      ? String(progress.lastWorkoutStartedAt)
+      : null,
     goals: sanitizeGoals(progress?.goals || {}),
     currentCycleNumber: Math.max(1, parseInt(progress?.currentCycleNumber, 10) || 1),
     lastUpdated: new Date().toISOString(),

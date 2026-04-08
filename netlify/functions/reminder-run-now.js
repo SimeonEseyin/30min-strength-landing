@@ -3,6 +3,11 @@ const { getSession } = require('./_auth');
 const { readStore, updateStore, normalizeEmail, getUserData } = require('./_store');
 const { sendPushRequest, isConfigured } = require('./_push');
 const { evaluateReminderDue } = require('./_reminder-debug');
+const {
+  buildReminderPayload,
+  getReminderMode,
+  updateNotificationHistory,
+} = require('./_reminder-modes');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -28,12 +33,15 @@ exports.handler = async (event) => {
 
   const normalizedEmail = normalizeEmail(session.email);
   const store = await readStore();
+  const now = new Date();
   const userData = getUserData(store, normalizedEmail);
+  const userRecord = store.users?.[normalizedEmail] || {};
   const settings = userData.settings || {};
+  const reminderMode = getReminderMode(userData, userRecord, now);
+  const reminderPayload = buildReminderPayload(reminderMode, userData);
   const subscriptions = Array.isArray(store.pushSubscriptions?.[normalizedEmail])
     ? store.pushSubscriptions[normalizedEmail]
     : [];
-  const now = new Date();
 
   const results = await updateStore(async (nextStore) => {
     const currentSubscriptions = Array.isArray(nextStore.pushSubscriptions?.[normalizedEmail])
@@ -42,6 +50,8 @@ exports.handler = async (event) => {
 
     const nextSubscriptions = [];
     const outcomes = [];
+    let sentLocalDate = null;
+    let userSentAny = false;
 
     for (let index = 0; index < currentSubscriptions.length; index += 1) {
       const entry = currentSubscriptions[index];
@@ -82,7 +92,7 @@ exports.handler = async (event) => {
       }
 
       try {
-        const response = await sendPushRequest(workingEntry.subscription);
+        const response = await sendPushRequest(workingEntry.subscription, reminderPayload);
         const accepted = response.status === 201 || response.status === 202;
 
         if (!accepted) {
@@ -98,9 +108,11 @@ exports.handler = async (event) => {
           lastSentLocalDate: evaluation.local?.localDate || workingEntry.lastSentLocalDate || null,
           lastAttemptAt: now.toISOString(),
           lastAttemptStatus: `manual-sent:${response.status}`,
-          lastAttemptReason: force ? `manual-force-${evaluation.reason || 'forced'}` : 'manual-run-due'
+          lastAttemptReason: force ? `manual-force-${reminderMode.type}` : reminderMode.type
         };
 
+        userSentAny = true;
+        sentLocalDate = sentLocalDate || updatedEntry.lastSentLocalDate || evaluation.local?.localDate || null;
         nextSubscriptions.push(updatedEntry);
         outcomes.push({
           index,
@@ -128,6 +140,18 @@ exports.handler = async (event) => {
     }
 
     nextStore.pushSubscriptions[normalizedEmail] = nextSubscriptions;
+    if (userSentAny) {
+      nextStore.userData[normalizedEmail] = {
+        ...userData,
+        notificationHistory: updateNotificationHistory(
+          userData.notificationHistory || {},
+          reminderMode,
+          now.toISOString(),
+          sentLocalDate
+        ),
+        updatedAt: now.toISOString(),
+      };
+    }
     return outcomes;
   });
 
