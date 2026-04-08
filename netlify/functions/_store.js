@@ -97,7 +97,7 @@ function defaultUserData() {
     history: [],
     settings: {
       units: 'lbs',
-      darkMode: false,
+      darkMode: true,
       notificationEnabled: false,
       notificationTimezone: 'UTC',
       notificationTime: '07:00',

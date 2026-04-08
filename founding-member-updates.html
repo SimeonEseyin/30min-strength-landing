@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Founding Member Updates | DevDad Strength</title>
+    <meta name="theme-color" content="#f97316">
+    <link rel="icon" href="/icons/favicon.ico" sizes="any">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --text-primary: #ffffff;
+            --text-secondary: #a3a3a3;
+            --text-muted: #737373;
+            --accent: #f97316;
+            --border: #262626;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+            background:
+                radial-gradient(circle at 80% 0%, rgba(249, 115, 22, 0.12), transparent 34%),
+                linear-gradient(180deg, #101010 0%, #0a0a0a 100%);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+        .container { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+        header { padding: 24px 0; border-bottom: 1px solid var(--border); }
+        .header-inner { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+        .logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.05em; color: var(--text-primary); text-decoration: none; }
+        .logo span { color: var(--accent); }
+        .back-link { color: var(--accent); text-decoration: none; font-size: 0.875rem; font-weight: 600; }
+        .content { padding: 72px 0; }
+        h1 { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; margin-bottom: 12px; }
+        h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem; color: var(--accent); margin-bottom: 12px; }
+        p, li { color: var(--text-secondary); }
+        .lede { max-width: 720px; margin-bottom: 30px; }
+        .card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 18px;
+        }
+        .update + .update { margin-top: 18px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.08); }
+        .date { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 8px; }
+        ul { padding-left: 20px; margin-top: 10px; }
+        li + li { margin-top: 8px; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 18px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            margin-top: 10px;
+        }
+        @media (max-width: 720px) { h1 { font-size: 2.5rem; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-inner">
+                <a href="/app" class="logo">DEV<span>DAD</span></a>
+                <a href="/app" class="back-link">← Back to App</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="container">
+            <h1>Founding Member Updates</h1>
+            <p class="lede">This page is the running snapshot of what is shipping, what just changed, and what the current product focus is. It is meant to keep early members oriented without turning the app into a changelog wall.</p>
+
+            <section class="card">
+                <h2>Current Focus</h2>
+                <ul>
+                    <li>Making reminders and push notifications reliable across devices.</li>
+                    <li>Improving plan defaults and quiz-to-app setup quality.</li>
+                    <li>Tightening the in-app experience so progress survives refreshes and device changes.</li>
+                </ul>
+            </section>
+
+            <section class="card">
+                <h2>Recent Product Changes</h2>
+
+                <div class="update">
+                    <div class="date">April 2026</div>
+                    <p>Reminder scheduling and push delivery were tightened so saved reminder changes correctly reset daily send state.</p>
+                </div>
+
+                <div class="update">
+                    <div class="date">April 2026</div>
+                    <p>Behavior-based reminder logic was added for first workout, incomplete session, inactivity, and weekly catch-up nudges.</p>
+                </div>
+
+                <div class="update">
+                    <div class="date">April 2026</div>
+                    <p>The in-app setup and quiz seeding flow were refined so defaults are imported once instead of constantly overriding user choices.</p>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>How to Send Feedback</h2>
+                <p>If something feels broken, unclear, or slower than it should be, send the issue and device/browser details to <a href="mailto:devdad.desk@gmail.com">devdad.desk@gmail.com</a>. Tight bug reports are more useful than general frustration.</p>
+                <a class="btn" href="mailto:devdad.desk@gmail.com?subject=DevDad%20Founding%20Member%20Feedback">Email Feedback</a>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

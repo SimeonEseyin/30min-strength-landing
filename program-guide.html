@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Program Guide | DevDad Strength</title>
+    <meta name="theme-color" content="#f97316">
+    <link rel="icon" href="/icons/favicon.ico" sizes="any">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-card: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #a3a3a3;
+            --text-muted: #737373;
+            --accent: #f97316;
+            --border: #262626;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+            background:
+                radial-gradient(circle at 15% 0%, rgba(249, 115, 22, 0.1), transparent 30%),
+                linear-gradient(180deg, #111111 0%, #0a0a0a 100%);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+        .container { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+        header { padding: 24px 0; border-bottom: 1px solid var(--border); }
+        .header-inner { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+        .logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.05em; color: var(--text-primary); text-decoration: none; }
+        .logo span { color: var(--accent); }
+        .back-link { color: var(--accent); text-decoration: none; font-size: 0.875rem; font-weight: 600; }
+        .content { padding: 72px 0; }
+        h1 { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; margin-bottom: 12px; }
+        h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem; color: var(--accent); margin-bottom: 12px; }
+        p, li { color: var(--text-secondary); }
+        .lede { max-width: 720px; margin-bottom: 30px; }
+        .card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 18px;
+        }
+        .timeline { display: grid; gap: 14px; }
+        .phase { padding: 16px 18px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+        .phase strong { color: var(--text-primary); display: block; margin-bottom: 6px; }
+        ul { padding-left: 20px; margin-top: 10px; }
+        li + li { margin-top: 8px; }
+        .footer-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 18px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .btn-primary { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: white; }
+        .btn-secondary { background: rgba(255,255,255,0.04); color: var(--text-primary); }
+        @media (max-width: 720px) { h1 { font-size: 2.5rem; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-inner">
+                <a href="/app" class="logo">DEV<span>DAD</span></a>
+                <a href="/app" class="back-link">← Back to App</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="container">
+            <h1>Program Guide</h1>
+            <p class="lede">This is the quick-read version of how the 30-Minute Strength System is structured. The app handles the day-to-day details. This guide explains the logic behind it so users know what the system is trying to do.</p>
+
+            <section class="card">
+                <h2>The Structure</h2>
+                <ul>
+                    <li>The program runs for 12 weeks.</li>
+                    <li>The app can support a 3-day or 4-day weekly rhythm depending on your setup.</li>
+                    <li>Each week is meant to be repeatable inside real life, not just on ideal weeks.</li>
+                    <li>Progress is driven by consistent completion and honest workout feedback, not by ego lifting.</li>
+                </ul>
+            </section>
+
+            <section class="card">
+                <h2>Phases</h2>
+                <div class="timeline">
+                    <div class="phase">
+                        <strong>Weeks 1–4: Foundation</strong>
+                        Learn the movement patterns, build consistency, and avoid overshooting load too early.
+                    </div>
+                    <div class="phase">
+                        <strong>Weeks 5–8: Build</strong>
+                        Keep sessions tight, push the main lifts harder, and progress load when the feedback supports it.
+                    </div>
+                    <div class="phase">
+                        <strong>Weeks 9–12: Peak</strong>
+                        Consolidate the strongest version of the routine you can sustain without losing form or recovery.
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>How Progression Works</h2>
+                <ul>
+                    <li>If a workout feels clearly easy, the next exposure is a chance to move load up modestly.</li>
+                    <li>If a workout feels solid, repeat quality before chasing more weight.</li>
+                    <li>If a workout feels too hard, reduce load next time and clean up execution.</li>
+                    <li>Rest days are part of the system. Logging recovery is better than pretending you trained when you did not.</li>
+                </ul>
+            </section>
+
+            <section class="card">
+                <h2>What to Expect Each Day</h2>
+                <ul>
+                    <li>Open the assigned day.</li>
+                    <li>Review the exercise list and cues.</li>
+                    <li>Run the timers during the session if helpful.</li>
+                    <li>Finish by logging feedback and any weights used.</li>
+                    <li>Let the app move you to the next incomplete day.</li>
+                </ul>
+            </section>
+
+            <section class="card">
+                <h2>When Life Gets Messy</h2>
+                <ul>
+                    <li>Missing a day does not break the plan.</li>
+                    <li>The system saves progress and waits for you to continue.</li>
+                    <li>The goal is to keep momentum alive through busy weeks, travel, kids, and interruptions.</li>
+                </ul>
+            </section>
+
+            <div class="footer-links">
+                <a class="btn btn-primary" href="/app">Open the App</a>
+                <a class="btn btn-secondary" href="/founding-member-updates.html">View Updates</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
