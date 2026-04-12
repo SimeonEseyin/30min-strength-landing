@@ -1373,36 +1373,9 @@
     function getPlanEquipmentMode(config = {}) {
       const equipment = Array.isArray(config.availableEquipment) ? config.availableEquipment : [];
       const hasNoEquipment = equipment.includes('No equipment yet') || equipment.includes('Bodyweight only') || equipment.length === 0;
-      const hasBarbell = equipment.includes('Barbell');
-      const gymFirst = config.trainingEnvironment === 'Gym only';
 
-      if (hasNoEquipment && !hasBarbell) return 'bodyweight';
-      if (gymFirst || hasBarbell) return 'gym';
+      if (hasNoEquipment) return 'bodyweight';
       return 'dumbbell';
-    }
-
-    function rewriteInstructionForVariant(text = '', variantName = '', mode = 'dumbbell') {
-      let rewritten = String(text || '');
-
-      if (mode === 'gym') {
-        const toolLabel = variantName.includes('Cable')
-          ? 'cable handle'
-          : variantName.includes('Kettlebell')
-          ? 'kettlebell'
-          : variantName.includes('EZ-Bar')
-          ? 'EZ-bar'
-          : 'barbell';
-
-        rewritten = rewritten
-          .replace(/dumbbells/gi, toolLabel)
-          .replace(/dumbbell/gi, toolLabel);
-
-        if (variantName === 'Barbell Bench Press') {
-          rewritten = rewritten.replace(/floor/gi, 'bench');
-        }
-      }
-
-      return rewritten;
     }
 
     const equipmentExerciseVariants = {
@@ -1628,93 +1601,6 @@
           ],
           mistakes: ['Hips sagging', 'Rushing off the floor', 'Partial range']
         }
-      },
-      gym: {
-        'Goblet Squat': {
-          name: 'Barbell Back Squat',
-          image: '🏋️',
-          sets: '4 sets × 6 reps',
-        },
-        'Dumbbell Shoulder Press': {
-          name: 'Barbell Overhead Press',
-          image: '🏋️',
-          sets: '4 sets × 6 reps',
-        },
-        'Dumbbell Floor Press': {
-          name: 'Barbell Bench Press',
-          image: '🏋️',
-          sets: '4 sets × 6 reps',
-        },
-        'Lateral Raise': {
-          name: 'Cable Lateral Raise',
-          image: '🪽',
-          sets: '3 sets × 12 reps',
-        },
-        'Romanian Deadlift': {
-          name: 'Barbell Romanian Deadlift',
-          image: '🏋️',
-          sets: '4 sets × 6 reps',
-        },
-        'Bent-Over Row': {
-          name: 'Barbell Row',
-          image: '🏋️',
-          sets: '4 sets × 8 reps',
-        },
-        'Single-Arm Row': {
-          name: 'Chest-Supported Row',
-          image: '🏋️',
-          sets: '3 sets × 10 reps',
-        },
-        'Reverse Fly': {
-          name: 'Face Pull',
-          image: '🧵',
-          sets: '3 sets × 15 reps',
-        },
-        'Bicep Curl': {
-          name: 'EZ-Bar Curl',
-          image: '💪',
-          sets: '3 sets × 10 reps',
-        },
-        'Bulgarian Split Squat': {
-          name: 'Barbell Split Squat',
-          image: '🏋️',
-          sets: '3 sets × 8 reps each',
-        },
-        'Single-Leg RDL': {
-          name: 'Barbell Good Morning',
-          image: '🏋️',
-          sets: '3 sets × 8 reps',
-        },
-        'Walking Lunges': {
-          name: 'Barbell Reverse Lunge',
-          image: '🏋️',
-          sets: '3 sets × 10 reps each',
-        },
-        'Calf Raises': {
-          name: 'Standing Calf Raise',
-          image: '🏋️',
-          sets: '4 sets × 12 reps',
-        },
-        'Dumbbell Thruster': {
-          name: 'Barbell Thruster',
-          image: '🏋️',
-          sets: '4 sets × 6 reps',
-        },
-        'Renegade Row': {
-          name: 'Cable Row',
-          image: '🧲',
-          sets: '3 sets × 10 reps',
-        },
-        'Dumbbell Swing': {
-          name: 'Kettlebell Swing',
-          image: '🔔',
-          sets: '3 sets × 15 reps',
-        },
-        'Push Press': {
-          name: 'Barbell Push Press',
-          image: '🏋️',
-          sets: '4 sets × 5 reps',
-        }
       }
     };
 
@@ -1730,7 +1616,7 @@
         tracksLoad: variant.tracksLoad === false ? false : exercise.tracksLoad !== false,
         instructions: Array.isArray(variant.instructions)
           ? variant.instructions
-          : (exercise.instructions || []).map(item => rewriteInstructionForVariant(item, variant.name || exercise.name, equipmentMode)),
+          : [...(exercise.instructions || [])],
         mistakes: Array.isArray(variant.mistakes)
           ? variant.mistakes
           : [...(exercise.mistakes || [])]
@@ -2799,7 +2685,6 @@
         if (equipment.includes('No equipment yet')) return 'No equipment yet';
         if (equipment.includes('Bodyweight only')) return 'Bodyweight only';
         if (equipment.includes('Dumbbells')) return 'Dumbbells';
-        if (equipment.includes('Barbell')) return 'Barbell';
         return equipment.slice(0, 2).join(' + ');
       }
 
@@ -2837,21 +2722,19 @@
         const minutesMatch = timeValue.match(/\d+/);
         const minutes = minutesMatch ? parseInt(minutesMatch[0], 10) : 30;
         const hasDumbbells = equipment.includes('Dumbbells');
-        const hasBarbell = equipment.includes('Barbell');
-        const hasPullupBar = equipment.includes('Pull-up bar');
 
         let customGoal = 'Build a training rhythm that fits family life.';
         let strengthGoal = '';
 
         if (goal === 'Build strength') {
           customGoal = 'Build practical strength with short, repeatable sessions.';
-          strengthGoal = hasBarbell ? 'Add weight to your main barbell lifts each week' : hasDumbbells ? 'Own your main dumbbell lifts with stronger sets each week' : 'Progress your key movements week by week';
+          strengthGoal = hasDumbbells ? 'Own your main dumbbell lifts with stronger sets each week' : 'Progress your key movements week by week';
         } else if (goal === 'Build muscle') {
-          customGoal = 'Add lean muscle without needing long gym sessions.';
+          customGoal = 'Add lean muscle without needing long workouts.';
           strengthGoal = hasDumbbells ? 'Increase your dumbbell loads and reps over 12 weeks' : 'Build visible muscle with progressive full-body training';
         } else if (goal === 'Lose fat') {
           customGoal = 'Lean out while keeping strength and consistency high.';
-          strengthGoal = hasPullupBar ? 'Keep getting stronger on bodyweight and pull movements' : 'Maintain strength while leaning down';
+          strengthGoal = 'Maintain strength while leaning down';
         } else if (goal === 'Stay consistent') {
           customGoal = 'Make training automatic even on busy weeks.';
           strengthGoal = 'Finish each week with momentum, not decision fatigue';
@@ -2889,7 +2772,7 @@
           ...defaultPlanConfig,
           focus: getFocusLabel(answers.goal || 'Build strength'),
           sessionLength,
-          trainingEnvironment: answers.location || 'Home only',
+          trainingEnvironment: 'Home only',
           availableEquipment: equipment,
           recoveryMode,
           scheduleTemplate: frequency,
@@ -2991,7 +2874,7 @@
           ...defaultPlanConfig,
           focus: getFocusLabel(draft.focus || defaultPlanConfig.focus),
           sessionLength: validSessionLengths.has(Number(draft.sessionLength)) ? Number(draft.sessionLength) : defaultPlanConfig.sessionLength,
-          trainingEnvironment: String(draft.trainingEnvironment || defaultPlanConfig.trainingEnvironment).trim() || defaultPlanConfig.trainingEnvironment,
+          trainingEnvironment: defaultPlanConfig.trainingEnvironment,
           availableEquipment: selectedEquipment.length ? selectedEquipment : ['Bodyweight only'],
           recoveryMode: validRecoveryModes.has(String(draft.recoveryMode || '')) ? String(draft.recoveryMode) : defaultPlanConfig.recoveryMode,
           scheduleTemplate: validScheduleTemplates.has(String(draft.scheduleTemplate || '')) ? String(draft.scheduleTemplate) : defaultPlanConfig.scheduleTemplate,
@@ -4442,11 +4325,11 @@
         setSuccess('');
         setScreen('welcome');
         clearScheduledReminder();
-
-        // Force a clean app bootstrap after logout so no in-memory state lingers.
-        setTimeout(() => {
-          window.location.href = `${window.location.pathname}${window.location.search || ''}`;
-        }, 0);
+        navHistoryReady.current = false;
+        suppressHistoryPush.current = false;
+        if (typeof window !== 'undefined') {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
       }
 
       // Handle workout completion with feedback
@@ -6998,7 +6881,6 @@
         const hasDraftChanges = JSON.stringify(normalizedDraft) !== JSON.stringify(normalizePlanConfigDraft(planConfig));
         const focusOptions = ['Build strength', 'Build muscle', 'Lose fat', 'Stay consistent'];
         const sessionLengthOptions = [15, 30, 45, 60];
-        const environmentOptions = ['Home only', 'Gym only', 'Both'];
         const recoveryOptions = [
           { value: 'light', label: 'Light start' },
           { value: 'moderate', label: 'Moderate start' },
@@ -7008,7 +6890,7 @@
           { value: '3-day', label: '3 workouts/week' },
           { value: '4-day', label: '4 workouts/week' }
         ];
-        const equipmentOptions = ['Bodyweight only', 'Dumbbells', 'Barbell', 'Pull-up bar', 'Bench', 'Bands', 'Kettlebell', 'No equipment yet'];
+        const equipmentOptions = ['Bodyweight only', 'Dumbbells', 'Bench', 'Bands', 'No equipment yet'];
 
         const updateDraftConfig = (patch) => {
           setDraftConfig(prev => normalizePlanConfigDraft({
@@ -7180,23 +7062,6 @@
                         onClick={() => updateDraftConfig({ sessionLength: option })}
                       >
                         {option}m
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mb-5">
-                  <div className="text-xs uppercase tracking-[0.16em] text-gray-500 mb-2">Training Environment</div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {environmentOptions.map(option => (
-                      <button
-                        key={option}
-                        type="button"
-                        className="rounded-xl px-3 py-3 text-sm font-semibold"
-                        style={getOptionButtonStyle(normalizedDraft.trainingEnvironment === option)}
-                        onClick={() => updateDraftConfig({ trainingEnvironment: option })}
-                      >
-                        {option}
                       </button>
                     ))}
                   </div>
@@ -7945,7 +7810,7 @@
           },
           {
             q: "What equipment do I need?",
-            a: "Just adjustable dumbbells (15-50 lbs recommended), a workout mat, and optionally a bench or sturdy chair. That's it! No gym membership needed."
+            a: "Just adjustable dumbbells (15-50 lbs recommended), a workout mat, and optionally a bench or sturdy chair. That's it for the home setup."
           },
           {
             q: "Can I do this program at home with kids around?",

@@ -1286,20 +1286,12 @@
 
         <!-- Step 4: Workout Location -->
         <div class="step" data-step="4">
-            <h2 class="step-question">Where will you do most workouts?</h2>
-            <p class="step-subtitle">This decides which starter setup fits best</p>
+            <h2 class="step-question">Where will you do your workouts?</h2>
+            <p class="step-subtitle">This system is built for a home setup</p>
             
             <div class="options-grid" data-field="location">
                 <div class="option-card" data-value="Home only">
                     <span class="option-text">At home</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-                <div class="option-card" data-value="Gym only">
-                    <span class="option-text">At a gym</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-                <div class="option-card" data-value="Both">
-                    <span class="option-text">Both</span>
                     <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
                 </div>
             </div>
@@ -1319,7 +1311,7 @@
                         <div class="feature-icon">
                             <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                         </div>
-                        <span class="feature-text">No commute to the gym required</span>
+                        <span class="feature-text">No leaving the house required</span>
                     </div>
                     <div class="feature-item">
                         <div class="feature-icon">
@@ -1347,19 +1339,11 @@
                     <span class="option-text">Dumbbells</span>
                     <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
                 </div>
-                <div class="option-card multi" data-value="Barbell">
-                    <span class="option-text">Barbell & plates</span>
+                <div class="option-card multi" data-value="Bench">
+                    <span class="option-text">Bench or sturdy chair</span>
                     <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
                 </div>
-                <div class="option-card multi" data-value="Pull-up bar">
-                    <span class="option-text">Pull-up bar</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-                <div class="option-card multi" data-value="Kettlebells">
-                    <span class="option-text">Kettlebells</span>
-                    <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-                </div>
-                <div class="option-card multi" data-value="Resistance bands">
+                <div class="option-card multi" data-value="Bands">
                     <span class="option-text">Resistance bands</span>
                     <span class="option-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
                 </div>
@@ -1886,14 +1870,12 @@
         function buildSetupLabel(location, equipment) {
             const gear = Array.isArray(equipment) ? equipment : [];
             const hasDumbbells = gear.includes('Dumbbells');
-            const hasBarbell = gear.includes('Barbell');
-            const hasBands = gear.includes('Resistance bands');
+            const hasBands = gear.includes('Bands');
+            const hasBench = gear.includes('Bench');
             const hasNoGear = gear.includes('No equipment yet') || gear.includes('Bodyweight only') || gear.length === 0;
 
-            if (location === 'Gym only') return 'Gym-based';
-            if (location === 'Both') return hasDumbbells ? 'Hybrid dumbbell + gym' : 'Hybrid home + gym';
-            if (hasBarbell) return 'Home barbell';
             if (hasDumbbells) return 'Home dumbbell';
+            if (hasBench) return 'Home bench';
             if (hasBands) return 'Home bands';
             if (hasNoGear) return 'Bodyweight-first';
             return 'Home-friendly';
@@ -1917,7 +1899,7 @@
             const answers = {
                 goal: state.answers.goal || '',
                 time: state.answers.time || '',
-                location: state.answers.location || '',
+                location: state.answers.location || 'Home only',
                 sleep: state.answers.sleep || '',
                 challenge: state.answers.challenge || '',
                 equipment: Array.isArray(state.answers.equipment) ? [...state.answers.equipment] : [],
@@ -2012,7 +1994,7 @@
                     'goal': state.answers.goal || '',
                     'time': state.answers.time || '',
                     'sleep': state.answers.sleep || '',
-                    'location': state.answers.location || '',
+                    'location': state.answers.location || 'Home only',
                     'equipment': Array.isArray(state.answers.equipment)
                         ? state.answers.equipment.join(', ')
                         : state.answers.equipment || '',
