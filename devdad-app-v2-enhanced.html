@@ -2076,11 +2076,18 @@
 
     function AnimatedNumber({ value, prefix = '', suffix = '', decimals = 0, className = '' }) {
       const numericValue = Number(value);
-      const [displayValue, setDisplayValue] = React.useState(Number.isFinite(numericValue) ? 0 : value);
+      const [displayValue, setDisplayValue] = React.useState(Number.isFinite(numericValue) ? numericValue : value);
+      const hasMounted = React.useRef(false);
 
       React.useEffect(() => {
         if (!Number.isFinite(numericValue)) {
           setDisplayValue(value);
+          return;
+        }
+
+        if (!hasMounted.current) {
+          hasMounted.current = true;
+          setDisplayValue(numericValue);
           return;
         }
 
@@ -2409,6 +2416,7 @@
       // Workout State
       const [currentWeek, setCurrentWeek] = useState(1);
       const [currentDay, setCurrentDay] = useState(1);
+      const [furthestUnlockedDays, setFurthestUnlockedDays] = useState({ 1: 1 });
       const [completedDays, setCompletedDays] = useState([]);
       const [workoutStarted, setWorkoutStarted] = useState(false);
       const [currentExercise, setCurrentExercise] = useState(0);
@@ -2817,6 +2825,7 @@
           progress: {
             currentWeek: 1,
             currentDay: 1,
+            furthestUnlockedDays: { 1: 1 },
             completedDays: [],
             workoutFeedback: {},
             lastWorkoutStartedAt: null,
@@ -3156,9 +3165,15 @@
       function hydrateUserData(data) {
         const safeData = data || buildDefaultUserData();
         const progress = safeData.progress || buildDefaultUserData().progress;
+        const hydratedWeek = progress.currentWeek || 1;
+        const hydratedDay = progress.currentDay || 1;
+        const hydratedUnlockedDays = progress.furthestUnlockedDays && typeof progress.furthestUnlockedDays === 'object'
+          ? progress.furthestUnlockedDays
+          : { [hydratedWeek]: hydratedDay };
 
-        setCurrentWeek(progress.currentWeek || 1);
-        setCurrentDay(progress.currentDay || 1);
+        setCurrentWeek(hydratedWeek);
+        setCurrentDay(hydratedDay);
+        setFurthestUnlockedDays(hydratedUnlockedDays);
         setCompletedDays(progress.completedDays || []);
         setWorkoutFeedback(progress.workoutFeedback || {});
         setLastWorkoutStartedAt(progress.lastWorkoutStartedAt || null);
@@ -3253,6 +3268,7 @@
           progress: {
             currentWeek,
             currentDay,
+            furthestUnlockedDays,
             completedDays,
             workoutFeedback,
             lastWorkoutStartedAt,
@@ -3360,9 +3376,25 @@
         };
       }
 
+      useEffect(() => {
+        setFurthestUnlockedDays(prev => {
+          const currentUnlockedDay = Math.max(1, prev[currentWeek] || 1);
+          const nextUnlockedDay = Math.max(currentUnlockedDay, currentDay);
+          if (nextUnlockedDay === currentUnlockedDay) {
+            return prev;
+          }
+
+          return {
+            ...prev,
+            [currentWeek]: nextUnlockedDay
+          };
+        });
+      }, [currentWeek, currentDay]);
+
       function resetUserScopedState() {
         setCurrentWeek(1);
         setCurrentDay(1);
+        setFurthestUnlockedDays({ 1: 1 });
         setCompletedDays([]);
         setWorkoutFeedback({});
         setLastWorkoutStartedAt(null);
@@ -5299,7 +5331,8 @@
                   const dayStatus = getDayStatus(day, currentWeek);
                   const isActive = day === currentDay;
                   const isCompleted = dayStatus.isCompleted;
-                  const isLocked = day > currentDay && !isCompleted;
+                  const furthestUnlockedDay = Math.max(1, furthestUnlockedDays[currentWeek] || 1);
+                  const isLocked = day > furthestUnlockedDay && !isCompleted;
                   const icon = isCompleted
                     ? '✓'
                     : isLocked
@@ -8165,6 +8198,28 @@
 
         const youtubeEmbedUrl = getExerciseYoutubeEmbedUrl(selectedExercise);
         const youtubeWatchUrl = getExerciseYoutubeWatchUrl(selectedExercise);
+        const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
+        const currentDayExercises = workoutInfo ? programExercises[workoutInfo.exerciseDay] || programExercises.day1 : programExercises.day1;
+        const exerciseIndex = currentDayExercises.findIndex(ex => ex.id === selectedExercise.id);
+        const normalizedExerciseIndex = exerciseIndex >= 0 ? exerciseIndex : 0;
+        const isLiveSessionReturn = returnScreen === 'workout';
+        const canStartFromSelected = isLiveSessionReturn ? normalizedExerciseIndex <= currentExercise : normalizedExerciseIndex === 0;
+        const startButtonLabel = isLiveSessionReturn
+          ? normalizedExerciseIndex < currentExercise
+            ? 'Resume From This Exercise'
+            : normalizedExerciseIndex === currentExercise
+            ? 'Back to Current Exercise'
+            : 'Finish Earlier Exercises First'
+          : normalizedExerciseIndex === 0
+          ? 'Start Workout'
+          : 'Start Workout From Exercise 1';
+        const sequenceNote = isLiveSessionReturn
+          ? normalizedExerciseIndex > currentExercise
+            ? 'This workout runs in order. Finish the earlier exercises before jumping ahead.'
+            : 'You can review any movement, but the live workout flow stays sequential.'
+          : normalizedExerciseIndex > 0
+          ? 'You can preview any movement here, but today\'s workout starts from exercise 1.'
+          : 'Starting here will begin today\'s workout from the top.';
 
         return (
           <div className="fixed inset-0 z-[120] flex items-center justify-center p-4" style={{background:'radial-gradient(circle at top, rgba(249,115,22,0.12) 0%, rgba(10,10,10,0.98) 58%)'}}>
@@ -8229,18 +8284,22 @@
               <div className="space-y-3">
                 <button 
                   className="nav-cta"
+                  disabled={!canStartFromSelected}
+                  style={!canStartFromSelected ? {opacity: 0.55, cursor: 'not-allowed'} : undefined}
                   onClick={() => {
+                    if (!canStartFromSelected) return;
                     setScreen('workout');
                     setWorkoutStarted(true);
                     setLastWorkoutStartedAt(new Date().toISOString());
-                    const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
-                    const currentDayExercises = workoutInfo ? programExercises[workoutInfo.exerciseDay] || programExercises.day1 : programExercises.day1;
-                    const exerciseIndex = currentDayExercises.findIndex(ex => ex.id === selectedExercise.id);
-                    setCurrentExercise(exerciseIndex >= 0 ? exerciseIndex : 0);
+                    setCurrentExercise(isLiveSessionReturn ? normalizedExerciseIndex : 0);
                   }}
                 >
-                  Start This Exercise
+                  {startButtonLabel}
                 </button>
+
+                <div className="text-xs text-center text-gray-400 px-2">
+                  {sequenceNote}
+                </div>
 
                 <button 
                   className="btn-secondary"
