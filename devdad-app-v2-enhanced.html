@@ -2178,24 +2178,20 @@
       function UserAvatar({ size = 44, currentUser, email, userProfile }) {
         const label = (currentUser?.name || email || 'U')[0].toUpperCase();
         const avatarDataUrl = userProfile?.avatarDataUrl || '';
-        const [avatarLoadFailed, setAvatarLoadFailed] = React.useState(false);
 
-        React.useEffect(() => {
-          setAvatarLoadFailed(false);
-        }, [avatarDataUrl]);
-
-        if (avatarDataUrl && !avatarLoadFailed) {
+        if (avatarDataUrl) {
           return (
-            <img
-              src={avatarDataUrl}
-              alt="Profile"
-              loading="lazy"
-              onError={() => setAvatarLoadFailed(true)}
+            <div
+              aria-label="Profile"
+              role="img"
               style={{
                 width: `${size}px`,
                 height: `${size}px`,
                 borderRadius: '999px',
-                objectFit: 'cover',
+                backgroundImage: `url(${avatarDataUrl})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
                 border: '1px solid rgba(255,255,255,0.1)',
                 background: 'rgba(255,255,255,0.06)'
               }}
