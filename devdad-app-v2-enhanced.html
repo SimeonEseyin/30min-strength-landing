@@ -575,7 +575,6 @@
       backdrop-filter: blur(20px);
       box-shadow: 0 20px 40px rgba(0,0,0,0.28);
       z-index: 30;
-      animation: nav-rise 680ms var(--ease-out-premium) both;
     }
 
     .nav-item {
@@ -4878,6 +4877,7 @@
 
       // Render current screen
       const contentScreen = screen === 'exercise-detail' ? (detailReturnScreen || (workoutStarted ? 'workout' : 'home')) : screen;
+      const bottomNavScreen = ['home', 'progress', 'more'].includes(contentScreen) ? contentScreen : null;
 
       return (
         <div className="max-w-md mx-auto min-h-screen shadow-2xl" style={{background:'var(--bg-app-shell)', boxShadow:'0 30px 80px rgba(0,0,0,0.32)', position:'relative', zIndex:1}}>
@@ -5220,6 +5220,7 @@
           {contentScreen === 'weight' && <WeightTrackingScreen />}
 
           {screen === 'exercise-detail' && <ExerciseDetailScreen />}
+          {bottomNavScreen && <BottomNav active={bottomNavScreen} setScreen={setScreen} />}
           </>
           )}
         </div>
@@ -5503,8 +5504,6 @@
                 </>
               )}
             </MotionSection>
-
-            <BottomNav active="home" setScreen={setScreen} />
           </div>
         );
       }
@@ -6613,8 +6612,6 @@
               )
             )}
             </div>
-
-            <BottomNav active="progress" setScreen={setScreen} />
           </div>
         );
       }
@@ -6920,8 +6917,6 @@
                 <span className="text-gray-400">›</span>
               </button>
             </div>
-
-            <BottomNav active="more" setScreen={setScreen} />
           </div>
         );
       }
