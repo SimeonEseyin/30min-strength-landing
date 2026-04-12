@@ -2412,6 +2412,7 @@
       // Navigation & UI State
       const [screen, setScreen] = useState('booting');
       const [showGoalsModal, setShowGoalsModal] = useState(false);
+      const [lastCompletedWorkoutSummary, setLastCompletedWorkoutSummary] = useState(null);
       
       // Workout State
       const [currentWeek, setCurrentWeek] = useState(1);
@@ -4333,7 +4334,7 @@
       }
 
       // Handle workout completion with feedback
-      const handleWorkoutComplete = (feedback) => {
+      const handleWorkoutComplete = (feedback, summary = null) => {
         const workoutKey = `week${currentWeek}_day${currentDay}`;
         const newFeedback = {
           ...workoutFeedback,
@@ -4356,6 +4357,7 @@
 
         setWorkoutStarted(false);
         setLastWorkoutStartedAt(null);
+        setLastCompletedWorkoutSummary(summary);
         const nextPosition = getNextIncompletePosition(updatedCompletedDays, currentWeek);
         if (!nextPosition) {
           setScreen('completion');
@@ -4366,8 +4368,8 @@
           setCurrentWeek(nextPosition.week);
         }
         setCurrentDay(nextPosition.day);
-        
-        setScreen('home');
+
+        setScreen('session-saved');
       };
 
       const handleRestDayComplete = () => {
@@ -4828,6 +4830,59 @@
         );
       };
 
+      const SessionSavedScreen = () => {
+        const summary = lastCompletedWorkoutSummary || {};
+        const upcomingWorkout = getWorkoutInfo(currentDay, currentWeek);
+        const nextWorkoutLabel = upcomingWorkout
+          ? `Day ${currentDay} • ${upcomingWorkout.type}`
+          : 'Recovery day next';
+
+        return (
+          <div className="app-screen px-6 py-8">
+            <div className="max-w-md mx-auto text-center">
+              <div className="text-6xl mb-6">✓</div>
+              <h1 className="text-3xl font-bold mb-3 text-white">Workout Saved</h1>
+              <p className="text-gray-400 mb-6">
+                Day {summary.day || currentDay} is logged and your progress is updated.
+              </p>
+
+              <div className="card mb-5 text-left">
+                <div className="text-xs uppercase tracking-[0.16em] text-gray-500 mb-2">Session Saved</div>
+                <div className="font-semibold text-white mb-2">
+                  Week {summary.week || currentWeek} • Day {summary.day || currentDay}
+                </div>
+                <div className="text-sm text-gray-300 mb-2">
+                  Feedback: {summary.feedbackLabel || 'Saved'}
+                </div>
+                <div className="text-sm text-gray-300">
+                  {summary.enteredWeightCount > 0
+                    ? `${summary.enteredWeightCount} ${summary.enteredWeightCount === 1 ? 'exercise' : 'exercises'} logged with weight history.`
+                    : 'No weights were entered for this session.'}
+                </div>
+              </div>
+
+              <div className="card mb-8 text-left">
+                <div className="text-xs uppercase tracking-[0.16em] text-gray-500 mb-2">Up Next</div>
+                <div className="font-semibold text-orange-100 mb-1">{nextWorkoutLabel}</div>
+                <div className="text-sm text-gray-400">
+                  Return to Home when you're ready for the next session.
+                </div>
+              </div>
+
+              <button
+                className="nav-cta max-w-md mx-auto"
+                onClick={() => {
+                  setLastCompletedWorkoutSummary(null);
+                  setScreen('home');
+                }}
+              >
+                Back To Home
+              </button>
+            </div>
+          </div>
+        );
+      };
+
       // Render current screen
       const contentScreen = screen === 'exercise-detail' ? (detailReturnScreen || (workoutStarted ? 'workout' : 'home')) : screen;
 
@@ -5160,6 +5215,7 @@
           {contentScreen === 'home' && <HomeScreen />}
           {contentScreen === 'workout' && <WorkoutScreen />}
           {contentScreen === 'complete' && <CompleteWorkoutScreen />}
+          {contentScreen === 'session-saved' && <SessionSavedScreen />}
           {contentScreen === 'completion' && <CompletionScreen />}
           {contentScreen === 'progress' && <ProgressScreen />}
           {contentScreen === 'more' && <MoreScreen />}
@@ -6227,6 +6283,11 @@
               className="nav-cta max-w-md w-full"
               onClick={() => {
                 if (!selectedFeedback) return;
+                const feedbackLabelMap = {
+                  perfect: 'Perfect - dialed in',
+                  hard: 'Too hard - need to adjust weight',
+                  easy: 'Too easy - ready for progression'
+                };
                 // Append to weight history
                 const updated = { ...exerciseWeights };
                 Object.entries(weightInputs).forEach(([name, val]) => {
@@ -6248,7 +6309,12 @@
                   }
                 });
                 setExerciseWeights(updated);
-                handleWorkoutComplete(selectedFeedback);
+                handleWorkoutComplete(selectedFeedback, {
+                  week: currentWeek,
+                  day: currentDay,
+                  enteredWeightCount,
+                  feedbackLabel: feedbackLabelMap[selectedFeedback] || 'Saved'
+                });
               }}
               disabled={!selectedFeedback}
             >
