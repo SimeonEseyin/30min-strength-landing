@@ -169,7 +169,6 @@
       overflow: hidden;
       isolation: isolate;
       transition: transform var(--motion-base) var(--ease-out-premium), border-color var(--motion-base) var(--ease-out-premium), box-shadow var(--motion-base) var(--ease-out-premium), background var(--motion-base) var(--ease-out-premium);
-      animation: rise-fade var(--motion-slow) var(--ease-out-premium) both;
       transform-origin: center bottom;
     }
 
@@ -209,7 +208,6 @@
       transition: transform var(--motion-base) var(--ease-out-premium), border-color var(--motion-base) var(--ease-out-premium), background var(--motion-base) var(--ease-out-premium), box-shadow var(--motion-base) var(--ease-out-premium);
       position: relative;
       overflow: hidden;
-      animation: rise-fade calc(var(--motion-slow) + 80ms) var(--ease-out-premium) both;
     }
     .exercise-card:hover {
       background: rgba(249, 115, 22, 0.08);
@@ -456,7 +454,6 @@
       min-height: 100vh;
       padding-bottom: 96px;
       color: var(--text-primary);
-      animation: page-enter 520ms var(--ease-out-premium) both;
       position: relative;
       z-index: 1;
     }
@@ -784,14 +781,10 @@
 
     .motion-section {
       --motion-delay: 0ms;
-      animation: rise-fade 620ms var(--ease-out-premium) both;
-      animation-delay: var(--motion-delay);
     }
 
     .motion-section-subtle {
       --motion-delay: 0ms;
-      animation: soft-fade 520ms var(--ease-out-premium) both;
-      animation-delay: var(--motion-delay);
     }
 
     .progress-tab {
@@ -5315,10 +5308,12 @@
                     : '💪';
                   
                   return (
-                    <div 
+                    <button
                       key={day}
+                      type="button"
                       className={`day-tab ${isActive ? 'active' : isCompleted ? 'inactive' : 'locked'}`}
                       onClick={() => !isLocked && setCurrentDay(day)}
+                      disabled={isLocked}
                     >
                       {isCompleted ? (
                         <>
@@ -5331,7 +5326,7 @@
                           <div className="text-xs">{dayStatus.isRecoveryDay ? `Rest ${day}` : `Day ${day}`}</div>
                         </>
                       )}
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -6280,6 +6275,7 @@
             </div>
 
             <button
+              type="button"
               className="nav-cta max-w-md w-full"
               onClick={() => {
                 if (!selectedFeedback) return;
