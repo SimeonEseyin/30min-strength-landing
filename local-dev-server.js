@@ -99,8 +99,9 @@ async function handleFunctionRequest(req, res, parsedUrl) {
 
 function safeFilePath(requestPath) {
   let pathname = decodeURIComponent(requestPath);
-  if (pathname === '/') pathname = '/devdad-landing.html';
+  if (pathname === '/') pathname = '/index.html';
 
+  // /app serves the built shell, not the authoring source HTML.
   const routeAliases = {
     '/app': '/devdad-app.html',
     '/app/': '/devdad-app.html',

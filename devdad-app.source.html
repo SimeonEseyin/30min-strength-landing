@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Authoring source for /app. Edit this file, then run node scripts/build-devdad-app.js. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -2758,7 +2759,7 @@
         const sessionLength = [15, 30, 45, 60].includes(Number(preview.minutes))
           ? Number(preview.minutes)
           : 30;
-        const frequency = Number(preview.frequency) >= 4 ? '4-day' : '3-day';
+        const frequency = '3-day';
         const recoveryMode = answers.sleep === 'Less than 5 hours'
           ? 'light'
           : answers.sleep === '5-6 hours'
@@ -4214,18 +4215,6 @@
         }
       };
 
-      const handlePurchaseAccess = () => {
-        const normalizedEmail = sanitizeInput(email.toLowerCase().trim());
-        const query = new URLSearchParams();
-
-        if (validateEmail(normalizedEmail)) {
-          query.set('email', normalizedEmail);
-        }
-        query.set('checkout', '1');
-
-        window.location.href = `/devdad-landing.html?${query.toString()}`;
-      };
-
       const handlePasswordReset = async () => {
         setError('');
         setSuccess('');
@@ -4946,22 +4935,26 @@
                   </div>
                 </div>
 
-                <a
-                  href="devdad-landing.html"
+                <div
+                  role="status"
+                  aria-live="polite"
                   style={{
                     display: 'block',
                     background: 'transparent',
                     color: '#a3a3a3',
                     padding: '12px 32px',
                     borderRadius: '8px',
-                    textDecoration: 'none',
                     fontWeight: '600',
                     fontSize: '15px',
                     border: '1px solid #262626',
                   }}
                 >
-                  Get Access — $47
-                </a>
+                  Current Price • $47 One-Time
+                </div>
+
+                <p className="text-sm mt-4" style={{color:'#a3a3a3'}}>
+                  Public pricing remains $47 one-time. Existing purchasers can still log in or create an account with their purchase email.
+                </p>
 
                 <p className="text-sm mt-6" style={{color:'#737373'}}>
                   Questions? <a href="mailto:devdad.desk@gmail.com" style={{color:'#f97316'}}>devdad.desk@gmail.com</a>
@@ -5023,7 +5016,7 @@
                 <button onClick={() => {setError(''); setSuccess(''); setScreen('welcome');}} className="back-button mb-6">←</button>
                 
                 <h2 className="text-2xl font-bold mb-2 text-white">Create Your Account</h2>
-                <p className="text-gray-400 mb-6">Use the same email you purchased with. If you have not purchased yet, you can still create your account first.</p>
+                <p className="text-gray-400 mb-6">Use the same email you purchased with to unlock your account. Public pricing remains $47 one-time while new member access is closed.</p>
 
                 {error && <div className="error-box">{error}</div>}
                 {success && <div className="success-box">{success}</div>}
@@ -5070,7 +5063,7 @@
                   <div className="space-y-2 text-sm text-gray-300">
                     <div className="flex items-center gap-2">
                       <span className="feature-check">✓</span>
-                      <span>30-minute sessions with a 3 or 4 day weekly setup</span>
+                      <span>Built to work on 3 days per week, with an optional 4th day when schedule and recovery allow</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="feature-check">✓</span>
@@ -5078,7 +5071,7 @@
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="feature-check">✓</span>
-                      <span>23 exercise video library with form tips</span>
+                      <span>Exercise library with guided form support</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="feature-check">✓</span>
@@ -5095,12 +5088,12 @@
                   Create Account
                 </button>
 
-                <button className="btn-secondary mb-3" onClick={handlePurchaseAccess}>
-                  Need Access First? Buy Now
+                <button className="btn-secondary mb-3" type="button" onClick={() => { window.location.href = '/#launch-status'; }}>
+                  View Pricing • $47
                 </button>
 
                 <p className="text-xs text-center text-gray-500 mt-4">
-                  Your paid access attaches to your account email. By continuing you accept our Terms & Privacy Policy.
+                  Public access will reopen from the main site. Existing purchasers can still log in here.
                 </p>
 
                 <p className="text-sm text-center text-gray-400 mt-6">
