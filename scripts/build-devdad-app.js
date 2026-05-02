@@ -4,7 +4,9 @@ const { execFileSync } = require('child_process');
 const esbuild = require('esbuild');
 
 const repoRoot = path.resolve(__dirname, '..');
-const sourceHtmlPath = path.join(repoRoot, 'devdad-app-v2-enhanced.html');
+// Authoring source for the app. Edit this file, then rebuild.
+const sourceHtmlPath = path.join(repoRoot, 'devdad-app.source.html');
+// Generated runtime shell served at /app.
 const outputHtmlPath = path.join(repoRoot, 'devdad-app.html');
 const assetDir = path.join(repoRoot, 'assets');
 const outputJsPath = path.join(assetDir, 'devdad-app.js');
@@ -76,6 +78,14 @@ function buildStyles() {
 
 function buildHtml(sourceHtml) {
   let outputHtml = sourceHtml;
+  outputHtml = outputHtml.replace(
+    '<!DOCTYPE html>',
+    '<!DOCTYPE html>\n<!-- Generated from devdad-app.source.html by scripts/build-devdad-app.js. Do not edit devdad-app.html directly. -->'
+  );
+  outputHtml = outputHtml.replace(
+    /\n<!-- Authoring source for \/app\. Edit this file, then run node scripts\/build-devdad-app\.js\. -->/,
+    ''
+  );
   outputHtml = removeRequiredBlock(
     outputHtml,
     /\s*<!-- Tailwind CSS -->\s*<script src="https:\/\/cdn\.tailwindcss\.com"><\/script>\s*/,

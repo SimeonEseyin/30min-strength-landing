@@ -2,7 +2,9 @@ const { createCheckoutSession } = require('./_stripe');
 const { hasTrustedOrigin, getRequestOrigin } = require('./_response');
 const { checkRateLimit, clearRateLimit } = require('./_auth');
 
+const CHECKOUT_ENABLED = false;
 const PRICE_CENTS = 4700; // $47 — founding member price
+const CHECKOUT_DISABLED_MESSAGE = 'Checkout is temporarily unavailable right now.';
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -14,6 +16,14 @@ exports.handler = async (event) => {
       statusCode: 403,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ error: 'Forbidden' }),
+    };
+  }
+
+  if (!CHECKOUT_ENABLED) {
+    return {
+      statusCode: 503,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: CHECKOUT_DISABLED_MESSAGE }),
     };
   }
 
@@ -50,7 +60,7 @@ exports.handler = async (event) => {
       safeName,
       priceCents: PRICE_CENTS,
       successUrl: `${baseUrl}/app?purchased=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${baseUrl}/devdad-landing.html?cancelled=true`,
+      cancelUrl: `${baseUrl}/?cancelled=true`,
     });
 
     clearRateLimit(event, email, 'checkout');
