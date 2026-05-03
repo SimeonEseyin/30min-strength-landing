@@ -134,6 +134,51 @@
       justify-content: flex-end;
     }
 
+    .nav-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .nav-toggle:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+
+    .nav-toggle-lines {
+      display: inline-grid;
+      gap: 5px;
+    }
+
+    .nav-toggle-lines span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      border-radius: 999px;
+      background: currentColor;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .site-header.is-menu-open .nav-toggle-lines span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+
+    .site-header.is-menu-open .nav-toggle-lines span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .site-header.is-menu-open .nav-toggle-lines span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
     .header-nav a {
       color: var(--text-secondary);
       font-size: 0.95rem;
@@ -904,14 +949,51 @@
     }
 
     @media (max-width: 860px) {
-      .site-header .container,
-      .header-nav {
-        flex-direction: column;
-        align-items: flex-start;
+      .site-header .container {
+        position: relative;
+        gap: 14px;
+        padding: 14px 0;
       }
 
       .header-nav {
+        display: none;
+        position: absolute;
+        top: calc(100% + 10px);
+        left: 0;
+        right: 0;
+        z-index: 30;
         width: 100%;
+        padding: 18px;
+        gap: 16px;
+        flex-direction: column;
+        align-items: stretch;
+        border-radius: 26px;
+        border: 1px solid var(--border);
+        background:
+          linear-gradient(180deg, rgba(18, 22, 29, 0.98) 0%, rgba(11, 13, 17, 0.98) 100%);
+        box-shadow: var(--shadow);
+      }
+
+      .site-header.is-menu-open .header-nav {
+        display: flex;
+      }
+
+      .header-nav a {
+        font-size: 1.1rem;
+      }
+
+      .header-actions {
+        width: 100%;
+      }
+
+      .header-actions .primary-btn {
+        width: 100%;
+        padding: 13px 18px;
+        font-size: 1rem;
+      }
+
+      .nav-toggle {
+        display: inline-flex;
       }
 
       .systems-grid,
@@ -930,7 +1012,7 @@
 
     @media (max-width: 720px) {
       .hero {
-        padding-top: 54px;
+        padding-top: 34px;
       }
 
       .container {
@@ -944,13 +1026,12 @@
       }
 
       .hero-actions,
-      .launch-actions,
-      .header-actions {
+      .launch-actions {
         width: 100%;
       }
 
       .hero-title {
-        font-size: clamp(3rem, 16vw, 4.2rem);
+        font-size: clamp(2.7rem, 15vw, 3.9rem);
       }
 
       .launch-price {
@@ -963,7 +1044,14 @@
   <header class="site-header">
     <div class="container">
       <a href="/" class="brand">DEV<span>DAD</span></a>
-      <nav class="header-nav">
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="siteNav" aria-label="Open navigation">
+        <span class="nav-toggle-lines" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+      </button>
+      <nav class="header-nav" id="siteNav">
         <a href="#program">Program</a>
         <a href="#proof">Proof</a>
         <a href="#faq">FAQ</a>
@@ -1374,6 +1462,16 @@
 
   <script>
     const quizBanner = document.getElementById('quizBanner');
+    const siteHeader = document.querySelector('.site-header');
+    const navToggle = document.querySelector('.nav-toggle');
+    const headerNav = document.getElementById('siteNav');
+
+    function setMenuOpen(isOpen) {
+      if (!siteHeader || !navToggle) return;
+      siteHeader.classList.toggle('is-menu-open', isOpen);
+      navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      navToggle.setAttribute('aria-label', isOpen ? 'Close navigation' : 'Open navigation');
+    }
 
     function maybeShowQuizBanner() {
       const urlParams = new URLSearchParams(window.location.search);
@@ -1431,11 +1529,23 @@
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
+      setMenuOpen(false);
       if (await redirectMembersToAppIfNeeded()) {
         return;
       }
 
       maybeShowQuizBanner();
+    });
+
+    navToggle?.addEventListener('click', () => {
+      const isOpen = siteHeader?.classList.contains('is-menu-open');
+      setMenuOpen(!isOpen);
+    });
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 860) {
+        setMenuOpen(false);
+      }
     });
 
     document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
@@ -1445,6 +1555,9 @@
         const target = document.querySelector(href);
         if (!target) return;
         event.preventDefault();
+        if (headerNav?.contains(anchor)) {
+          setMenuOpen(false);
+        }
         target.scrollIntoView({ behavior: 'smooth' });
       });
     });
