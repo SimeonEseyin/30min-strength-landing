@@ -21,7 +21,10 @@ const STORE_COLLECTIONS = [
   'userData',
   'pushSubscriptions',
   'passwordResets',
+  'emailVerifications',
   'rateLimits',
+  'premiumInterests',
+  'analyticsActors',
 ];
 
 function getPreferredDataDir() {
@@ -175,7 +178,10 @@ function defaultStore() {
     userData: {},
     pushSubscriptions: {},
     passwordResets: {},
+    emailVerifications: {},
     rateLimits: {},
+    premiumInterests: {},
+    analyticsActors: {},
   };
 }
 
@@ -270,7 +276,10 @@ function mergeDefaults(store) {
   if (!merged.userData || typeof merged.userData !== 'object') merged.userData = {};
   if (!merged.pushSubscriptions || typeof merged.pushSubscriptions !== 'object') merged.pushSubscriptions = {};
   if (!merged.passwordResets || typeof merged.passwordResets !== 'object') merged.passwordResets = {};
+  if (!merged.emailVerifications || typeof merged.emailVerifications !== 'object') merged.emailVerifications = {};
   if (!merged.rateLimits || typeof merged.rateLimits !== 'object') merged.rateLimits = {};
+  if (!merged.premiumInterests || typeof merged.premiumInterests !== 'object') merged.premiumInterests = {};
+  if (!merged.analyticsActors || typeof merged.analyticsActors !== 'object') merged.analyticsActors = {};
 
   return merged;
 }

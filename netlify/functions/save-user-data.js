@@ -1,6 +1,7 @@
 const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
 const { getSession } = require('./_auth');
 const { readStoreEntry, updateStoreEntry, getUserData } = require('./_store');
+const { recordAnalyticsEventSafe } = require('./_analytics');
 
 function isPlainObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value);
@@ -306,6 +307,17 @@ exports.handler = async (event) => {
     updatedAt: new Date().toISOString(),
   };
 
+  const previousCompletedCount = Array.isArray(existing.progress?.completedDays)
+    ? existing.progress.completedDays.length
+    : 0;
+  const nextCompletedCount = Array.isArray(updatedData.progress?.completedDays)
+    ? updatedData.progress.completedDays.length
+    : 0;
+  const firstWorkoutStarted = previousCompletedCount === 0 &&
+    !existing.progress?.lastWorkoutStartedAt &&
+    Boolean(updatedData.progress?.lastWorkoutStartedAt);
+  const workoutCompleted = nextCompletedCount > previousCompletedCount;
+
   if (payload.settings && reminderScheduleChanged(existing.settings, nextSettings)) {
     await updateStoreEntry('pushSubscriptions', session.email, current => {
       const currentSubscriptions = Array.isArray(current) ? current : [];
@@ -322,6 +334,28 @@ exports.handler = async (event) => {
   }
 
   await updateStoreEntry('userData', session.email, () => updatedData);
+
+  if (firstWorkoutStarted) {
+    await recordAnalyticsEventSafe({
+      eventName: 'first_workout_started',
+      email: session.email,
+      path: '/app',
+    });
+  }
+  if (workoutCompleted) {
+    await recordAnalyticsEventSafe({
+      eventName: 'workout_completed',
+      email: session.email,
+      path: '/app',
+    });
+    if (previousCompletedCount === 0) {
+      await recordAnalyticsEventSafe({
+        eventName: 'first_workout_completed',
+        email: session.email,
+        path: '/app',
+      });
+    }
+  }
 
   return json(200, { ok: true, data: updatedData });
 };

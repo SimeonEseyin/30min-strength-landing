@@ -1582,6 +1582,7 @@
     <!-- Hidden iframe for form submission -->
     <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
 
+    <script src="/analytics.js"></script>
     <script>
         // Quiz State
         const state = {
@@ -1690,7 +1691,7 @@
                 runLoadingAnimation();
             } else if (stepType === 'results') {
                 ctaBtn.style.display = 'block';
-                ctaBtn.textContent = 'VIEW 30-MIN STRENGTH AT $47';
+                ctaBtn.textContent = 'CREATE FREE ACCOUNT & START';
                 skipBtn.style.display = 'none';
                 updateResultsPage();
             } else if (stepNum === 11) {
@@ -1996,7 +1997,8 @@
                 fetch('/', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams(formData).toString()
+                    body: new URLSearchParams(formData).toString(),
+                    keepalive: true
                 })
                 .then(response => {
                     if (response.ok) {
@@ -2049,21 +2051,13 @@
             if (stepType === 'results') {
                 // Show loading state
                 ctaBtn.classList.add('loading');
-                ctaBtn.textContent = 'OPENING 30-MIN STRENGTH';
+                ctaBtn.textContent = 'OPENING YOUR FREE PLAN';
+                persistQuizProfile();
+                window.DevDadAnalytics?.track('quiz_completed');
 
-                // Submit form and wait for response
-                submitForm()
-                    .then(() => {
-                        persistQuizProfile();
-                        // Redirect to the canonical homepage and launch section
-                        const email = encodeURIComponent(state.answers.email || '');
-                        window.location.href = `/?from=quiz&email=${email}#launch-status`;
-                    })
-                    .catch((error) => {
-                        // Error - remove loading state, user can try again
-                        ctaBtn.classList.remove('loading');
-                        ctaBtn.textContent = 'VIEW 30-MIN STRENGTH AT $47';
-                    });
+                // Lead capture is best-effort and must never block product activation.
+                submitForm().catch(() => {});
+                window.location.href = '/app?from=quiz';
                 return;
             }
 
@@ -2084,6 +2078,7 @@
         // Initialize
         initProgressBar();
         showStep(state.stepSequence[0]);
+        window.DevDadAnalytics?.track('quiz_started');
     </script>
 </body>
 </html>

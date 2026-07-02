@@ -1058,7 +1058,7 @@
         <a href="#launch-status">Access</a>
         <a href="#about">About</a>
         <div class="header-actions">
-          <a href="quiz.html" class="primary-btn">Take the Fit Quiz</a>
+          <a href="quiz.html" class="primary-btn">Build My Free Plan</a>
         </div>
       </nav>
     </div>
@@ -1075,7 +1075,7 @@
               A 12-week home strength system with clear progression, simple home setup, and an app flow built for interruptions.
             </p>
             <div class="hero-actions">
-              <a href="quiz.html" class="primary-btn">Take the Fit Quiz</a>
+              <a href="quiz.html" class="primary-btn">Build My Free Plan</a>
               <a href="#proof" class="secondary-btn">View App Proof</a>
             </div>
             <p class="hero-cta-note">Takes about 2 minutes. Your starter setup carries into your free account.</p>
@@ -1322,8 +1322,8 @@
               <li>Exercise demos, form details, and progress tracking stay tied to the training flow.</li>
             </ul>
             <div class="proof-actions">
-              <a href="quiz.html" class="primary-btn">Take the Fit Quiz</a>
-              <a href="#launch-status" class="secondary-btn">Get Free Access</a>
+              <a href="quiz.html" class="primary-btn">Build My Free Plan</a>
+              <a href="/app?signup=1" class="secondary-btn">Start Free Now</a>
             </div>
             <p class="proof-note">Save your starter setup, then create a free account to begin.</p>
           </div>
@@ -1382,8 +1382,8 @@
             <div class="launch-price">Free</div>
             <p>No payment or subscription. A registered account is required to use the app and save progress.</p>
             <div class="launch-actions">
-              <a href="quiz.html" class="primary-btn">Take the Fit Quiz</a>
-              <a href="/app" class="secondary-btn">Create Account or Log In</a>
+              <a href="quiz.html" class="primary-btn">Build My Free Plan</a>
+              <a href="/app?signup=1" class="secondary-btn">Start Free Now</a>
             </div>
             <div class="launch-note">Free access is available now.</div>
           </div>
@@ -1460,6 +1460,7 @@
     </div>
   </footer>
 
+  <script src="/analytics.js"></script>
   <script>
     const quizBanner = document.getElementById('quizBanner');
     const siteHeader = document.querySelector('.site-header');
@@ -1534,6 +1535,7 @@
         return;
       }
 
+      window.DevDadAnalytics?.track('landing_view');
       maybeShowQuizBanner();
     });
 

@@ -63,8 +63,10 @@ exports.handler = async (event) => {
       const user = store.users[normalizedEmail];
       user.passwordHash = nextPassword.hash;
       user.passwordSalt = nextPassword.salt;
+      if (user.emailVerifiedAt === null) user.emailVerifiedAt = new Date().toISOString();
       user.updatedAt = new Date().toISOString();
       delete store.passwordResets[normalizedEmail];
+      delete store.emailVerifications[normalizedEmail];
 
       Object.entries(store.sessions).forEach(([sessionId, session]) => {
         if (normalizeEmail(session?.email) === normalizedEmail) delete store.sessions[sessionId];

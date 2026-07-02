@@ -170,6 +170,7 @@ async function getSession(event) {
   const normalizedEmail = normalizeEmail(session.email);
   const user = await readStoreEntry('users', normalizedEmail);
   if (!user) return null;
+  if (user.emailVerifiedAt === null) return null;
 
   return {
     sessionId,

@@ -956,6 +956,7 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="/analytics.js"></script>
 </head>
 <body>
   <div id="root"></div>
@@ -2220,7 +2221,9 @@
         );
       }
 
-      function PaidCoachCard({ compact = false }) {
+      function PaidCoachCard({ compact = false, interestStatus = 'idle', onJoin }) {
+        const joined = interestStatus === 'joined';
+        const joining = interestStatus === 'joining';
         return (
           <div
             className={`card ${compact ? 'mb-4' : 'mb-6'}`}
@@ -2238,6 +2241,18 @@
             <p className="text-sm text-gray-400">
               The free plan includes the complete 12-week program, workout tracking, timers, and progress history. AI recommendations will be available with a future paid plan.
             </p>
+            <button
+              type="button"
+              className="btn-secondary mt-4"
+              disabled={joining || joined}
+              onClick={onJoin}
+              style={joined ? {opacity:0.8, cursor:'default'} : undefined}
+            >
+              {joining ? 'Joining…' : joined ? '✓ You’re on the early-access list' : 'Join AI Coach Early Access'}
+            </button>
+            {interestStatus === 'error' && (
+              <div className="text-xs text-red-300 mt-2">Could not save your interest. Please try again.</div>
+            )}
           </div>
         );
       }
@@ -2460,6 +2475,9 @@
       const [email, setEmail] = useState('');
       const [password, setPassword] = useState('');
       const [confirmPassword, setConfirmPassword] = useState('');
+      const [termsAccepted, setTermsAccepted] = useState(false);
+      const [pendingVerificationEmail, setPendingVerificationEmail] = useState('');
+      const [verificationResendStatus, setVerificationResendStatus] = useState('idle');
       const [loginEmail, setLoginEmail] = useState('');
       const [loginPassword, setLoginPassword] = useState('');
       const [resetEmail, setResetEmail] = useState('');
@@ -2498,6 +2516,7 @@
       const [daysSinceLastWorkout, setDaysSinceLastWorkout] = useState(0);
       const [aiCoach, setAiCoach] = useState(null);
       const [aiCoachStatus, setAiCoachStatus] = useState('idle');
+      const [premiumInterestStatus, setPremiumInterestStatus] = useState('idle');
       const [planConfig, setPlanConfig] = useState({
         focus: 'Build strength',
         sessionLength: 30,
@@ -2564,7 +2583,7 @@
         lastAdjustedAt: null
       };
 
-      const isAuthScreen = ['welcome', 'signup', 'login', 'reset-password'].includes(screen);
+      const isAuthScreen = ['welcome', 'signup', 'login', 'reset-password', 'verify-email-pending'].includes(screen);
       const totalWeeks = 12;
       const currentPhase = currentWeek <= 4 ? 'Foundation' : currentWeek <= 8 ? 'Build' : 'Peak';
       const workoutsPerWeek = planConfig.scheduleTemplate === '4-day' ? 4 : 3;
@@ -2578,6 +2597,7 @@
       const lastAiSnapshot = React.useRef('');
       const navHistoryReady = React.useRef(false);
       const suppressHistoryPush = React.useRef(false);
+      const trackedSignupStart = React.useRef(false);
       const [showNotificationDebugTools] = useState(() => {
         if (typeof window === 'undefined') return false;
         return new URLSearchParams(window.location.search).get('debug') === '1';
@@ -2940,6 +2960,21 @@
         }
 
         return payload;
+      }
+
+      async function handlePremiumInterest() {
+        if (premiumInterestStatus === 'joining' || premiumInterestStatus === 'joined') return;
+        window.DevDadAnalytics?.track('premium_interest_clicked');
+        setPremiumInterestStatus('joining');
+        try {
+          await apiRequest('/.netlify/functions/premium-interest', {
+            method: 'POST',
+            body: JSON.stringify({ feature: 'ai-coach' })
+          });
+          setPremiumInterestStatus('joined');
+        } catch (error) {
+          setPremiumInterestStatus('error');
+        }
       }
 
       function delay(ms) {
@@ -3636,14 +3671,59 @@
           const urlParams = new URLSearchParams(window.location.search);
           const passwordResetToken = urlParams.get('reset_token') || '';
           const passwordResetEmail = String(urlParams.get('email') || '').trim().toLowerCase();
+          const emailVerificationToken = urlParams.get('verify_token') || '';
+          const emailVerificationEmail = String(urlParams.get('email') || '').trim().toLowerCase();
           const storedQuizProfile = readStoredQuizProfile();
           const storedQuizEmail = String(storedQuizProfile?.email || '').trim().toLowerCase();
+          const shouldStartSignup = urlParams.get('signup') === '1' || Boolean(storedQuizProfile);
 
           if (passwordResetToken) setResetToken(passwordResetToken);
           if (passwordResetEmail) setResetEmail(passwordResetEmail);
 
           if (urlParams.toString()) {
             window.history.replaceState({}, document.title, window.location.pathname);
+          }
+
+          if (emailVerificationToken && emailVerificationEmail) {
+            let verificationResult;
+            try {
+              verificationResult = await apiRequest('/.netlify/functions/verify-email', {
+                method: 'POST',
+                body: JSON.stringify({ email: emailVerificationEmail, token: emailVerificationToken })
+              });
+            } catch (verificationError) {
+              if (!cancelled) {
+                setPendingVerificationEmail(emailVerificationEmail);
+                setError(verificationError.message || 'This verification link is invalid or has expired.');
+                setScreen('verify-email-pending');
+                setBootReady(true);
+              }
+              return;
+            }
+
+            if (cancelled) return;
+            const authenticatedUser = verificationResult.user;
+            hydrationReady.current = false;
+            setCurrentUser(authenticatedUser);
+            setIsLoggedIn(true);
+            setEmail(authenticatedUser.email);
+            restoreCoachCache(authenticatedUser.email);
+
+            let daysSince = 0;
+            let appliedQuizSeed = false;
+            try {
+              const loaded = await loadUserData(authenticatedUser.email, { allowUnauthorizedFallback: true });
+              daysSince = loaded.daysSince || 0;
+              appliedQuizSeed = Boolean(loaded.appliedQuizSeed);
+            } catch (loadError) {
+            }
+
+            if (cancelled) return;
+            setShowGoalsModal(!appliedQuizSeed);
+            setSuccess(verificationResult.message || 'Email verified. Your account is ready.');
+            setScreen(daysSince >= 3 ? 'welcome-back' : 'home');
+            setBootReady(true);
+            return;
           }
 
           try {
@@ -3670,7 +3750,7 @@
                 setEmail(storedQuizEmail);
                 setLoginEmail(storedQuizEmail);
               }
-              setScreen(passwordResetToken ? 'reset-password' : 'welcome');
+              setScreen(passwordResetToken ? 'reset-password' : (shouldStartSignup ? 'signup' : 'welcome'));
             }
           } catch (error) {
             if (!cancelled) {
@@ -3680,7 +3760,7 @@
                 setEmail(storedQuizEmail);
                 setLoginEmail(storedQuizEmail);
               }
-              setScreen(passwordResetToken ? 'reset-password' : 'welcome');
+              setScreen(passwordResetToken ? 'reset-password' : (shouldStartSignup ? 'signup' : 'welcome'));
             }
           } finally {
             if (!cancelled) {
@@ -3695,6 +3775,13 @@
           cancelled = true;
         };
       }, []);
+
+      useEffect(() => {
+        if (screen === 'signup' && !trackedSignupStart.current) {
+          trackedSignupStart.current = true;
+          window.DevDadAnalytics?.track('signup_started');
+        }
+      }, [screen]);
 
       useEffect(() => {
         const standalone = typeof window !== 'undefined' && (
@@ -4080,35 +4167,28 @@
           return;
         }
 
+        if (!termsAccepted) {
+          setError('You must accept the Terms of Service and Privacy Policy');
+          return;
+        }
+
         try {
           const result = await apiRequest('/.netlify/functions/auth-signup', {
             method: 'POST',
             body: JSON.stringify({
               email: normalizedEmail,
               password,
-              confirmPassword
+              confirmPassword,
+              termsAccepted: true,
+              analytics: window.DevDadAnalytics?.getContext?.() || null
             })
           });
-
-          const sessionUser = await waitForAuthenticatedSession(result.user.email);
-          const authenticatedUser = sessionUser || result.user;
-          hydrationReady.current = false;
-          setCurrentUser(authenticatedUser);
-          setIsLoggedIn(true);
-          setEmail(authenticatedUser.email);
-          restoreCoachCache(authenticatedUser.email);
-          const { appliedQuizSeed } = await loadUserData(authenticatedUser.email, { allowUnauthorizedFallback: true });
-          setSuccess('Account created successfully!');
-
-          setTimeout(() => {
-            setShowGoalsModal(!appliedQuizSeed);
-            setScreen('home');
-            setError('');
-            setSuccess('');
-            setEmail('');
-            setPassword('');
-            setConfirmPassword('');
-          }, 1000);
+          setPendingVerificationEmail(result.email || normalizedEmail);
+          setPassword('');
+          setConfirmPassword('');
+          setTermsAccepted(false);
+          setSuccess(result.message || 'Check your email to activate your account.');
+          setScreen('verify-email-pending');
         } catch (error) {
           setError(error.message || 'Account creation failed. Please try again.');
         }
@@ -4168,9 +4248,32 @@
             setLoginPassword('');
           }, 800);
         } catch (error) {
+          if (error.payload?.code === 'email_verification_required') {
+            setPendingVerificationEmail(error.payload.email || normalizedEmail);
+            setSuccess('Your account exists. Check your email for the verification link.');
+            setScreen('verify-email-pending');
+            return;
+          }
           setError(error.message || 'Login failed. Please try again.');
         }
       };
+
+      async function handleResendVerification() {
+        if (!pendingVerificationEmail || verificationResendStatus === 'sending') return;
+        setVerificationResendStatus('sending');
+        setError('');
+        try {
+          const result = await apiRequest('/.netlify/functions/resend-verification', {
+            method: 'POST',
+            body: JSON.stringify({ email: pendingVerificationEmail })
+          });
+          setVerificationResendStatus('sent');
+          setSuccess(result.message || 'A new verification link has been sent.');
+        } catch (resendError) {
+          setVerificationResendStatus('error');
+          setError(resendError.message || 'Could not resend the verification email.');
+        }
+      }
 
       const handlePasswordResetRequest = async () => {
         setError('');
@@ -4283,12 +4386,16 @@
         setEmail('');
         setPassword('');
         setConfirmPassword('');
+        setTermsAccepted(false);
+        setPendingVerificationEmail('');
+        setVerificationResendStatus('idle');
         setLoginEmail('');
         setLoginPassword('');
         setResetEmail('');
         setResetToken('');
         setResetPassword('');
         setResetConfirmPassword('');
+        setPremiumInterestStatus('idle');
         setWorkoutStarted(false);
         setCurrentExercise(0);
         setSelectedExercise(null);
@@ -4901,7 +5008,7 @@
                 </div>
 
                 <button className="nav-cta mb-3" onClick={() => {setError(''); setSuccess(''); setScreen('signup');}}>
-                  Start Your System
+                  Create Free Account
                 </button>
                 <button className="btn-secondary mb-2" onClick={() => {setError(''); setSuccess(''); setScreen('login');}}>
                   Log In
@@ -4915,7 +5022,7 @@
               <div className="auth-card">
                 <button onClick={() => {setError(''); setSuccess(''); setScreen('welcome');}} className="back-button mb-6">←</button>
                 
-                <h2 className="text-2xl font-bold mb-2 text-white">Create Your Account</h2>
+                <h2 className="text-2xl font-bold mb-2 text-white">Create Your Free Account</h2>
                 <p className="text-gray-400 mb-6">DevDad Strength is free. Create an account to save your plan and progress securely.</p>
 
                 {error && <div className="error-box">{error}</div>}
@@ -4946,6 +5053,17 @@
                     onKeyDown={(e) => e.key === 'Enter' && handleSignup()}
                     autoComplete="new-password"
                   />
+                  <label className="flex items-start gap-3 text-sm text-gray-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={termsAccepted}
+                      onChange={(e) => setTermsAccepted(e.target.checked)}
+                      style={{width:'18px', height:'18px', marginTop:'2px', flexShrink:0}}
+                    />
+                    <span>
+                      I agree to the <a href="/terms.html" target="_blank" rel="noreferrer" className="text-orange-300 underline">Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noreferrer" className="text-orange-300 underline">Privacy Policy</a>.
+                    </span>
+                  </label>
                 </div>
 
                 <div className="card hero-card mb-6">
@@ -4995,6 +5113,58 @@
                 <p className="text-sm text-center text-gray-400 mt-6">
                   Already have an account? <button onClick={() => {setError(''); setSuccess(''); setScreen('login');}} className="font-semibold text-orange-300">Log In</button>
                 </p>
+              </div>
+            </div>
+          )}
+
+          {screen === 'verify-email-pending' && (
+            <div className="auth-shell">
+              <div className="auth-card text-center">
+                <div className="text-5xl mb-4">✉️</div>
+                <h2 className="text-2xl font-bold mb-2 text-white">Verify your email</h2>
+                <p className="text-gray-400 mb-2">We sent an activation link to:</p>
+                <p className="font-semibold text-orange-200 mb-6 break-all">{pendingVerificationEmail}</p>
+
+                {error && <div className="error-box text-left">{error}</div>}
+                {success && <div className="success-box text-left">{success}</div>}
+
+                <p className="text-sm text-gray-400 mb-6">
+                  Open the link in that email to activate your account and load your plan. The link expires after 24 hours.
+                </p>
+
+                <button
+                  type="button"
+                  className="nav-cta mb-3"
+                  disabled={verificationResendStatus === 'sending' || verificationResendStatus === 'sent'}
+                  onClick={handleResendVerification}
+                >
+                  {verificationResendStatus === 'sending' ? 'Sending…' : verificationResendStatus === 'sent' ? 'Verification Email Sent' : 'Resend Verification Email'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary mb-3"
+                  onClick={() => {
+                    setError('');
+                    setSuccess('');
+                    setVerificationResendStatus('idle');
+                    setEmail(pendingVerificationEmail);
+                    setScreen('signup');
+                  }}
+                >
+                  Use a Different Email
+                </button>
+                <button
+                  type="button"
+                  className="font-semibold text-orange-300"
+                  onClick={() => {
+                    setError('');
+                    setSuccess('');
+                    setLoginEmail(pendingVerificationEmail);
+                    setScreen('login');
+                  }}
+                >
+                  Back to Log In
+                </button>
               </div>
             </div>
           )}
@@ -5203,7 +5373,7 @@
             {success && <div className="success-box mx-6 mt-4">{success}</div>}
 
             <div className="px-6 mt-4">
-              <PaidCoachCard compact />
+              <PaidCoachCard compact interestStatus={premiumInterestStatus} onJoin={handlePremiumInterest} />
             </div>
 
             {/* Week selector */}
@@ -6280,7 +6450,7 @@
             </div>
 
             <div className="p-6">
-            <PaidCoachCard />
+            <PaidCoachCard interestStatus={premiumInterestStatus} onJoin={handlePremiumInterest} />
             {activeTab === 'workouts' && (<>
               {/* Stats Cards */}
               <MotionSection delay={50} className="grid grid-cols-2 gap-4 mb-6">

@@ -1,8 +1,8 @@
-async function sendPasswordResetEmail({ to, resetUrl }) {
+async function sendEmail({ to, subject, text, html }) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.PASSWORD_RESET_FROM_EMAIL || process.env.RESEND_FROM_EMAIL;
   if (!apiKey || !from) {
-    throw new Error('Password reset email is not configured.');
+    throw new Error('Account email delivery is not configured.');
   }
 
   const response = await fetch('https://api.resend.com/emails', {
@@ -14,15 +14,33 @@ async function sendPasswordResetEmail({ to, resetUrl }) {
     body: JSON.stringify({
       from,
       to: [to],
-      subject: 'Reset your DevDad Strength password',
-      text: `Use this link to reset your password. It expires in 30 minutes:\n\n${resetUrl}\n\nIf you did not request this, you can ignore this email.`,
-      html: `<p>Use the link below to reset your DevDad Strength password. It expires in 30 minutes.</p><p><a href="${resetUrl.replace(/&/g, '&amp;')}">Reset password</a></p><p>If you did not request this, you can ignore this email.</p>`,
+      subject,
+      text,
+      html,
     }),
   });
 
   if (!response.ok) {
-    throw new Error(`Password reset email failed (${response.status}).`);
+    throw new Error(`Account email delivery failed (${response.status}).`);
   }
 }
 
-module.exports = { sendPasswordResetEmail };
+async function sendPasswordResetEmail({ to, resetUrl }) {
+  return sendEmail({
+    to,
+    subject: 'Reset your DevDad Strength password',
+    text: `Use this link to reset your password. It expires in 30 minutes:\n\n${resetUrl}\n\nIf you did not request this, you can ignore this email.`,
+    html: `<p>Use the link below to reset your DevDad Strength password. It expires in 30 minutes.</p><p><a href="${resetUrl.replace(/&/g, '&amp;')}">Reset password</a></p><p>If you did not request this, you can ignore this email.</p>`,
+  });
+}
+
+async function sendEmailVerification({ to, verificationUrl }) {
+  return sendEmail({
+    to,
+    subject: 'Verify your DevDad Strength email',
+    text: `Verify your email to activate your free DevDad Strength account:\n\n${verificationUrl}\n\nThis link expires in 24 hours.`,
+    html: `<p>Verify your email to activate your free DevDad Strength account.</p><p><a href="${verificationUrl.replace(/&/g, '&amp;')}">Verify email and open my plan</a></p><p>This link expires in 24 hours.</p>`,
+  });
+}
+
+module.exports = { sendPasswordResetEmail, sendEmailVerification };

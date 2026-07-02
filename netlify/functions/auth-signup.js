@@ -1,5 +1,7 @@
 const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
 const { getPublicStoreError, normalizeEmail, updateStore } = require('./_store');
+const { issueEmailVerification } = require('./_verification');
+const { recordAnalyticsEventSafe, validVisitorId } = require('./_analytics');
 const {
   sanitizeName,
   validateEmail,
@@ -7,9 +9,9 @@ const {
   checkRateLimit,
   clearRateLimit,
   hashPassword,
-  createSession,
-  publicUser,
 } = require('./_auth');
+
+const TERMS_VERSION = '2026-07-02';
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -23,9 +25,11 @@ exports.handler = async (event) => {
   let email;
   let password;
   let confirmPassword;
+  let termsAccepted;
+  let analytics;
 
   try {
-    ({ email, password, confirmPassword } = parseJsonBody(event));
+    ({ email, password, confirmPassword, termsAccepted, analytics } = parseJsonBody(event));
   } catch {
     return json(400, { error: 'Invalid JSON' });
   }
@@ -49,6 +53,10 @@ exports.handler = async (event) => {
     return json(400, { error: 'Passwords do not match' });
   }
 
+  if (termsAccepted !== true) {
+    return json(400, { error: 'You must accept the Terms of Service and Privacy Policy' });
+  }
+
   let createdUser = null;
 
   try {
@@ -66,6 +74,9 @@ exports.handler = async (event) => {
         name: sanitizeName(normalizedEmail),
         passwordHash: passwordRecord.hash,
         passwordSalt: passwordRecord.salt,
+        emailVerifiedAt: null,
+        termsAcceptedAt: now,
+        termsVersion: TERMS_VERSION,
         createdAt: now,
         updatedAt: now,
       };
@@ -77,18 +88,38 @@ exports.handler = async (event) => {
     return json(publicError.statusCode || 500, { error: publicError.message || 'Account creation failed. Please try again.' });
   }
 
-  await clearRateLimit(event, normalizedEmail, 'signup');
-  let session;
   try {
-    session = await createSession(normalizedEmail);
+    await issueEmailVerification(normalizedEmail, event);
   } catch (error) {
-    const publicError = getPublicStoreError(error, 'Account creation is temporarily unavailable. Please try again shortly.');
-    return json(publicError.statusCode || 500, { error: publicError.message || 'Account creation failed. Please try again.' });
+    await updateStore(store => {
+      if (store.users[normalizedEmail]?.createdAt === createdUser.createdAt && store.users[normalizedEmail]?.emailVerifiedAt === null) {
+        delete store.users[normalizedEmail];
+      }
+      delete store.emailVerifications[normalizedEmail];
+    });
+    await clearRateLimit(event, normalizedEmail, 'signup');
+    return json(503, { error: 'We could not send the verification email. Please try again shortly.' });
   }
 
-  return json(200, {
-    user: publicUser(createdUser, true, session.expiresAt),
-  }, {
-    'Set-Cookie': session.cookie,
+  await clearRateLimit(event, normalizedEmail, 'signup');
+  const visitorId = validVisitorId(analytics?.visitorId) ? analytics.visitorId : '';
+  await recordAnalyticsEventSafe({
+    eventName: 'account_created',
+    email: normalizedEmail,
+    visitorId,
+    path: analytics?.path,
+    attribution: analytics?.attribution,
+  });
+  await recordAnalyticsEventSafe({
+    eventName: 'verification_requested',
+    email: normalizedEmail,
+    visitorId,
+    path: analytics?.path,
+    attribution: analytics?.attribution,
+  });
+  return json(202, {
+    requiresVerification: true,
+    email: normalizedEmail,
+    message: 'Check your email to activate your account.',
   });
 };

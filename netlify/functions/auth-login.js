@@ -1,5 +1,6 @@
 const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
 const { getPublicStoreError, normalizeEmail, readStoreEntry, updateStoreEntry } = require('./_store');
+const { recordAnalyticsEventSafe } = require('./_analytics');
 const {
   validateEmail,
   checkRateLimit,
@@ -54,6 +55,15 @@ exports.handler = async (event) => {
     return json(401, { error: 'Invalid email or password' });
   }
 
+  // Accounts created before verification was introduced have no field and remain valid.
+  if (user.emailVerifiedAt === null) {
+    return json(403, {
+      error: 'Verify your email before logging in.',
+      code: 'email_verification_required',
+      email: normalizedEmail,
+    });
+  }
+
   await clearRateLimit(event, normalizedEmail, 'login');
   let session;
   try {
@@ -64,6 +74,7 @@ exports.handler = async (event) => {
     });
 
     session = await createSession(normalizedEmail);
+    await recordAnalyticsEventSafe({ eventName: 'login_completed', email: normalizedEmail, path: '/app' });
   } catch (error) {
     const publicError = getPublicStoreError(error);
     return json(publicError.statusCode || 500, { error: publicError.message || 'Login failed. Please try again.' });
