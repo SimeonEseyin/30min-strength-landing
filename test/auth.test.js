@@ -82,6 +82,14 @@ test('consent, email verification, registered access, recovery, and paid feature
   }, { ip: '10.0.0.12' }));
   assert.equal(forgedServerEvent.statusCode, 400);
 
+  const outdatedClient = await signup(event('POST', {
+    email: 'outdated@example.com',
+    password: 'StrongPass1',
+    confirmPassword: 'StrongPass1',
+  }, { ip: '10.0.0.13' }));
+  assert.equal(outdatedClient.statusCode, 409);
+  assert.equal(body(outdatedClient).code, 'client_update_required');
+
   const rejectedTerms = await signup(event('POST', {
     email: 'terms@example.com',
     password: 'StrongPass1',

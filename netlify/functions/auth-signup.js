@@ -53,6 +53,13 @@ exports.handler = async (event) => {
     return json(400, { error: 'Passwords do not match' });
   }
 
+  if (termsAccepted === undefined) {
+    return json(409, {
+      error: 'Your app is out of date. Refresh the page to review the Terms and Privacy Policy before registering.',
+      code: 'client_update_required',
+    });
+  }
+
   if (termsAccepted !== true) {
     return json(400, { error: 'You must accept the Terms of Service and Privacy Policy' });
   }
