@@ -1,6 +1,5 @@
 const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
-const { getPublicStoreError, normalizeEmail, readStore, updateStore } = require('./_store');
-const { restoreStripeEntitlementByEmail } = require('./_entitlements');
+const { getPublicStoreError, normalizeEmail, updateStore } = require('./_store');
 const {
   sanitizeName,
   validateEmail,
@@ -36,7 +35,7 @@ exports.handler = async (event) => {
     return json(400, { error: 'Please enter a valid email address' });
   }
 
-  const rateLimit = checkRateLimit(event, normalizedEmail, 'signup');
+  const rateLimit = await checkRateLimit(event, normalizedEmail, 'signup');
   if (!rateLimit.allowed) {
     return json(429, { error: rateLimit.message });
   }
@@ -78,29 +77,17 @@ exports.handler = async (event) => {
     return json(publicError.statusCode || 500, { error: publicError.message || 'Account creation failed. Please try again.' });
   }
 
-  clearRateLimit(event, normalizedEmail, 'signup');
+  await clearRateLimit(event, normalizedEmail, 'signup');
   let session;
-  let store;
-
   try {
     session = await createSession(normalizedEmail);
-    store = await readStore();
   } catch (error) {
     const publicError = getPublicStoreError(error, 'Account creation is temporarily unavailable. Please try again shortly.');
     return json(publicError.statusCode || 500, { error: publicError.message || 'Account creation failed. Please try again.' });
   }
 
-  let hasPurchased = Boolean(store.entitlements[normalizedEmail]);
-  if (!hasPurchased) {
-    try {
-      hasPurchased = await restoreStripeEntitlementByEmail(normalizedEmail);
-    } catch {
-      hasPurchased = false;
-    }
-  }
-
   return json(200, {
-    user: publicUser(createdUser, hasPurchased, session.expiresAt),
+    user: publicUser(createdUser, true, session.expiresAt),
   }, {
     'Set-Cookie': session.cookie,
   });

@@ -1,10 +1,9 @@
 const crypto = require('crypto');
-const { normalizeEmail, readStore, updateStore } = require('./_store');
+const { normalizeEmail, readStoreEntry, updateStoreEntry } = require('./_store');
 const { parseCookies, serializeCookie } = require('./_response');
 
 const SESSION_COOKIE = 'devdad_session';
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
-const loginAttempts = new Map();
 
 function getCookieOptions() {
   const isProduction = process.env.CONTEXT === 'production' || process.env.NODE_ENV === 'production';
@@ -43,33 +42,48 @@ function getClientKey(event, email, scope = 'auth') {
   return `${scope}::${forwardedFor.split(',')[0].trim()}::${normalizeEmail(email)}`;
 }
 
-function checkRateLimit(event, email, scope = 'auth') {
+async function checkRateLimit(event, email, scope = 'auth', options = {}) {
   const now = Date.now();
   const key = getClientKey(event, email, scope);
-  const existing = loginAttempts.get(key);
+  const windowMs = options.windowMs || 15 * 60 * 1000;
+  const minimumIntervalMs = options.minimumIntervalMs ?? 2000;
+  const maxAttempts = options.maxAttempts || 5;
 
-  if (!existing || now - existing.firstAttempt > 15 * 60 * 1000) {
-    loginAttempts.set(key, { count: 1, firstAttempt: now, lastAttempt: now });
-    return { allowed: true };
-  }
+  let result;
+  await updateStoreEntry('rateLimits', key, existing => {
+    if (!existing || now - existing.firstAttempt > windowMs) {
+      result = { allowed: true };
+      return {
+        count: 1,
+        firstAttempt: now,
+        lastAttempt: now,
+      };
+    }
 
-  if (now - existing.lastAttempt < 2000) {
-    return { allowed: false, message: 'Please wait before trying again.' };
-  }
+    if (now - existing.lastAttempt < minimumIntervalMs) {
+      result = { allowed: false, message: 'Please wait before trying again.' };
+      return existing;
+    }
 
-  if (existing.count >= 5) {
-    const waitTime = Math.ceil((15 * 60 * 1000 - (now - existing.firstAttempt)) / 60000);
-    return { allowed: false, message: `Too many attempts. Wait ${waitTime} minute(s).` };
-  }
+    if (existing.count >= maxAttempts) {
+      const waitTime = Math.max(1, Math.ceil((windowMs - (now - existing.firstAttempt)) / 60000));
+      result = { allowed: false, message: `Too many attempts. Wait ${waitTime} minute(s).` };
+      return existing;
+    }
 
-  existing.count += 1;
-  existing.lastAttempt = now;
-  loginAttempts.set(key, existing);
-  return { allowed: true };
+    result = { allowed: true };
+    return {
+      ...existing,
+      count: existing.count + 1,
+      lastAttempt: now,
+    };
+  });
+  return result;
 }
 
-function clearRateLimit(event, email, scope = 'auth') {
-  loginAttempts.delete(getClientKey(event, email, scope));
+async function clearRateLimit(event, email, scope = 'auth') {
+  const key = getClientKey(event, email, scope);
+  await updateStoreEntry('rateLimits', key, () => null);
 }
 
 function randomToken() {
@@ -112,13 +126,11 @@ async function createSession(email) {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + SESSION_TTL_SECONDS * 1000).toISOString();
 
-  await updateStore(store => {
-    store.sessions[sessionId] = {
+  await updateStoreEntry('sessions', sessionId, () => ({
       email: normalizedEmail,
       createdAt: now.toISOString(),
       expiresAt,
-    };
-  });
+  }));
 
   return {
     token,
@@ -133,9 +145,7 @@ async function createSession(email) {
 async function destroySession(event) {
   const token = parseCookies(event.headers?.cookie || '')[SESSION_COOKIE];
   if (token) {
-    await updateStore(store => {
-      delete store.sessions[hashToken(token)];
-    });
+    await updateStoreEntry('sessions', hashToken(token), () => null);
   }
   return serializeCookie(SESSION_COOKIE, '', {
     ...getCookieOptions(),
@@ -149,25 +159,23 @@ async function getSession(event) {
   if (!token) return null;
 
   const sessionId = hashToken(token);
-  const store = await readStore();
-  const session = store.sessions[sessionId];
+  const session = await readStoreEntry('sessions', sessionId);
   if (!session) return null;
 
   if (new Date(session.expiresAt) <= new Date()) {
-    await updateStore(nextStore => {
-      delete nextStore.sessions[sessionId];
-    });
+    await updateStoreEntry('sessions', sessionId, () => null);
     return null;
   }
 
-  const user = store.users[normalizeEmail(session.email)];
+  const normalizedEmail = normalizeEmail(session.email);
+  const user = await readStoreEntry('users', normalizedEmail);
   if (!user) return null;
 
   return {
     sessionId,
-    email: normalizeEmail(session.email),
+    email: normalizedEmail,
     user,
-    hasPurchased: Boolean(store.entitlements[normalizeEmail(session.email)]),
+    hasPurchased: true,
     expiresAt: session.expiresAt,
   };
 }
@@ -177,7 +185,9 @@ function publicUser(user, hasPurchased, expiresAt) {
     email: user.email,
     name: user.name,
     createdAt: user.createdAt,
-    hasPurchased,
+    hasAccess: true,
+    // Kept true temporarily so previously cached clients do not show the retired paywall.
+    hasPurchased: true,
     expiresAt,
   };
 }

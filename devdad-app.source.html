@@ -2400,9 +2400,6 @@
       }
 
       function App() {
-      // Purchase Verification State
-      const [hasPurchased, setHasPurchased] = useState(false);
-      const [purchaseChecked, setPurchaseChecked] = useState(false);
       const [bootReady, setBootReady] = useState(false);
       
       // Navigation & UI State
@@ -2444,7 +2441,10 @@
       const [loginEmail, setLoginEmail] = useState('');
       const [loginPassword, setLoginPassword] = useState('');
       const [resetEmail, setResetEmail] = useState('');
-      const [resetCardLast4, setResetCardLast4] = useState('');
+      const [resetToken, setResetToken] = useState(() => {
+        if (typeof window === 'undefined') return '';
+        return new URLSearchParams(window.location.search).get('reset_token') || '';
+      });
       const [resetPassword, setResetPassword] = useState('');
       const [resetConfirmPassword, setResetConfirmPassword] = useState('');
       const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -3612,37 +3612,16 @@
 
         async function bootstrapApp() {
           const urlParams = new URLSearchParams(window.location.search);
-          const sessionId = urlParams.get('session_id');
+          const passwordResetToken = urlParams.get('reset_token') || '';
+          const passwordResetEmail = String(urlParams.get('email') || '').trim().toLowerCase();
           const storedQuizProfile = readStoredQuizProfile();
           const storedQuizEmail = String(storedQuizProfile?.email || '').trim().toLowerCase();
-          let checkoutVerified = false;
-          let checkoutEmail = '';
+
+          if (passwordResetToken) setResetToken(passwordResetToken);
+          if (passwordResetEmail) setResetEmail(passwordResetEmail);
 
           if (urlParams.toString()) {
             window.history.replaceState({}, document.title, window.location.pathname);
-          }
-
-          if (sessionId && sessionId.startsWith('cs_')) {
-            try {
-              checkoutEmail = sessionStorage.getItem('checkoutEmail') || '';
-              const purchaseResult = await apiRequest('/.netlify/functions/verify-purchase', {
-                method: 'POST',
-                body: JSON.stringify({ sessionId })
-              });
-
-              checkoutVerified = Boolean(purchaseResult.verified);
-
-              if (!cancelled && checkoutVerified) {
-                setHasPurchased(true);
-                if (checkoutEmail) {
-                  setEmail(checkoutEmail);
-                  setLoginEmail(checkoutEmail);
-                }
-                setSuccess('Purchase confirmed. Create your account or log in with this email to unlock the app.');
-                sessionStorage.removeItem('checkoutEmail');
-              }
-            } catch (error) {
-            }
           }
 
           try {
@@ -3656,37 +3635,33 @@
               setIsLoggedIn(true);
               setEmail(sessionResult.user.email);
               setSuccess('');
-              setHasPurchased(Boolean(sessionResult.user.hasPurchased) || checkoutVerified);
               restoreCoachCache(sessionResult.user.email);
 
               const { daysSince } = await loadUserData(sessionResult.user.email, { allowUnauthorizedFallback: true });
               if (cancelled) return;
 
-              setScreen(daysSince >= 3 ? 'welcome-back' : 'home');
+              setScreen(passwordResetToken ? 'reset-password' : (daysSince >= 3 ? 'welcome-back' : 'home'));
             } else {
               setCurrentUser(null);
               setIsLoggedIn(false);
-              setHasPurchased(checkoutVerified);
               if (storedQuizEmail) {
                 setEmail(storedQuizEmail);
                 setLoginEmail(storedQuizEmail);
               }
-              setScreen('welcome');
+              setScreen(passwordResetToken ? 'reset-password' : 'welcome');
             }
           } catch (error) {
             if (!cancelled) {
               setCurrentUser(null);
               setIsLoggedIn(false);
-              setHasPurchased(checkoutVerified);
               if (storedQuizEmail) {
                 setEmail(storedQuizEmail);
                 setLoginEmail(storedQuizEmail);
               }
-              setScreen('welcome');
+              setScreen(passwordResetToken ? 'reset-password' : 'welcome');
             }
           } finally {
             if (!cancelled) {
-              setPurchaseChecked(true);
               setBootReady(true);
             }
           }
@@ -3920,7 +3895,7 @@
       useEffect(() => {
         if (typeof window === 'undefined') return;
 
-        const appHistoryEnabled = bootReady && purchaseChecked && hasPurchased && !isAuthScreen;
+        const appHistoryEnabled = bootReady && isLoggedIn && !isAuthScreen;
 
         if (!appHistoryEnabled) {
           navHistoryReady.current = false;
@@ -3950,7 +3925,7 @@
         }
 
         window.history.pushState(nextState, '', window.location.pathname + window.location.search);
-      }, [screen, bootReady, purchaseChecked, hasPurchased, isAuthScreen]);
+      }, [screen, bootReady, isLoggedIn, isAuthScreen]);
 
       useEffect(() => {
         const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
@@ -4137,7 +4112,6 @@
           setCurrentUser(authenticatedUser);
           setIsLoggedIn(true);
           setEmail(authenticatedUser.email);
-          setHasPurchased(Boolean(authenticatedUser.hasPurchased));
           restoreCoachCache(authenticatedUser.email);
           const { appliedQuizSeed } = await loadUserData(authenticatedUser.email, { allowUnauthorizedFallback: true });
           setSuccess('Account created successfully!');
@@ -4197,7 +4171,6 @@
           setCurrentUser(authenticatedUser);
           setIsLoggedIn(true);
           setEmail(authenticatedUser.email);
-          setHasPurchased(Boolean(authenticatedUser.hasPurchased));
           restoreCoachCache(authenticatedUser.email);
           const { daysSince } = await loadUserData(authenticatedUser.email, { allowUnauthorizedFallback: true });
 
@@ -4215,14 +4188,9 @@
         }
       };
 
-      const handlePasswordReset = async () => {
+      const handlePasswordResetRequest = async () => {
         setError('');
         setSuccess('');
-
-        if (!resetEmail || !resetCardLast4 || !resetPassword || !resetConfirmPassword) {
-          setError('Please fill in all fields');
-          return;
-        }
 
         const normalizedEmail = sanitizeInput(resetEmail.toLowerCase().trim());
         if (!validateEmail(normalizedEmail)) {
@@ -4230,9 +4198,24 @@
           return;
         }
 
-        const normalizedCardLast4 = String(resetCardLast4 || '').replace(/\D/g, '').slice(-4);
-        if (!/^\d{4}$/.test(normalizedCardLast4)) {
-          setError('Enter the last 4 digits of the card used at checkout');
+        try {
+          const result = await apiRequest('/.netlify/functions/request-password-reset', {
+            method: 'POST',
+            body: JSON.stringify({ email: normalizedEmail })
+          });
+          setSuccess(result.message || 'If an account exists for that email, a reset link has been sent.');
+        } catch (error) {
+          setError(error.message || 'Unable to request a reset link. Please try again.');
+        }
+      };
+
+      const handlePasswordReset = async () => {
+        setError('');
+        setSuccess('');
+
+        const normalizedEmail = sanitizeInput(resetEmail.toLowerCase().trim());
+        if (!validateEmail(normalizedEmail) || !resetToken) {
+          setError('This reset link is invalid or has expired.');
           return;
         }
 
@@ -4252,7 +4235,7 @@
             method: 'POST',
             body: JSON.stringify({
               email: normalizedEmail,
-              cardLast4: normalizedCardLast4,
+              token: resetToken,
               newPassword: resetPassword,
               confirmNewPassword: resetConfirmPassword
             })
@@ -4264,7 +4247,6 @@
           setCurrentUser(authenticatedUser);
           setIsLoggedIn(true);
           setEmail(authenticatedUser.email);
-          setHasPurchased(Boolean(authenticatedUser.hasPurchased));
           restoreCoachCache(authenticatedUser.email);
           const { daysSince } = await loadUserData(authenticatedUser.email, { allowUnauthorizedFallback: true });
 
@@ -4272,7 +4254,7 @@
           setLoginEmail(authenticatedUser.email);
           setLoginPassword('');
           setResetEmail('');
-          setResetCardLast4('');
+          setResetToken('');
           setResetPassword('');
           setResetConfirmPassword('');
 
@@ -4320,7 +4302,7 @@
         setLoginEmail('');
         setLoginPassword('');
         setResetEmail('');
-        setResetCardLast4('');
+        setResetToken('');
         setResetPassword('');
         setResetConfirmPassword('');
         setWorkoutStarted(false);
@@ -4329,7 +4311,6 @@
         setShowGoalsModal(false);
         setShowSkipRestModal(false);
         setSkipRestWarningLevel(0);
-        setHasPurchased(false);
         resetUserScopedState();
         setError('');
         setSuccess('');
@@ -4898,73 +4879,8 @@
 
       return (
         <div className="max-w-md mx-auto min-h-screen shadow-2xl" style={{background:'var(--bg-app-shell)', boxShadow:'0 30px 80px rgba(0,0,0,0.32)', position:'relative', zIndex:1}}>
-          {/* Purchase Gate - Show if not purchased */}
-          {bootReady && purchaseChecked && !hasPurchased && !isAuthScreen && (
-            <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{background: 'var(--bg-atmosphere)'}}>
-              <div className="max-w-md w-full text-center">
-                <h2 className="text-3xl font-bold mb-2 text-white">Dev<span style={{color:'#f97316'}}>Dad</span> Strength</h2>
-                <p className="mb-8" style={{color:'#a3a3a3'}}>The 30-Minute Strength System</p>
-
-                <div className="rounded-lg p-6 mb-6 text-left" style={{background:'#1a1a1a', border:'1px solid #262626'}}>
-                  <h3 className="font-bold text-lg mb-1 text-white">Already purchased?</h3>
-                  <p className="text-sm mb-4" style={{color:'#a3a3a3'}}>Create an account or log in with the same email you used at checkout. Access unlocks automatically when the purchase email matches your account.</p>
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      className="nav-cta flex-1"
-                      onClick={() => {
-                        setError('');
-                        setSuccess('');
-                        setEmail(loginEmail || email);
-                        setScreen('signup');
-                      }}
-                    >
-                      Create Account
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-secondary flex-1"
-                      onClick={() => {
-                        setError('');
-                        setSuccess('');
-                        setScreen('login');
-                      }}
-                    >
-                      Log In
-                    </button>
-                  </div>
-                </div>
-
-                <div
-                  role="status"
-                  aria-live="polite"
-                  style={{
-                    display: 'block',
-                    background: 'transparent',
-                    color: '#a3a3a3',
-                    padding: '12px 32px',
-                    borderRadius: '8px',
-                    fontWeight: '600',
-                    fontSize: '15px',
-                    border: '1px solid #262626',
-                  }}
-                >
-                  Current Price • $47 One-Time
-                </div>
-
-                <p className="text-sm mt-4" style={{color:'#a3a3a3'}}>
-                  Public pricing remains $47 one-time. Existing purchasers can still log in or create an account with their purchase email.
-                </p>
-
-                <p className="text-sm mt-6" style={{color:'#737373'}}>
-                  Questions? <a href="mailto:devdad.desk@gmail.com" style={{color:'#f97316'}}>devdad.desk@gmail.com</a>
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Main App - Show only if purchased or purchase not checked yet */}
-          {(screen === 'booting' || !bootReady || !purchaseChecked || hasPurchased || isAuthScreen) && (
+          {/* Registration gate: app screens render only for authenticated users. */}
+          {(screen === 'booting' || !bootReady || isLoggedIn || isAuthScreen) && (
             <>
           {showGoalsModal && <GoalsModal />}
           {showSkipRestModal && <SkipRestDayModal />}
@@ -5016,7 +4932,7 @@
                 <button onClick={() => {setError(''); setSuccess(''); setScreen('welcome');}} className="back-button mb-6">←</button>
                 
                 <h2 className="text-2xl font-bold mb-2 text-white">Create Your Account</h2>
-                <p className="text-gray-400 mb-6">Use the same email you purchased with to unlock your account. Public pricing remains $47 one-time while new member access is closed.</p>
+                <p className="text-gray-400 mb-6">DevDad Strength is free. Create an account to save your plan and progress securely.</p>
 
                 {error && <div className="error-box">{error}</div>}
                 {success && <div className="success-box">{success}</div>}
@@ -5056,8 +4972,8 @@
                       <p className="text-sm text-gray-400">12-week progressive program</p>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-lg" style={{color: '#f97316'}}>$47</div>
-                      <div className="text-xs text-gray-500">one-time</div>
+                      <div className="font-bold text-lg" style={{color: '#f97316'}}>Free</div>
+                      <div className="text-xs text-gray-500">account required</div>
                     </div>
                   </div>
                   <div className="space-y-2 text-sm text-gray-300">
@@ -5088,12 +5004,8 @@
                   Create Account
                 </button>
 
-                <button className="btn-secondary mb-3" type="button" onClick={() => { window.location.href = '/#launch-status'; }}>
-                  View Pricing • $47
-                </button>
-
                 <p className="text-xs text-center text-gray-500 mt-4">
-                  Public access will reopen from the main site. Existing purchasers can still log in here.
+                  Registration is required so your workout history and settings stay connected to your account.
                 </p>
 
                 <p className="text-sm text-center text-gray-400 mt-6">
@@ -5145,7 +5057,7 @@
                       setError('');
                       setSuccess('');
                       setResetEmail(loginEmail || email || '');
-                      setResetCardLast4('');
+                      setResetToken('');
                       setResetPassword('');
                       setResetConfirmPassword('');
                       setScreen('reset-password');
@@ -5168,7 +5080,9 @@
                 <button onClick={() => {setError(''); setSuccess(''); setScreen('login');}} className="back-button mb-6">←</button>
 
                 <h2 className="text-2xl font-bold mb-2 text-white">Reset Password</h2>
-                <p className="text-gray-400 mb-6">Enter the checkout email and the last 4 digits of the card you used to purchase access.</p>
+                <p className="text-gray-400 mb-6">
+                  {resetToken ? 'Choose a new password for your account.' : 'Enter your account email and we will send you a secure reset link.'}
+                </p>
 
                 {error && <div className="error-box">{error}</div>}
                 {success && <div className="success-box">{success}</div>}
@@ -5176,46 +5090,41 @@
                 <div className="space-y-4 mb-6">
                   <input
                     type="email"
-                    placeholder="Purchase Email"
+                    placeholder="Account Email"
                     value={resetEmail}
+                    disabled={Boolean(resetToken)}
                     onChange={(e) => setResetEmail(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
+                    onKeyDown={(e) => e.key === 'Enter' && (resetToken ? handlePasswordReset() : handlePasswordResetRequest())}
                     autoComplete="email"
                   />
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength="4"
-                    placeholder="Card Last 4"
-                    value={resetCardLast4}
-                    onChange={(e) => setResetCardLast4(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
-                    autoComplete="off"
-                  />
-                  <input
-                    type="password"
-                    placeholder="New Password"
-                    value={resetPassword}
-                    onChange={(e) => setResetPassword(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
-                    autoComplete="new-password"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Confirm New Password"
-                    value={resetConfirmPassword}
-                    onChange={(e) => setResetConfirmPassword(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
-                    autoComplete="new-password"
-                  />
+                  {resetToken && (
+                    <>
+                      <input
+                        type="password"
+                        placeholder="New Password"
+                        value={resetPassword}
+                        onChange={(e) => setResetPassword(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
+                        autoComplete="new-password"
+                      />
+                      <input
+                        type="password"
+                        placeholder="Confirm New Password"
+                        value={resetConfirmPassword}
+                        onChange={(e) => setResetConfirmPassword(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
+                        autoComplete="new-password"
+                      />
+                    </>
+                  )}
                 </div>
 
-                <button className="nav-cta mb-3" onClick={handlePasswordReset}>
-                  Reset Password
+                <button className="nav-cta mb-3" onClick={resetToken ? handlePasswordReset : handlePasswordResetRequest}>
+                  {resetToken ? 'Reset Password' : 'Send Reset Link'}
                 </button>
 
                 <p className="text-sm text-center text-gray-500 mb-6">
-                  This works for paid accounts verified through Stripe card checkout. If the purchase used a different payment method, contact <a href="mailto:devdad.desk@gmail.com" className="text-orange-300">devdad.desk@gmail.com</a>.
+                  Reset links expire after 30 minutes and can only be used once.
                 </p>
 
                 <p className="text-sm text-center text-gray-400">

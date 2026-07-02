@@ -1,5 +1,5 @@
 const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
-const { getSession, checkRateLimit, clearRateLimit } = require('./_auth');
+const { getSession, checkRateLimit } = require('./_auth');
 
 function roundToIncrement(value, increment) {
   return Math.round(value / increment) * increment;
@@ -240,7 +240,11 @@ exports.handler = async (event) => {
     return json(401, { error: 'Unauthorized' });
   }
 
-  const rateLimit = checkRateLimit(event, session.email, 'ai-coach');
+  const rateLimit = await checkRateLimit(event, session.email, 'ai-coach', {
+    maxAttempts: 20,
+    windowMs: 60 * 60 * 1000,
+    minimumIntervalMs: 2000,
+  });
   if (!rateLimit.allowed) {
     return json(429, { error: rateLimit.message });
   }
@@ -264,7 +268,6 @@ exports.handler = async (event) => {
 
   try {
     const coach = await createOpenAICoach(snapshot, fallback);
-    clearRateLimit(event, session.email, 'ai-coach');
     return json(200, { coach });
   } catch (error) {
     return json(200, {

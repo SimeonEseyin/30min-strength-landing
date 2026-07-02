@@ -12,6 +12,17 @@ const rootDir = path.resolve(__dirname, '..', '..');
 const tempDataDir = path.join(process.env.TMPDIR || '/tmp', 'devdad-data');
 const STORE_BLOB_KEY = 'store';
 const STORE_NAMESPACE = 'devdad-data';
+const ENTITY_STORE_PREFIX = 'v2/entities/';
+const ENTITY_STORE_MARKER = 'v2/migrated';
+const STORE_COLLECTIONS = [
+  'users',
+  'entitlements',
+  'sessions',
+  'userData',
+  'pushSubscriptions',
+  'passwordResets',
+  'rateLimits',
+];
 
 function getPreferredDataDir() {
   if (process.env.DEVDAD_DATA_DIR) {
@@ -163,6 +174,8 @@ function defaultStore() {
     sessions: {},
     userData: {},
     pushSubscriptions: {},
+    passwordResets: {},
+    rateLimits: {},
   };
 }
 
@@ -256,19 +269,99 @@ function mergeDefaults(store) {
   if (!merged.sessions || typeof merged.sessions !== 'object') merged.sessions = {};
   if (!merged.userData || typeof merged.userData !== 'object') merged.userData = {};
   if (!merged.pushSubscriptions || typeof merged.pushSubscriptions !== 'object') merged.pushSubscriptions = {};
+  if (!merged.passwordResets || typeof merged.passwordResets !== 'object') merged.passwordResets = {};
+  if (!merged.rateLimits || typeof merged.rateLimits !== 'object') merged.rateLimits = {};
 
   return merged;
+}
+
+function encodeStoreKey(value) {
+  return Buffer.from(String(value), 'utf8').toString('base64url');
+}
+
+function decodeStoreKey(value) {
+  return Buffer.from(String(value), 'base64url').toString('utf8');
+}
+
+function getEntityBlobKey(collection, key) {
+  return `${ENTITY_STORE_PREFIX}${collection}/${encodeStoreKey(key)}`;
+}
+
+async function hasEntityStore(blobStore) {
+  return Boolean(await blobStore.get(ENTITY_STORE_MARKER, { consistency: 'strong' }));
+}
+
+async function listAllEntityBlobs(blobStore) {
+  const blobs = [];
+  for await (const page of blobStore.list({ prefix: ENTITY_STORE_PREFIX, paginate: true })) {
+    blobs.push(...page.blobs);
+  }
+  return blobs;
+}
+
+async function readEntityStore(blobStore) {
+  if (!(await hasEntityStore(blobStore))) {
+    const legacyStore = await blobStore.get(STORE_BLOB_KEY, {
+      type: 'json',
+      consistency: 'strong',
+    });
+    return { store: mergeDefaults(legacyStore || defaultStore()), migrated: false };
+  }
+
+  const store = defaultStore();
+  const blobs = await listAllEntityBlobs(blobStore);
+  await Promise.all(blobs.map(async ({ key: blobKey }) => {
+    const relativeKey = blobKey.slice(ENTITY_STORE_PREFIX.length);
+    const separator = relativeKey.indexOf('/');
+    if (separator === -1) return;
+
+    const collection = relativeKey.slice(0, separator);
+    if (!STORE_COLLECTIONS.includes(collection)) return;
+
+    const encodedKey = relativeKey.slice(separator + 1);
+    const value = await blobStore.get(blobKey, { type: 'json', consistency: 'strong' });
+    if (value !== null && value !== undefined) {
+      store[collection][decodeStoreKey(encodedKey)] = value;
+    }
+  }));
+
+  return { store: mergeDefaults(store), migrated: true };
+}
+
+function valuesMatch(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+async function persistEntityChanges(blobStore, previousStore, nextStore, writeEverything = false) {
+  const writes = [];
+
+  for (const collection of STORE_COLLECTIONS) {
+    const previous = previousStore[collection] || {};
+    const next = nextStore[collection] || {};
+    const keys = new Set([...Object.keys(previous), ...Object.keys(next)]);
+
+    for (const key of keys) {
+      const blobKey = getEntityBlobKey(collection, key);
+      if (!Object.prototype.hasOwnProperty.call(next, key)) {
+        writes.push(blobStore.delete(blobKey));
+      } else if (writeEverything || !valuesMatch(previous[key], next[key])) {
+        writes.push(blobStore.setJSON(blobKey, next[key]));
+      }
+    }
+  }
+
+  await Promise.all(writes);
+  if (writeEverything) {
+    await blobStore.set(ENTITY_STORE_MARKER, new Date().toISOString());
+  }
 }
 
 async function readStore() {
   const blobStore = getBlobStore();
   if (blobStore) {
     try {
-      const store = await blobStore.get(STORE_BLOB_KEY, {
-        type: 'json',
-        consistency: 'strong',
-      });
-      return mergeDefaults(store || defaultStore());
+      const { store } = await readEntityStore(blobStore);
+      return store;
     } catch (error) {
       if (isRecoverableStoreError(error)) {
         return mergeDefaults(defaultStore());
@@ -313,21 +406,20 @@ async function writeStore(store) {
   }
 
   const storeFile = ensureStoreFile();
-  await fs.promises.writeFile(storeFile, JSON.stringify(mergeDefaults(store), null, 2));
+  const temporaryFile = `${storeFile}.${process.pid}.${Date.now()}.tmp`;
+  await fs.promises.writeFile(temporaryFile, JSON.stringify(mergeDefaults(store), null, 2));
+  await fs.promises.rename(temporaryFile, storeFile);
 }
 
 async function updateStore(mutator) {
-  writeChain = writeChain.then(async () => {
+  const operation = writeChain.catch(() => {}).then(async () => {
     const blobStore = getBlobStore();
     if (blobStore) {
       try {
-        const existing = await blobStore.get(STORE_BLOB_KEY, {
-          consistency: 'strong',
-          type: 'json',
-        });
-        const store = mergeDefaults(existing || defaultStore());
+        const { store, migrated } = await readEntityStore(blobStore);
+        const previousStore = structuredClone(store);
         const result = await mutator(store);
-        await blobStore.setJSON(STORE_BLOB_KEY, store);
+        await persistEntityChanges(blobStore, previousStore, mergeDefaults(store), !migrated);
         return result;
       } catch (error) {
         if (!canUseLocalFileStore() || !shouldFallbackFromBlobError(error)) {
@@ -342,7 +434,74 @@ async function updateStore(mutator) {
     await writeStore(store);
     return result;
   });
-  return writeChain;
+  writeChain = operation.catch(() => {});
+  return operation;
+}
+
+function assertStoreCollection(collection) {
+  if (!STORE_COLLECTIONS.includes(collection)) {
+    throw new Error(`Unknown store collection: ${collection}`);
+  }
+}
+
+async function readStoreEntry(collection, key) {
+  assertStoreCollection(collection);
+  const normalizedKey = String(key);
+  const blobStore = getBlobStore();
+
+  if (blobStore) {
+    try {
+      if (await hasEntityStore(blobStore)) {
+        return await blobStore.get(getEntityBlobKey(collection, normalizedKey), {
+          type: 'json',
+          consistency: 'strong',
+        });
+      }
+    } catch (error) {
+      if (!canUseLocalFileStore() || !shouldFallbackFromBlobError(error)) throw error;
+      disableBlobStore();
+    }
+  }
+
+  const store = await readStore();
+  return store[collection][normalizedKey] ?? null;
+}
+
+async function updateStoreEntry(collection, key, mutator) {
+  assertStoreCollection(collection);
+  const normalizedKey = String(key);
+  const blobStore = getBlobStore();
+
+  if (blobStore) {
+    try {
+      if (await hasEntityStore(blobStore)) {
+        const blobKey = getEntityBlobKey(collection, normalizedKey);
+        const existing = await blobStore.get(blobKey, { type: 'json', consistency: 'strong' });
+        const next = await mutator(existing ?? null);
+        if (next === null || next === undefined) await blobStore.delete(blobKey);
+        else await blobStore.setJSON(blobKey, next);
+        return next;
+      }
+    } catch (error) {
+      if (!canUseLocalFileStore() || !shouldFallbackFromBlobError(error)) throw error;
+      disableBlobStore();
+    }
+  }
+
+  return updateStore(store => {
+    const existing = store[collection][normalizedKey] ?? null;
+    const next = mutator(existing);
+    if (next && typeof next.then === 'function') {
+      return next.then(resolved => {
+        if (resolved === null || resolved === undefined) delete store[collection][normalizedKey];
+        else store[collection][normalizedKey] = resolved;
+        return resolved;
+      });
+    }
+    if (next === null || next === undefined) delete store[collection][normalizedKey];
+    else store[collection][normalizedKey] = next;
+    return next;
+  });
 }
 
 function getUserData(store, email) {
@@ -416,5 +575,7 @@ module.exports = {
   normalizeEmail,
   readStore,
   updateStore,
+  readStoreEntry,
+  updateStoreEntry,
   getUserData,
 };

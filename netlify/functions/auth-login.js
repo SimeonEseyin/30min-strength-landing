@@ -1,6 +1,5 @@
 const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
-const { getPublicStoreError, normalizeEmail, readStore, updateStore } = require('./_store');
-const { restoreStripeEntitlementByEmail } = require('./_entitlements');
+const { getPublicStoreError, normalizeEmail, readStoreEntry, updateStoreEntry } = require('./_store');
 const {
   validateEmail,
   checkRateLimit,
@@ -33,20 +32,19 @@ exports.handler = async (event) => {
     return json(400, { error: 'Invalid email format' });
   }
 
-  const rateLimit = checkRateLimit(event, normalizedEmail, 'login');
+  const rateLimit = await checkRateLimit(event, normalizedEmail, 'login');
   if (!rateLimit.allowed) {
     return json(429, { error: rateLimit.message });
   }
 
-  let store;
+  let user;
   try {
-    store = await readStore();
+    user = await readStoreEntry('users', normalizedEmail);
   } catch (error) {
     const publicError = getPublicStoreError(error);
     return json(publicError.statusCode || 500, { error: publicError.message || 'Login failed. Please try again.' });
   }
 
-  const user = store.users[normalizedEmail];
   if (!user) {
     return json(401, { error: 'Invalid email or password' });
   }
@@ -56,14 +54,13 @@ exports.handler = async (event) => {
     return json(401, { error: 'Invalid email or password' });
   }
 
-  clearRateLimit(event, normalizedEmail, 'login');
+  await clearRateLimit(event, normalizedEmail, 'login');
   let session;
   try {
-    await updateStore(nextStore => {
-      if (nextStore.users[normalizedEmail]) {
-        nextStore.users[normalizedEmail].updatedAt = new Date().toISOString();
-        nextStore.users[normalizedEmail].lastLoginAt = new Date().toISOString();
-      }
+    await updateStoreEntry('users', normalizedEmail, currentUser => {
+      if (!currentUser) return null;
+      const now = new Date().toISOString();
+      return { ...currentUser, updatedAt: now, lastLoginAt: now };
     });
 
     session = await createSession(normalizedEmail);
@@ -72,17 +69,8 @@ exports.handler = async (event) => {
     return json(publicError.statusCode || 500, { error: publicError.message || 'Login failed. Please try again.' });
   }
 
-  let hasPurchased = Boolean(store.entitlements[normalizedEmail]);
-  if (!hasPurchased) {
-    try {
-      hasPurchased = await restoreStripeEntitlementByEmail(normalizedEmail);
-    } catch {
-      hasPurchased = false;
-    }
-  }
-
   return json(200, {
-    user: publicUser(user, hasPurchased, session.expiresAt),
+    user: publicUser(user, true, session.expiresAt),
   }, {
     'Set-Cookie': session.cookie,
   });
