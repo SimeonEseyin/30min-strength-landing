@@ -1,7 +1,6 @@
 const { json } = require('./_response');
 const { getPublicStoreError } = require('./_store');
 const { getSession, publicUser } = require('./_auth');
-const { restoreStripeEntitlementByEmail } = require('./_entitlements');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'GET') {
@@ -20,16 +19,7 @@ exports.handler = async (event) => {
     return json(200, { user: null });
   }
 
-  let hasPurchased = session.hasPurchased;
-  if (!hasPurchased) {
-    try {
-      hasPurchased = await restoreStripeEntitlementByEmail(session.email);
-    } catch {
-      hasPurchased = false;
-    }
-  }
-
   return json(200, {
-    user: publicUser(session.user, hasPurchased, session.expiresAt),
+    user: publicUser(session.user, true, session.expiresAt),
   });
 };

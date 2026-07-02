@@ -956,6 +956,7 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="/analytics.js"></script>
 </head>
 <body>
   <div id="root"></div>
@@ -2220,6 +2221,42 @@
         );
       }
 
+      function PaidCoachCard({ compact = false, interestStatus = 'idle', onJoin }) {
+        const joined = interestStatus === 'joined';
+        const joining = interestStatus === 'joining';
+        return (
+          <div
+            className={`card ${compact ? 'mb-4' : 'mb-6'}`}
+            style={{background:'linear-gradient(180deg, rgba(249,115,22,0.08) 0%, rgba(255,255,255,0.03) 100%)', border:'1px solid rgba(249,115,22,0.16)'}}
+          >
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <div>
+                <div className="section-label" style={{marginBottom:'8px', color:'#fdba74'}}>AI COACH</div>
+                <div className="font-semibold text-white">Personalized coaching is a paid feature</div>
+              </div>
+              <div className="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]" style={{background:'rgba(249,115,22,0.12)', color:'#fdba74', border:'1px solid rgba(249,115,22,0.18)'}}>
+                Premium
+              </div>
+            </div>
+            <p className="text-sm text-gray-400">
+              The free plan includes the complete 12-week program, workout tracking, timers, and progress history. AI recommendations will be available with a future paid plan.
+            </p>
+            <button
+              type="button"
+              className="btn-secondary mt-4"
+              disabled={joining || joined}
+              onClick={onJoin}
+              style={joined ? {opacity:0.8, cursor:'default'} : undefined}
+            >
+              {joining ? 'Joining…' : joined ? '✓ You’re on the early-access list' : 'Join AI Coach Early Access'}
+            </button>
+            {interestStatus === 'error' && (
+              <div className="text-xs text-red-300 mt-2">Could not save your interest. Please try again.</div>
+            )}
+          </div>
+        );
+      }
+
       function CoachInsightCard({ coach, status, compact = false }) {
         const [isExpanded, setIsExpanded] = React.useState(false);
 
@@ -2400,9 +2437,6 @@
       }
 
       function App() {
-      // Purchase Verification State
-      const [hasPurchased, setHasPurchased] = useState(false);
-      const [purchaseChecked, setPurchaseChecked] = useState(false);
       const [bootReady, setBootReady] = useState(false);
       
       // Navigation & UI State
@@ -2441,10 +2475,16 @@
       const [email, setEmail] = useState('');
       const [password, setPassword] = useState('');
       const [confirmPassword, setConfirmPassword] = useState('');
+      const [termsAccepted, setTermsAccepted] = useState(false);
+      const [pendingVerificationEmail, setPendingVerificationEmail] = useState('');
+      const [verificationResendStatus, setVerificationResendStatus] = useState('idle');
       const [loginEmail, setLoginEmail] = useState('');
       const [loginPassword, setLoginPassword] = useState('');
       const [resetEmail, setResetEmail] = useState('');
-      const [resetCardLast4, setResetCardLast4] = useState('');
+      const [resetToken, setResetToken] = useState(() => {
+        if (typeof window === 'undefined') return '';
+        return new URLSearchParams(window.location.search).get('reset_token') || '';
+      });
       const [resetPassword, setResetPassword] = useState('');
       const [resetConfirmPassword, setResetConfirmPassword] = useState('');
       const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -2476,6 +2516,7 @@
       const [daysSinceLastWorkout, setDaysSinceLastWorkout] = useState(0);
       const [aiCoach, setAiCoach] = useState(null);
       const [aiCoachStatus, setAiCoachStatus] = useState('idle');
+      const [premiumInterestStatus, setPremiumInterestStatus] = useState('idle');
       const [planConfig, setPlanConfig] = useState({
         focus: 'Build strength',
         sessionLength: 30,
@@ -2542,7 +2583,7 @@
         lastAdjustedAt: null
       };
 
-      const isAuthScreen = ['welcome', 'signup', 'login', 'reset-password'].includes(screen);
+      const isAuthScreen = ['welcome', 'signup', 'login', 'reset-password', 'verify-email-pending'].includes(screen);
       const totalWeeks = 12;
       const currentPhase = currentWeek <= 4 ? 'Foundation' : currentWeek <= 8 ? 'Build' : 'Peak';
       const workoutsPerWeek = planConfig.scheduleTemplate === '4-day' ? 4 : 3;
@@ -2556,6 +2597,7 @@
       const lastAiSnapshot = React.useRef('');
       const navHistoryReady = React.useRef(false);
       const suppressHistoryPush = React.useRef(false);
+      const trackedSignupStart = React.useRef(false);
       const [showNotificationDebugTools] = useState(() => {
         if (typeof window === 'undefined') return false;
         return new URLSearchParams(window.location.search).get('debug') === '1';
@@ -2918,6 +2960,21 @@
         }
 
         return payload;
+      }
+
+      async function handlePremiumInterest() {
+        if (premiumInterestStatus === 'joining' || premiumInterestStatus === 'joined') return;
+        window.DevDadAnalytics?.track('premium_interest_clicked');
+        setPremiumInterestStatus('joining');
+        try {
+          await apiRequest('/.netlify/functions/premium-interest', {
+            method: 'POST',
+            body: JSON.stringify({ feature: 'ai-coach' })
+          });
+          setPremiumInterestStatus('joined');
+        } catch (error) {
+          setPremiumInterestStatus('error');
+        }
       }
 
       function delay(ms) {
@@ -3612,37 +3669,61 @@
 
         async function bootstrapApp() {
           const urlParams = new URLSearchParams(window.location.search);
-          const sessionId = urlParams.get('session_id');
+          const passwordResetToken = urlParams.get('reset_token') || '';
+          const passwordResetEmail = String(urlParams.get('email') || '').trim().toLowerCase();
+          const emailVerificationToken = urlParams.get('verify_token') || '';
+          const emailVerificationEmail = String(urlParams.get('email') || '').trim().toLowerCase();
           const storedQuizProfile = readStoredQuizProfile();
           const storedQuizEmail = String(storedQuizProfile?.email || '').trim().toLowerCase();
-          let checkoutVerified = false;
-          let checkoutEmail = '';
+          const shouldStartSignup = urlParams.get('signup') === '1' || Boolean(storedQuizProfile);
+
+          if (passwordResetToken) setResetToken(passwordResetToken);
+          if (passwordResetEmail) setResetEmail(passwordResetEmail);
 
           if (urlParams.toString()) {
             window.history.replaceState({}, document.title, window.location.pathname);
           }
 
-          if (sessionId && sessionId.startsWith('cs_')) {
+          if (emailVerificationToken && emailVerificationEmail) {
+            let verificationResult;
             try {
-              checkoutEmail = sessionStorage.getItem('checkoutEmail') || '';
-              const purchaseResult = await apiRequest('/.netlify/functions/verify-purchase', {
+              verificationResult = await apiRequest('/.netlify/functions/verify-email', {
                 method: 'POST',
-                body: JSON.stringify({ sessionId })
+                body: JSON.stringify({ email: emailVerificationEmail, token: emailVerificationToken })
               });
-
-              checkoutVerified = Boolean(purchaseResult.verified);
-
-              if (!cancelled && checkoutVerified) {
-                setHasPurchased(true);
-                if (checkoutEmail) {
-                  setEmail(checkoutEmail);
-                  setLoginEmail(checkoutEmail);
-                }
-                setSuccess('Purchase confirmed. Create your account or log in with this email to unlock the app.');
-                sessionStorage.removeItem('checkoutEmail');
+            } catch (verificationError) {
+              if (!cancelled) {
+                setPendingVerificationEmail(emailVerificationEmail);
+                setError(verificationError.message || 'This verification link is invalid or has expired.');
+                setScreen('verify-email-pending');
+                setBootReady(true);
               }
-            } catch (error) {
+              return;
             }
+
+            if (cancelled) return;
+            const authenticatedUser = verificationResult.user;
+            hydrationReady.current = false;
+            setCurrentUser(authenticatedUser);
+            setIsLoggedIn(true);
+            setEmail(authenticatedUser.email);
+            restoreCoachCache(authenticatedUser.email);
+
+            let daysSince = 0;
+            let appliedQuizSeed = false;
+            try {
+              const loaded = await loadUserData(authenticatedUser.email, { allowUnauthorizedFallback: true });
+              daysSince = loaded.daysSince || 0;
+              appliedQuizSeed = Boolean(loaded.appliedQuizSeed);
+            } catch (loadError) {
+            }
+
+            if (cancelled) return;
+            setShowGoalsModal(!appliedQuizSeed);
+            setSuccess(verificationResult.message || 'Email verified. Your account is ready.');
+            setScreen(daysSince >= 3 ? 'welcome-back' : 'home');
+            setBootReady(true);
+            return;
           }
 
           try {
@@ -3656,37 +3737,33 @@
               setIsLoggedIn(true);
               setEmail(sessionResult.user.email);
               setSuccess('');
-              setHasPurchased(Boolean(sessionResult.user.hasPurchased) || checkoutVerified);
               restoreCoachCache(sessionResult.user.email);
 
               const { daysSince } = await loadUserData(sessionResult.user.email, { allowUnauthorizedFallback: true });
               if (cancelled) return;
 
-              setScreen(daysSince >= 3 ? 'welcome-back' : 'home');
+              setScreen(passwordResetToken ? 'reset-password' : (daysSince >= 3 ? 'welcome-back' : 'home'));
             } else {
               setCurrentUser(null);
               setIsLoggedIn(false);
-              setHasPurchased(checkoutVerified);
               if (storedQuizEmail) {
                 setEmail(storedQuizEmail);
                 setLoginEmail(storedQuizEmail);
               }
-              setScreen('welcome');
+              setScreen(passwordResetToken ? 'reset-password' : (shouldStartSignup ? 'signup' : 'welcome'));
             }
           } catch (error) {
             if (!cancelled) {
               setCurrentUser(null);
               setIsLoggedIn(false);
-              setHasPurchased(checkoutVerified);
               if (storedQuizEmail) {
                 setEmail(storedQuizEmail);
                 setLoginEmail(storedQuizEmail);
               }
-              setScreen('welcome');
+              setScreen(passwordResetToken ? 'reset-password' : (shouldStartSignup ? 'signup' : 'welcome'));
             }
           } finally {
             if (!cancelled) {
-              setPurchaseChecked(true);
               setBootReady(true);
             }
           }
@@ -3698,6 +3775,13 @@
           cancelled = true;
         };
       }, []);
+
+      useEffect(() => {
+        if (screen === 'signup' && !trackedSignupStart.current) {
+          trackedSignupStart.current = true;
+          window.DevDadAnalytics?.track('signup_started');
+        }
+      }, [screen]);
 
       useEffect(() => {
         const standalone = typeof window !== 'undefined' && (
@@ -3864,44 +3948,6 @@
       ]);
 
       useEffect(() => {
-        if (!isLoggedIn || !currentUser || !hydrationReady.current) return;
-
-        const snapshot = buildAiCoachSnapshot();
-        const serializedSnapshot = JSON.stringify(snapshot);
-        if (serializedSnapshot === lastAiSnapshot.current) return;
-
-        const timeoutId = setTimeout(async () => {
-          setAiCoachStatus('loading');
-          try {
-            const result = await apiRequest('/.netlify/functions/ai-coach', {
-              method: 'POST',
-              body: JSON.stringify({ snapshot })
-            });
-            setAiCoach(result.coach || null);
-            setAiCoachStatus('ready');
-            lastAiSnapshot.current = serializedSnapshot;
-            persistCoachCache(currentUser?.email, result.coach || null, serializedSnapshot);
-          } catch (error) {
-            setAiCoachStatus('error');
-          }
-        }, 500);
-
-        return () => clearTimeout(timeoutId);
-      }, [
-        currentWeek,
-        currentDay,
-        currentCycleNumber,
-        currentPhase,
-        daysSinceLastWorkout,
-        settings.units,
-        goals,
-        workoutFeedback,
-        exerciseWeights,
-        isLoggedIn,
-        currentUser
-      ]);
-
-      useEffect(() => {
         if (typeof window === 'undefined') return undefined;
 
         const handlePopState = (event) => {
@@ -3920,7 +3966,7 @@
       useEffect(() => {
         if (typeof window === 'undefined') return;
 
-        const appHistoryEnabled = bootReady && purchaseChecked && hasPurchased && !isAuthScreen;
+        const appHistoryEnabled = bootReady && isLoggedIn && !isAuthScreen;
 
         if (!appHistoryEnabled) {
           navHistoryReady.current = false;
@@ -3950,7 +3996,7 @@
         }
 
         window.history.pushState(nextState, '', window.location.pathname + window.location.search);
-      }, [screen, bootReady, purchaseChecked, hasPurchased, isAuthScreen]);
+      }, [screen, bootReady, isLoggedIn, isAuthScreen]);
 
       useEffect(() => {
         const workoutInfo = getWorkoutInfo(currentDay, currentWeek);
@@ -4121,36 +4167,28 @@
           return;
         }
 
+        if (!termsAccepted) {
+          setError('You must accept the Terms of Service and Privacy Policy');
+          return;
+        }
+
         try {
           const result = await apiRequest('/.netlify/functions/auth-signup', {
             method: 'POST',
             body: JSON.stringify({
               email: normalizedEmail,
               password,
-              confirmPassword
+              confirmPassword,
+              termsAccepted: true,
+              analytics: window.DevDadAnalytics?.getContext?.() || null
             })
           });
-
-          const sessionUser = await waitForAuthenticatedSession(result.user.email);
-          const authenticatedUser = sessionUser || result.user;
-          hydrationReady.current = false;
-          setCurrentUser(authenticatedUser);
-          setIsLoggedIn(true);
-          setEmail(authenticatedUser.email);
-          setHasPurchased(Boolean(authenticatedUser.hasPurchased));
-          restoreCoachCache(authenticatedUser.email);
-          const { appliedQuizSeed } = await loadUserData(authenticatedUser.email, { allowUnauthorizedFallback: true });
-          setSuccess('Account created successfully!');
-
-          setTimeout(() => {
-            setShowGoalsModal(!appliedQuizSeed);
-            setScreen('home');
-            setError('');
-            setSuccess('');
-            setEmail('');
-            setPassword('');
-            setConfirmPassword('');
-          }, 1000);
+          setPendingVerificationEmail(result.email || normalizedEmail);
+          setPassword('');
+          setConfirmPassword('');
+          setTermsAccepted(false);
+          setSuccess(result.message || 'Check your email to activate your account.');
+          setScreen('verify-email-pending');
         } catch (error) {
           setError(error.message || 'Account creation failed. Please try again.');
         }
@@ -4197,7 +4235,6 @@
           setCurrentUser(authenticatedUser);
           setIsLoggedIn(true);
           setEmail(authenticatedUser.email);
-          setHasPurchased(Boolean(authenticatedUser.hasPurchased));
           restoreCoachCache(authenticatedUser.email);
           const { daysSince } = await loadUserData(authenticatedUser.email, { allowUnauthorizedFallback: true });
 
@@ -4211,18 +4248,36 @@
             setLoginPassword('');
           }, 800);
         } catch (error) {
+          if (error.payload?.code === 'email_verification_required') {
+            setPendingVerificationEmail(error.payload.email || normalizedEmail);
+            setSuccess('Your account exists. Check your email for the verification link.');
+            setScreen('verify-email-pending');
+            return;
+          }
           setError(error.message || 'Login failed. Please try again.');
         }
       };
 
-      const handlePasswordReset = async () => {
+      async function handleResendVerification() {
+        if (!pendingVerificationEmail || verificationResendStatus === 'sending') return;
+        setVerificationResendStatus('sending');
+        setError('');
+        try {
+          const result = await apiRequest('/.netlify/functions/resend-verification', {
+            method: 'POST',
+            body: JSON.stringify({ email: pendingVerificationEmail })
+          });
+          setVerificationResendStatus('sent');
+          setSuccess(result.message || 'A new verification link has been sent.');
+        } catch (resendError) {
+          setVerificationResendStatus('error');
+          setError(resendError.message || 'Could not resend the verification email.');
+        }
+      }
+
+      const handlePasswordResetRequest = async () => {
         setError('');
         setSuccess('');
-
-        if (!resetEmail || !resetCardLast4 || !resetPassword || !resetConfirmPassword) {
-          setError('Please fill in all fields');
-          return;
-        }
 
         const normalizedEmail = sanitizeInput(resetEmail.toLowerCase().trim());
         if (!validateEmail(normalizedEmail)) {
@@ -4230,9 +4285,24 @@
           return;
         }
 
-        const normalizedCardLast4 = String(resetCardLast4 || '').replace(/\D/g, '').slice(-4);
-        if (!/^\d{4}$/.test(normalizedCardLast4)) {
-          setError('Enter the last 4 digits of the card used at checkout');
+        try {
+          const result = await apiRequest('/.netlify/functions/request-password-reset', {
+            method: 'POST',
+            body: JSON.stringify({ email: normalizedEmail })
+          });
+          setSuccess(result.message || 'If an account exists for that email, a reset link has been sent.');
+        } catch (error) {
+          setError(error.message || 'Unable to request a reset link. Please try again.');
+        }
+      };
+
+      const handlePasswordReset = async () => {
+        setError('');
+        setSuccess('');
+
+        const normalizedEmail = sanitizeInput(resetEmail.toLowerCase().trim());
+        if (!validateEmail(normalizedEmail) || !resetToken) {
+          setError('This reset link is invalid or has expired.');
           return;
         }
 
@@ -4252,7 +4322,7 @@
             method: 'POST',
             body: JSON.stringify({
               email: normalizedEmail,
-              cardLast4: normalizedCardLast4,
+              token: resetToken,
               newPassword: resetPassword,
               confirmNewPassword: resetConfirmPassword
             })
@@ -4264,7 +4334,6 @@
           setCurrentUser(authenticatedUser);
           setIsLoggedIn(true);
           setEmail(authenticatedUser.email);
-          setHasPurchased(Boolean(authenticatedUser.hasPurchased));
           restoreCoachCache(authenticatedUser.email);
           const { daysSince } = await loadUserData(authenticatedUser.email, { allowUnauthorizedFallback: true });
 
@@ -4272,7 +4341,7 @@
           setLoginEmail(authenticatedUser.email);
           setLoginPassword('');
           setResetEmail('');
-          setResetCardLast4('');
+          setResetToken('');
           setResetPassword('');
           setResetConfirmPassword('');
 
@@ -4317,19 +4386,22 @@
         setEmail('');
         setPassword('');
         setConfirmPassword('');
+        setTermsAccepted(false);
+        setPendingVerificationEmail('');
+        setVerificationResendStatus('idle');
         setLoginEmail('');
         setLoginPassword('');
         setResetEmail('');
-        setResetCardLast4('');
+        setResetToken('');
         setResetPassword('');
         setResetConfirmPassword('');
+        setPremiumInterestStatus('idle');
         setWorkoutStarted(false);
         setCurrentExercise(0);
         setSelectedExercise(null);
         setShowGoalsModal(false);
         setShowSkipRestModal(false);
         setSkipRestWarningLevel(0);
-        setHasPurchased(false);
         resetUserScopedState();
         setError('');
         setSuccess('');
@@ -4898,73 +4970,8 @@
 
       return (
         <div className="max-w-md mx-auto min-h-screen shadow-2xl" style={{background:'var(--bg-app-shell)', boxShadow:'0 30px 80px rgba(0,0,0,0.32)', position:'relative', zIndex:1}}>
-          {/* Purchase Gate - Show if not purchased */}
-          {bootReady && purchaseChecked && !hasPurchased && !isAuthScreen && (
-            <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{background: 'var(--bg-atmosphere)'}}>
-              <div className="max-w-md w-full text-center">
-                <h2 className="text-3xl font-bold mb-2 text-white">Dev<span style={{color:'#f97316'}}>Dad</span> Strength</h2>
-                <p className="mb-8" style={{color:'#a3a3a3'}}>The 30-Minute Strength System</p>
-
-                <div className="rounded-lg p-6 mb-6 text-left" style={{background:'#1a1a1a', border:'1px solid #262626'}}>
-                  <h3 className="font-bold text-lg mb-1 text-white">Already purchased?</h3>
-                  <p className="text-sm mb-4" style={{color:'#a3a3a3'}}>Create an account or log in with the same email you used at checkout. Access unlocks automatically when the purchase email matches your account.</p>
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      className="nav-cta flex-1"
-                      onClick={() => {
-                        setError('');
-                        setSuccess('');
-                        setEmail(loginEmail || email);
-                        setScreen('signup');
-                      }}
-                    >
-                      Create Account
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-secondary flex-1"
-                      onClick={() => {
-                        setError('');
-                        setSuccess('');
-                        setScreen('login');
-                      }}
-                    >
-                      Log In
-                    </button>
-                  </div>
-                </div>
-
-                <div
-                  role="status"
-                  aria-live="polite"
-                  style={{
-                    display: 'block',
-                    background: 'transparent',
-                    color: '#a3a3a3',
-                    padding: '12px 32px',
-                    borderRadius: '8px',
-                    fontWeight: '600',
-                    fontSize: '15px',
-                    border: '1px solid #262626',
-                  }}
-                >
-                  Current Price • $47 One-Time
-                </div>
-
-                <p className="text-sm mt-4" style={{color:'#a3a3a3'}}>
-                  Public pricing remains $47 one-time. Existing purchasers can still log in or create an account with their purchase email.
-                </p>
-
-                <p className="text-sm mt-6" style={{color:'#737373'}}>
-                  Questions? <a href="mailto:devdad.desk@gmail.com" style={{color:'#f97316'}}>devdad.desk@gmail.com</a>
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Main App - Show only if purchased or purchase not checked yet */}
-          {(screen === 'booting' || !bootReady || !purchaseChecked || hasPurchased || isAuthScreen) && (
+          {/* Registration gate: app screens render only for authenticated users. */}
+          {(screen === 'booting' || !bootReady || isLoggedIn || isAuthScreen) && (
             <>
           {showGoalsModal && <GoalsModal />}
           {showSkipRestModal && <SkipRestDayModal />}
@@ -5001,7 +5008,7 @@
                 </div>
 
                 <button className="nav-cta mb-3" onClick={() => {setError(''); setSuccess(''); setScreen('signup');}}>
-                  Start Your System
+                  Create Free Account
                 </button>
                 <button className="btn-secondary mb-2" onClick={() => {setError(''); setSuccess(''); setScreen('login');}}>
                   Log In
@@ -5015,8 +5022,8 @@
               <div className="auth-card">
                 <button onClick={() => {setError(''); setSuccess(''); setScreen('welcome');}} className="back-button mb-6">←</button>
                 
-                <h2 className="text-2xl font-bold mb-2 text-white">Create Your Account</h2>
-                <p className="text-gray-400 mb-6">Use the same email you purchased with to unlock your account. Public pricing remains $47 one-time while new member access is closed.</p>
+                <h2 className="text-2xl font-bold mb-2 text-white">Create Your Free Account</h2>
+                <p className="text-gray-400 mb-6">DevDad Strength is free. Create an account to save your plan and progress securely.</p>
 
                 {error && <div className="error-box">{error}</div>}
                 {success && <div className="success-box">{success}</div>}
@@ -5046,6 +5053,17 @@
                     onKeyDown={(e) => e.key === 'Enter' && handleSignup()}
                     autoComplete="new-password"
                   />
+                  <label className="flex items-start gap-3 text-sm text-gray-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={termsAccepted}
+                      onChange={(e) => setTermsAccepted(e.target.checked)}
+                      style={{width:'18px', height:'18px', marginTop:'2px', flexShrink:0}}
+                    />
+                    <span>
+                      I agree to the <a href="/terms.html" target="_blank" rel="noreferrer" className="text-orange-300 underline">Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noreferrer" className="text-orange-300 underline">Privacy Policy</a>.
+                    </span>
+                  </label>
                 </div>
 
                 <div className="card hero-card mb-6">
@@ -5056,8 +5074,8 @@
                       <p className="text-sm text-gray-400">12-week progressive program</p>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-lg" style={{color: '#f97316'}}>$47</div>
-                      <div className="text-xs text-gray-500">one-time</div>
+                      <div className="font-bold text-lg" style={{color: '#f97316'}}>Free</div>
+                      <div className="text-xs text-gray-500">account required</div>
                     </div>
                   </div>
                   <div className="space-y-2 text-sm text-gray-300">
@@ -5088,17 +5106,65 @@
                   Create Account
                 </button>
 
-                <button className="btn-secondary mb-3" type="button" onClick={() => { window.location.href = '/#launch-status'; }}>
-                  View Pricing • $47
-                </button>
-
                 <p className="text-xs text-center text-gray-500 mt-4">
-                  Public access will reopen from the main site. Existing purchasers can still log in here.
+                  Registration is required so your workout history and settings stay connected to your account.
                 </p>
 
                 <p className="text-sm text-center text-gray-400 mt-6">
                   Already have an account? <button onClick={() => {setError(''); setSuccess(''); setScreen('login');}} className="font-semibold text-orange-300">Log In</button>
                 </p>
+              </div>
+            </div>
+          )}
+
+          {screen === 'verify-email-pending' && (
+            <div className="auth-shell">
+              <div className="auth-card text-center">
+                <div className="text-5xl mb-4">✉️</div>
+                <h2 className="text-2xl font-bold mb-2 text-white">Verify your email</h2>
+                <p className="text-gray-400 mb-2">We sent an activation link to:</p>
+                <p className="font-semibold text-orange-200 mb-6 break-all">{pendingVerificationEmail}</p>
+
+                {error && <div className="error-box text-left">{error}</div>}
+                {success && <div className="success-box text-left">{success}</div>}
+
+                <p className="text-sm text-gray-400 mb-6">
+                  Open the link in that email to activate your account and load your plan. The link expires after 24 hours.
+                </p>
+
+                <button
+                  type="button"
+                  className="nav-cta mb-3"
+                  disabled={verificationResendStatus === 'sending' || verificationResendStatus === 'sent'}
+                  onClick={handleResendVerification}
+                >
+                  {verificationResendStatus === 'sending' ? 'Sending…' : verificationResendStatus === 'sent' ? 'Verification Email Sent' : 'Resend Verification Email'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary mb-3"
+                  onClick={() => {
+                    setError('');
+                    setSuccess('');
+                    setVerificationResendStatus('idle');
+                    setEmail(pendingVerificationEmail);
+                    setScreen('signup');
+                  }}
+                >
+                  Use a Different Email
+                </button>
+                <button
+                  type="button"
+                  className="font-semibold text-orange-300"
+                  onClick={() => {
+                    setError('');
+                    setSuccess('');
+                    setLoginEmail(pendingVerificationEmail);
+                    setScreen('login');
+                  }}
+                >
+                  Back to Log In
+                </button>
               </div>
             </div>
           )}
@@ -5145,7 +5211,7 @@
                       setError('');
                       setSuccess('');
                       setResetEmail(loginEmail || email || '');
-                      setResetCardLast4('');
+                      setResetToken('');
                       setResetPassword('');
                       setResetConfirmPassword('');
                       setScreen('reset-password');
@@ -5168,7 +5234,9 @@
                 <button onClick={() => {setError(''); setSuccess(''); setScreen('login');}} className="back-button mb-6">←</button>
 
                 <h2 className="text-2xl font-bold mb-2 text-white">Reset Password</h2>
-                <p className="text-gray-400 mb-6">Enter the checkout email and the last 4 digits of the card you used to purchase access.</p>
+                <p className="text-gray-400 mb-6">
+                  {resetToken ? 'Choose a new password for your account.' : 'Enter your account email and we will send you a secure reset link.'}
+                </p>
 
                 {error && <div className="error-box">{error}</div>}
                 {success && <div className="success-box">{success}</div>}
@@ -5176,46 +5244,41 @@
                 <div className="space-y-4 mb-6">
                   <input
                     type="email"
-                    placeholder="Purchase Email"
+                    placeholder="Account Email"
                     value={resetEmail}
+                    disabled={Boolean(resetToken)}
                     onChange={(e) => setResetEmail(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
+                    onKeyDown={(e) => e.key === 'Enter' && (resetToken ? handlePasswordReset() : handlePasswordResetRequest())}
                     autoComplete="email"
                   />
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength="4"
-                    placeholder="Card Last 4"
-                    value={resetCardLast4}
-                    onChange={(e) => setResetCardLast4(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
-                    autoComplete="off"
-                  />
-                  <input
-                    type="password"
-                    placeholder="New Password"
-                    value={resetPassword}
-                    onChange={(e) => setResetPassword(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
-                    autoComplete="new-password"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Confirm New Password"
-                    value={resetConfirmPassword}
-                    onChange={(e) => setResetConfirmPassword(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
-                    autoComplete="new-password"
-                  />
+                  {resetToken && (
+                    <>
+                      <input
+                        type="password"
+                        placeholder="New Password"
+                        value={resetPassword}
+                        onChange={(e) => setResetPassword(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
+                        autoComplete="new-password"
+                      />
+                      <input
+                        type="password"
+                        placeholder="Confirm New Password"
+                        value={resetConfirmPassword}
+                        onChange={(e) => setResetConfirmPassword(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handlePasswordReset()}
+                        autoComplete="new-password"
+                      />
+                    </>
+                  )}
                 </div>
 
-                <button className="nav-cta mb-3" onClick={handlePasswordReset}>
-                  Reset Password
+                <button className="nav-cta mb-3" onClick={resetToken ? handlePasswordReset : handlePasswordResetRequest}>
+                  {resetToken ? 'Reset Password' : 'Send Reset Link'}
                 </button>
 
                 <p className="text-sm text-center text-gray-500 mb-6">
-                  This works for paid accounts verified through Stripe card checkout. If the purchase used a different payment method, contact <a href="mailto:devdad.desk@gmail.com" className="text-orange-300">devdad.desk@gmail.com</a>.
+                  Reset links expire after 30 minutes and can only be used once.
                 </p>
 
                 <p className="text-sm text-center text-gray-400">
@@ -5310,7 +5373,7 @@
             {success && <div className="success-box mx-6 mt-4">{success}</div>}
 
             <div className="px-6 mt-4">
-              <CoachInsightCard coach={aiCoach} status={aiCoachStatus} compact />
+              <PaidCoachCard compact interestStatus={premiumInterestStatus} onJoin={handlePremiumInterest} />
             </div>
 
             {/* Week selector */}
@@ -6387,7 +6450,7 @@
             </div>
 
             <div className="p-6">
-            <CoachInsightCard coach={aiCoach} status={aiCoachStatus} />
+            <PaidCoachCard interestStatus={premiumInterestStatus} onJoin={handlePremiumInterest} />
             {activeTab === 'workouts' && (<>
               {/* Stats Cards */}
               <MotionSection delay={50} className="grid grid-cols-2 gap-4 mb-6">

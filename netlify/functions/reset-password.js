@@ -1,7 +1,6 @@
-const { listCheckoutSessionsByEmail, retrievePaymentIntent } = require('./_stripe');
+const crypto = require('crypto');
 const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
-const { normalizeEmail, readStore, updateStore } = require('./_store');
-const { persistStripeEntitlement } = require('./_entitlements');
+const { normalizeEmail, updateStore } = require('./_store');
 const {
   validateEmail,
   validatePassword,
@@ -12,114 +11,77 @@ const {
   publicUser,
 } = require('./_auth');
 
-function getCardLast4(paymentIntent) {
-  return paymentIntent?.latest_charge?.payment_method_details?.card?.last4 || '';
+function hashToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
 }
 
 exports.handler = async (event) => {
-  if (event.httpMethod !== 'POST') {
-    return json(405, { error: 'Method Not Allowed' });
-  }
-
-  if (!hasTrustedOrigin(event)) {
-    return json(403, { error: 'Forbidden' });
-  }
+  if (event.httpMethod !== 'POST') return json(405, { error: 'Method Not Allowed' });
+  if (!hasTrustedOrigin(event)) return json(403, { error: 'Forbidden' });
 
   let email;
-  let cardLast4;
+  let token;
   let newPassword;
   let confirmNewPassword;
-
   try {
-    ({ email, cardLast4, newPassword, confirmNewPassword } = parseJsonBody(event));
+    ({ email, token, newPassword, confirmNewPassword } = parseJsonBody(event));
   } catch {
     return json(400, { error: 'Invalid JSON' });
   }
 
   const normalizedEmail = normalizeEmail(email);
-  if (!validateEmail(normalizedEmail)) {
-    return json(400, { error: 'Please enter a valid email address' });
+  if (!validateEmail(normalizedEmail) || typeof token !== 'string' || token.length !== 64) {
+    return json(400, { error: 'This reset link is invalid or has expired.' });
   }
 
-  const rateLimit = checkRateLimit(event, normalizedEmail, 'password-reset');
-  if (!rateLimit.allowed) {
-    return json(429, { error: rateLimit.message });
-  }
-
-  const normalizedCardLast4 = String(cardLast4 || '').replace(/\D/g, '').slice(-4);
-  if (!/^\d{4}$/.test(normalizedCardLast4)) {
-    return json(400, { error: 'Enter the last 4 digits of the card used at checkout' });
-  }
+  const rateLimit = await checkRateLimit(event, normalizedEmail, 'password-reset', {
+    maxAttempts: 5,
+    windowMs: 30 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) return json(429, { error: rateLimit.message });
 
   const passwordError = validatePassword(String(newPassword || ''));
-  if (passwordError) {
-    return json(400, { error: passwordError });
-  }
+  if (passwordError) return json(400, { error: passwordError });
+  if (newPassword !== confirmNewPassword) return json(400, { error: 'New passwords do not match' });
 
-  if (newPassword !== confirmNewPassword) {
-    return json(400, { error: 'New passwords do not match' });
-  }
-
-  const store = await readStore();
-  const existingUser = store.users[normalizedEmail];
-  if (!existingUser) {
-    return json(401, { error: 'We could not verify that purchase. Check the email and card last 4.' });
-  }
-
-  let verifiedPurchase = false;
-  let matchedCheckoutSession = null;
+  const nextPassword = await hashPassword(String(newPassword));
+  let updatedUser;
   try {
-    const checkoutSessions = await listCheckoutSessionsByEmail(normalizedEmail, 100);
-    for (const session of checkoutSessions.data || []) {
-      if (session.payment_status !== 'paid' || !session.payment_intent) continue;
+    updatedUser = await updateStore(store => {
+      const reset = store.passwordResets[normalizedEmail];
+      const suppliedHash = hashToken(token);
+      const validReset = reset &&
+        reset.tokenHash === suppliedHash &&
+        new Date(reset.expiresAt).getTime() > Date.now();
 
-      const paymentIntent = await retrievePaymentIntent(session.payment_intent);
-      if (getCardLast4(paymentIntent) === normalizedCardLast4) {
-        verifiedPurchase = true;
-        matchedCheckoutSession = session;
-        break;
+      if (!validReset || !store.users[normalizedEmail]) {
+        const error = new Error('This reset link is invalid or has expired.');
+        error.statusCode = 401;
+        throw error;
       }
-    }
-  } catch {
-    return json(502, { error: 'Password reset is temporarily unavailable. Please try again.' });
-  }
 
-  if (!verifiedPurchase) {
-    return json(401, { error: 'We could not verify that purchase. Check the email and card last 4.' });
-  }
+      const user = store.users[normalizedEmail];
+      user.passwordHash = nextPassword.hash;
+      user.passwordSalt = nextPassword.salt;
+      if (user.emailVerifiedAt === null) user.emailVerifiedAt = new Date().toISOString();
+      user.updatedAt = new Date().toISOString();
+      delete store.passwordResets[normalizedEmail];
+      delete store.emailVerifications[normalizedEmail];
 
-  const nextPassword = await hashPassword(String(newPassword || ''));
-  const updatedUser = await updateStore(nextStore => {
-    const user = nextStore.users[normalizedEmail];
-    if (!user) {
-      const error = new Error('We could not verify that purchase. Check the email and card last 4.');
-      error.statusCode = 401;
-      throw error;
-    }
+      Object.entries(store.sessions).forEach(([sessionId, session]) => {
+        if (normalizeEmail(session?.email) === normalizedEmail) delete store.sessions[sessionId];
+      });
 
-    user.passwordHash = nextPassword.hash;
-    user.passwordSalt = nextPassword.salt;
-    user.updatedAt = new Date().toISOString();
-
-    Object.entries(nextStore.sessions).forEach(([sessionId, session]) => {
-      if (normalizeEmail(session?.email) === normalizedEmail) {
-        delete nextStore.sessions[sessionId];
-      }
+      return { ...user };
     });
-
-    return { ...user };
-  });
-
-  if (verifiedPurchase && matchedCheckoutSession) {
-    await persistStripeEntitlement(normalizedEmail, matchedCheckoutSession, 'stripe_password_reset_restore');
+  } catch (error) {
+    return json(error.statusCode || 500, { error: error.statusCode ? error.message : 'Password reset failed. Please try again.' });
   }
 
-  clearRateLimit(event, normalizedEmail, 'password-reset');
+  await clearRateLimit(event, normalizedEmail, 'password-reset');
   const session = await createSession(normalizedEmail);
   return json(200, {
-    user: publicUser(updatedUser, Boolean(store.entitlements[normalizedEmail]) || verifiedPurchase, session.expiresAt),
+    user: publicUser(updatedUser, true, session.expiresAt),
     message: 'Password reset successfully.',
-  }, {
-    'Set-Cookie': session.cookie,
-  });
+  }, { 'Set-Cookie': session.cookie });
 };

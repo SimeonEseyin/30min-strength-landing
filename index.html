@@ -1055,10 +1055,10 @@
         <a href="#program">Program</a>
         <a href="#proof">Proof</a>
         <a href="#faq">FAQ</a>
-        <a href="#launch-status">Pricing</a>
+        <a href="#launch-status">Access</a>
         <a href="#about">About</a>
         <div class="header-actions">
-          <a href="quiz.html" class="primary-btn">Take the Fit Quiz</a>
+          <a href="quiz.html" class="primary-btn">Build My Free Plan</a>
         </div>
       </nav>
     </div>
@@ -1075,12 +1075,12 @@
               A 12-week home strength system with clear progression, simple home setup, and an app flow built for interruptions.
             </p>
             <div class="hero-actions">
-              <a href="quiz.html" class="primary-btn">Take the Fit Quiz</a>
+              <a href="quiz.html" class="primary-btn">Build My Free Plan</a>
               <a href="#proof" class="secondary-btn">View App Proof</a>
             </div>
-            <p class="hero-cta-note">Takes about 2 minutes. It saves your starter setup now so you can move faster when access opens again.</p>
+            <p class="hero-cta-note">Takes about 2 minutes. Your starter setup carries into your free account.</p>
             <p class="install-note">
-              Already purchased? <a href="/app">Open the app</a>.
+              Ready to train? <a href="/app">Create a free account or log in</a>.
             </p>
             <div class="hero-highlights">
               <div class="hero-highlight">
@@ -1105,7 +1105,7 @@
               <span>30-Min Strength came out of rebuilding strength around work, recovery, and interrupted home sessions, not ideal gym conditions.</span>
             </div>
             <div id="quizBanner" class="quiz-banner" role="status" aria-live="polite">
-              <strong>Your fit quiz is saved.</strong> 30-Min Strength is the current program at $47 one-time. New member access will reopen on this page.
+              <strong>Your fit quiz is saved.</strong> Create your free account to continue into the app.
             </div>
           </div>
 
@@ -1322,10 +1322,10 @@
               <li>Exercise demos, form details, and progress tracking stay tied to the training flow.</li>
             </ul>
             <div class="proof-actions">
-              <a href="quiz.html" class="primary-btn">Take the Fit Quiz</a>
-              <a href="#launch-status" class="secondary-btn">See Pricing</a>
+              <a href="quiz.html" class="primary-btn">Build My Free Plan</a>
+              <a href="/app?signup=1" class="secondary-btn">Start Free Now</a>
             </div>
-            <p class="proof-note">Save your starter setup now so it is ready when access opens again.</p>
+            <p class="proof-note">Save your starter setup, then create a free account to begin.</p>
           </div>
         </div>
       </div>
@@ -1358,8 +1358,8 @@
           </article>
 
           <article class="inside-card">
-            <h3>Is this a subscription?</h3>
-            <p>No. It is a one-time $47 purchase when public access opens again.</p>
+            <h3>How much does it cost?</h3>
+            <p>It is free. Registration is required so the app can securely save your plan, settings, and progress.</p>
           </article>
         </div>
       </div>
@@ -1368,28 +1368,28 @@
     <section id="launch-status" class="section">
       <div class="container">
         <div class="section-head">
-          <div class="eyebrow">Pricing</div>
-          <h2>30-Min Strength is $47 one-time.</h2>
+          <div class="eyebrow">Free Access</div>
+          <h2>30-Min Strength is free.</h2>
           <p>
-            The price stays visible so you can judge the offer clearly, save your fit quiz, and come back here when public access opens again.
+            Create an account to get the full 12-week system and keep your workout progress synced.
           </p>
         </div>
 
         <div class="launch-grid">
           <div class="launch-card">
-            <div class="status-pill" style="margin-bottom: 18px;">Access currently closed</div>
+            <div class="status-pill" style="margin-bottom: 18px;">Access open</div>
             <h2>30-Min Strength</h2>
-            <div class="launch-price">$47</div>
-            <p>Current public price: $47 one-time. No subscription. Existing purchasers can still access the app with their account email.</p>
+            <div class="launch-price">Free</div>
+            <p>No payment or subscription. A registered account is required to use the app and save progress.</p>
             <div class="launch-actions">
-              <a href="quiz.html" class="primary-btn">Take the Fit Quiz</a>
-              <a href="/app" class="secondary-btn">Existing Members Open App</a>
+              <a href="quiz.html" class="primary-btn">Build My Free Plan</a>
+              <a href="/app?signup=1" class="secondary-btn">Start Free Now</a>
             </div>
-            <div class="launch-note">Public access will reopen on this page.</div>
+            <div class="launch-note">Free access is available now.</div>
           </div>
 
           <div class="launch-side">
-            <h3>What $47 includes</h3>
+            <h3>What free access includes</h3>
             <ul class="bullet-list">
               <li>12-week progressive strength program.</li>
               <li>Three-day core plan with an optional 4th day when life allows.</li>
@@ -1397,7 +1397,7 @@
               <li>Progress tracking, completion history, and dual timers.</li>
               <li>App-based delivery built for home training and interruptions.</li>
             </ul>
-            <p style="margin-top: 18px;">Take the Fit Quiz to save your starter-plan answers now so you can move faster when public access opens again.</p>
+            <p style="margin-top: 18px;">Take the Fit Quiz to save your starter-plan answers, then create your free account.</p>
           </div>
         </div>
       </div>
@@ -1460,6 +1460,7 @@
     </div>
   </footer>
 
+  <script src="/analytics.js"></script>
   <script>
     const quizBanner = document.getElementById('quizBanner');
     const siteHeader = document.querySelector('.site-header');
@@ -1495,7 +1496,7 @@
 
     async function redirectMembersToAppIfNeeded() {
       const urlParams = new URLSearchParams(window.location.search);
-      const hasMarketingIntent = ['from', 'email', 'cancelled', 'checkout', 'session_id'].some((key) => urlParams.has(key));
+      const hasMarketingIntent = ['from', 'email'].some((key) => urlParams.has(key));
       const isStandalone = window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
       if (hasMarketingIntent) return false;
@@ -1534,6 +1535,7 @@
         return;
       }
 
+      window.DevDadAnalytics?.track('landing_view');
       maybeShowQuizBanner();
     });
 

@@ -1,6 +1,7 @@
 const { json, parseJsonBody, hasTrustedOrigin } = require('./_response');
 const { getSession } = require('./_auth');
-const { updateStore, getUserData } = require('./_store');
+const { readStoreEntry, updateStoreEntry, getUserData } = require('./_store');
+const { recordAnalyticsEventSafe } = require('./_analytics');
 
 function isPlainObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value);
@@ -290,28 +291,37 @@ exports.handler = async (event) => {
     return json(413, { error: 'Payload too large' });
   }
 
-  const updatedData = await updateStore(store => {
-    const existing = getUserData(store, session.email);
-    const nextSettings = payload.settings ? sanitizeSettings(payload.settings) : existing.settings;
-    const next = {
-      ...existing,
-      progress: payload.progress ? sanitizeProgress(payload.progress) : existing.progress,
-      history: payload.history ? sanitizeHistory(payload.history) : existing.history,
-      settings: nextSettings,
-      profile: payload.profile ? sanitizeProfile(payload.profile) : existing.profile,
-      weights: payload.weights ? sanitizeWeights(payload.weights) : existing.weights,
-      coachCache: payload.coachCache ? sanitizeCoachCache(payload.coachCache) : existing.coachCache,
-      planConfig: payload.planConfig ? sanitizePlanConfig(payload.planConfig) : existing.planConfig,
-      intake: payload.intake ? sanitizeIntake(payload.intake) : existing.intake,
-      updatedAt: new Date().toISOString(),
-    };
+  const storedUserData = await readStoreEntry('userData', session.email);
+  const existing = getUserData({ userData: { [session.email]: storedUserData || {} } }, session.email);
+  const nextSettings = payload.settings ? sanitizeSettings(payload.settings) : existing.settings;
+  const updatedData = {
+    ...existing,
+    progress: payload.progress ? sanitizeProgress(payload.progress) : existing.progress,
+    history: payload.history ? sanitizeHistory(payload.history) : existing.history,
+    settings: nextSettings,
+    profile: payload.profile ? sanitizeProfile(payload.profile) : existing.profile,
+    weights: payload.weights ? sanitizeWeights(payload.weights) : existing.weights,
+    coachCache: payload.coachCache ? sanitizeCoachCache(payload.coachCache) : existing.coachCache,
+    planConfig: payload.planConfig ? sanitizePlanConfig(payload.planConfig) : existing.planConfig,
+    intake: payload.intake ? sanitizeIntake(payload.intake) : existing.intake,
+    updatedAt: new Date().toISOString(),
+  };
 
-    if (payload.settings && reminderScheduleChanged(existing.settings, nextSettings)) {
-      const currentSubscriptions = Array.isArray(store.pushSubscriptions?.[session.email])
-        ? store.pushSubscriptions[session.email]
-        : [];
+  const previousCompletedCount = Array.isArray(existing.progress?.completedDays)
+    ? existing.progress.completedDays.length
+    : 0;
+  const nextCompletedCount = Array.isArray(updatedData.progress?.completedDays)
+    ? updatedData.progress.completedDays.length
+    : 0;
+  const firstWorkoutStarted = previousCompletedCount === 0 &&
+    !existing.progress?.lastWorkoutStartedAt &&
+    Boolean(updatedData.progress?.lastWorkoutStartedAt);
+  const workoutCompleted = nextCompletedCount > previousCompletedCount;
 
-      store.pushSubscriptions[session.email] = currentSubscriptions.map((entry) => ({
+  if (payload.settings && reminderScheduleChanged(existing.settings, nextSettings)) {
+    await updateStoreEntry('pushSubscriptions', session.email, current => {
+      const currentSubscriptions = Array.isArray(current) ? current : [];
+      return currentSubscriptions.map((entry) => ({
         ...entry,
         lastSentAt: null,
         lastSentLocalDate: null,
@@ -320,11 +330,32 @@ exports.handler = async (event) => {
         lastAttemptReason: null,
         updatedAt: new Date().toISOString()
       }));
-    }
+    });
+  }
 
-    store.userData[session.email] = next;
-    return next;
-  });
+  await updateStoreEntry('userData', session.email, () => updatedData);
+
+  if (firstWorkoutStarted) {
+    await recordAnalyticsEventSafe({
+      eventName: 'first_workout_started',
+      email: session.email,
+      path: '/app',
+    });
+  }
+  if (workoutCompleted) {
+    await recordAnalyticsEventSafe({
+      eventName: 'workout_completed',
+      email: session.email,
+      path: '/app',
+    });
+    if (previousCompletedCount === 0) {
+      await recordAnalyticsEventSafe({
+        eventName: 'first_workout_completed',
+        email: session.email,
+        path: '/app',
+      });
+    }
+  }
 
   return json(200, { ok: true, data: updatedData });
 };
