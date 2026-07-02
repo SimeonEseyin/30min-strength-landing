@@ -3675,7 +3675,9 @@
           const emailVerificationEmail = String(urlParams.get('email') || '').trim().toLowerCase();
           const storedQuizProfile = readStoredQuizProfile();
           const storedQuizEmail = String(storedQuizProfile?.email || '').trim().toLowerCase();
-          const shouldStartSignup = urlParams.get('signup') === '1' || Boolean(storedQuizProfile);
+          const shouldStartSignup = urlParams.get('signup') === '1' ||
+            urlParams.get('from') === 'quiz' ||
+            Boolean(storedQuizProfile);
 
           if (passwordResetToken) setResetToken(passwordResetToken);
           if (passwordResetEmail) setResetEmail(passwordResetEmail);
@@ -5007,9 +5009,16 @@
                   </div>
                 </div>
 
-                <button className="nav-cta mb-3" onClick={() => {setError(''); setSuccess(''); setScreen('signup');}}>
-                  Create Free Account
+                <div className="card mb-4 text-center" style={{background:'rgba(249,115,22,0.07)', border:'1px solid rgba(249,115,22,0.16)'}}>
+                  <div className="font-semibold text-white mb-1">New to DevDad?</div>
+                  <div className="text-sm text-gray-400">Registration is required to open the app and save your plan and progress.</div>
+                </div>
+
+                <button className="nav-cta mb-5" onClick={() => {setError(''); setSuccess(''); setScreen('signup');}}>
+                  Create My Free Account
                 </button>
+
+                <div className="text-sm text-center text-gray-400 mb-3">Already registered?</div>
                 <button className="btn-secondary mb-2" onClick={() => {setError(''); setSuccess(''); setScreen('login');}}>
                   Log In
                 </button>
@@ -5023,7 +5032,7 @@
                 <button onClick={() => {setError(''); setSuccess(''); setScreen('welcome');}} className="back-button mb-6">←</button>
                 
                 <h2 className="text-2xl font-bold mb-2 text-white">Create Your Free Account</h2>
-                <p className="text-gray-400 mb-6">DevDad Strength is free. Create an account to save your plan and progress securely.</p>
+                <p className="text-gray-400 mb-6">Registration is required. Create your free account to open the app and save your personalized plan and progress.</p>
 
                 {error && <div className="error-box">{error}</div>}
                 {success && <div className="success-box">{success}</div>}
