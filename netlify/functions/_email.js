@@ -21,7 +21,18 @@ async function sendEmail({ to, subject, text, html }) {
   });
 
   if (!response.ok) {
-    throw new Error(`Account email delivery failed (${response.status}).`);
+    let providerCode = '';
+    let providerMessage = '';
+    try {
+      const payload = await response.json();
+      providerCode = String(payload?.name || payload?.code || '').trim();
+      providerMessage = String(payload?.message || '').replace(/\s+/g, ' ').trim().slice(0, 300);
+    } catch {
+      // Some provider/network responses do not contain JSON.
+    }
+
+    const providerDetails = [providerCode, providerMessage].filter(Boolean).join(': ');
+    throw new Error(`Account email delivery failed (${response.status})${providerDetails ? `: ${providerDetails}` : '.'}`);
   }
 }
 
