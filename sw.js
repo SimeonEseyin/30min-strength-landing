@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'devdad-shell-v13';
+const CACHE_VERSION = 'devdad-shell-v14';
 const APP_SHELL = '/devdad-app.html';
 const CORE_ASSETS = [
   '/',
@@ -20,7 +20,10 @@ const CORE_ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_VERSION).then((cache) => cache.addAll(CORE_ASSETS)).catch(() => {})
+    Promise.all([
+      caches.open(CACHE_VERSION).then((cache) => cache.addAll(CORE_ASSETS)).catch(() => {}),
+      self.skipWaiting(),
+    ])
   );
 });
 
@@ -32,7 +35,7 @@ self.addEventListener('activate', (event) => {
           .filter((key) => key !== CACHE_VERSION)
           .map((key) => caches.delete(key))
       )
-    )
+    ).then(() => self.clients.claim())
   );
 });
 
@@ -75,6 +78,23 @@ self.addEventListener('fetch', (event) => {
     url.pathname.startsWith('/icons/');
 
   if (!isStaticAsset) return;
+
+  const preferNetwork = request.destination === 'script' || request.destination === 'style';
+
+  if (preferNetwork) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok && response.type !== 'opaque') {
+            const clone = response.clone();
+            caches.open(CACHE_VERSION).then((cache) => cache.put(request, clone)).catch(() => {});
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(request).then(async (cached) => {
