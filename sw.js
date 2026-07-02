@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'devdad-shell-v12';
+const CACHE_VERSION = 'devdad-shell-v13';
 const APP_SHELL = '/devdad-app.html';
 const CORE_ASSETS = [
   '/',
