@@ -16,9 +16,10 @@ const FUNNEL_STEPS = [
 ];
 
 function authorized(event) {
-  const expected = String(process.env.ANALYTICS_ADMIN_TOKEN || '');
-  const header = event.headers?.authorization || event.headers?.Authorization || '';
-  const supplied = String(header).replace(/^Bearer\s+/i, '');
+  const expected = String(process.env.ANALYTICS_ADMIN_TOKEN || '').trim();
+  const authorization = event.headers?.authorization || event.headers?.Authorization || '';
+  const analyticsToken = event.headers?.['x-analytics-token'] || event.headers?.['X-Analytics-Token'] || '';
+  const supplied = String(analyticsToken || authorization).replace(/^Bearer\s+/i, '').trim();
   if (!expected || !supplied) return false;
 
   const expectedBuffer = Buffer.from(expected);

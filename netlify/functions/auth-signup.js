@@ -98,6 +98,7 @@ exports.handler = async (event) => {
   try {
     await issueEmailVerification(normalizedEmail, event);
   } catch (error) {
+    console.error('Unable to send signup verification email:', error.message);
     await updateStore(store => {
       if (store.users[normalizedEmail]?.createdAt === createdUser.createdAt && store.users[normalizedEmail]?.emailVerifiedAt === null) {
         delete store.users[normalizedEmail];

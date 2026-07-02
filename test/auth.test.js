@@ -14,9 +14,17 @@ process.env.ANALYTICS_ADMIN_TOKEN = 'test-analytics-admin-token';
 
 const originalFetch = global.fetch;
 const sentEmails = [];
+let resendFailure = null;
 global.fetch = async (url, options = {}) => {
   if (String(url) === 'https://api.resend.com/emails') {
     sentEmails.push(JSON.parse(options.body));
+    if (resendFailure) {
+      return {
+        ok: false,
+        status: resendFailure.status,
+        json: async () => resendFailure.body,
+      };
+    }
     return { ok: true, status: 200 };
   }
   throw new Error(`Unexpected fetch in test: ${url}`);
@@ -35,7 +43,7 @@ const trackEvent = require('../netlify/functions/track-event').handler;
 const analyticsSummary = require('../netlify/functions/analytics-summary').handler;
 const { updateStore, readStoreEntry } = require('../netlify/functions/_store');
 
-function event(method, body, { cookie = '', ip = '127.0.0.1', authorization = '' } = {}) {
+function event(method, body, { cookie = '', ip = '127.0.0.1', authorization = '', analyticsToken = '' } = {}) {
   return {
     httpMethod: method,
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -46,6 +54,7 @@ function event(method, body, { cookie = '', ip = '127.0.0.1', authorization = ''
       'x-forwarded-for': ip,
       'x-forwarded-proto': 'https',
       authorization,
+      'x-analytics-token': analyticsToken,
     },
   };
 }
@@ -137,6 +146,29 @@ test('consent, email verification, registered access, recovery, and paid feature
   }, { ip: '10.0.0.3' }));
   assert.equal(secondSignup.statusCode, 202, 'a rejected write must not poison later writes');
 
+  resendFailure = {
+    status: 403,
+    body: { name: 'validation_error', message: 'The sender domain is not verified.' },
+  };
+  const originalConsoleError = console.error;
+  const loggedErrors = [];
+  console.error = (...args) => loggedErrors.push(args.join(' '));
+  let failedEmailSignup;
+  try {
+    failedEmailSignup = await signup(event('POST', {
+      email: 'email-failure@example.com',
+      password: 'StrongPass3',
+      confirmPassword: 'StrongPass3',
+      termsAccepted: true,
+    }, { ip: '10.0.0.14' }));
+  } finally {
+    console.error = originalConsoleError;
+    resendFailure = null;
+  }
+  assert.equal(failedEmailSignup.statusCode, 503);
+  assert.match(loggedErrors.join('\n'), /403.*validation_error.*sender domain is not verified/i);
+  assert.equal(await readStoreEntry('users', 'email-failure@example.com'), null);
+
   const unauthorizedData = await loadUserData(event('GET'));
   assert.equal(unauthorizedData.statusCode, 401);
 
@@ -214,4 +246,9 @@ test('consent, email verification, registered access, recovery, and paid feature
   assert.equal(summary.statusCode, 200);
   assert.equal(body(summary).events.landing_view.uniqueActors, 1);
   assert.equal(body(summary).events.account_created.uniqueActors, 2);
+
+  const customHeaderSummary = await analyticsSummary(event('GET', undefined, {
+    analyticsToken: ` ${process.env.ANALYTICS_ADMIN_TOKEN} `,
+  }));
+  assert.equal(customHeaderSummary.statusCode, 200);
 });
