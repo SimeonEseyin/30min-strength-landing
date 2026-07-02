@@ -8,7 +8,6 @@ const dataDir = path.join('/tmp', `devdad-auth-test-${process.pid}`);
 process.env.DEVDAD_DATA_DIR = dataDir;
 process.env.CONTEXT = 'production';
 process.env.URL = 'https://example.com';
-delete process.env.OPENAI_API_KEY;
 
 const signup = require('../netlify/functions/auth-signup').handler;
 const login = require('../netlify/functions/auth-login').handler;
@@ -41,7 +40,7 @@ test.after(() => {
   fs.rmSync(dataDir, { recursive: true, force: true });
 });
 
-test('registered access, queue recovery, token reset, and AI quota', async () => {
+test('registered access, queue recovery, token reset, and paid AI lock', async () => {
   const firstSignup = await signup(event('POST', {
     email: 'first@example.com',
     password: 'StrongPass1',
@@ -111,9 +110,7 @@ test('registered access, queue recovery, token reset, and AI quota', async () =>
   const coachPayload = {
     snapshot: { units: 'lbs', recentFeedback: [], currentWorkout: { loadableExercises: [] } },
   };
-  const firstCoach = await aiCoach(event('POST', coachPayload, { cookie: resetCookie, ip: '10.0.0.7' }));
-  assert.equal(firstCoach.statusCode, 200);
-
-  const immediateSecondCoach = await aiCoach(event('POST', coachPayload, { cookie: resetCookie, ip: '10.0.0.7' }));
-  assert.equal(immediateSecondCoach.statusCode, 429);
+  const lockedCoach = await aiCoach(event('POST', coachPayload, { cookie: resetCookie, ip: '10.0.0.7' }));
+  assert.equal(lockedCoach.statusCode, 403);
+  assert.equal(body(lockedCoach).code, 'paid_feature');
 });

@@ -2220,6 +2220,28 @@
         );
       }
 
+      function PaidCoachCard({ compact = false }) {
+        return (
+          <div
+            className={`card ${compact ? 'mb-4' : 'mb-6'}`}
+            style={{background:'linear-gradient(180deg, rgba(249,115,22,0.08) 0%, rgba(255,255,255,0.03) 100%)', border:'1px solid rgba(249,115,22,0.16)'}}
+          >
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <div>
+                <div className="section-label" style={{marginBottom:'8px', color:'#fdba74'}}>AI COACH</div>
+                <div className="font-semibold text-white">Personalized coaching is a paid feature</div>
+              </div>
+              <div className="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]" style={{background:'rgba(249,115,22,0.12)', color:'#fdba74', border:'1px solid rgba(249,115,22,0.18)'}}>
+                Premium
+              </div>
+            </div>
+            <p className="text-sm text-gray-400">
+              The free plan includes the complete 12-week program, workout tracking, timers, and progress history. AI recommendations will be available with a future paid plan.
+            </p>
+          </div>
+        );
+      }
+
       function CoachInsightCard({ coach, status, compact = false }) {
         const [isExpanded, setIsExpanded] = React.useState(false);
 
@@ -3839,44 +3861,6 @@
       ]);
 
       useEffect(() => {
-        if (!isLoggedIn || !currentUser || !hydrationReady.current) return;
-
-        const snapshot = buildAiCoachSnapshot();
-        const serializedSnapshot = JSON.stringify(snapshot);
-        if (serializedSnapshot === lastAiSnapshot.current) return;
-
-        const timeoutId = setTimeout(async () => {
-          setAiCoachStatus('loading');
-          try {
-            const result = await apiRequest('/.netlify/functions/ai-coach', {
-              method: 'POST',
-              body: JSON.stringify({ snapshot })
-            });
-            setAiCoach(result.coach || null);
-            setAiCoachStatus('ready');
-            lastAiSnapshot.current = serializedSnapshot;
-            persistCoachCache(currentUser?.email, result.coach || null, serializedSnapshot);
-          } catch (error) {
-            setAiCoachStatus('error');
-          }
-        }, 500);
-
-        return () => clearTimeout(timeoutId);
-      }, [
-        currentWeek,
-        currentDay,
-        currentCycleNumber,
-        currentPhase,
-        daysSinceLastWorkout,
-        settings.units,
-        goals,
-        workoutFeedback,
-        exerciseWeights,
-        isLoggedIn,
-        currentUser
-      ]);
-
-      useEffect(() => {
         if (typeof window === 'undefined') return undefined;
 
         const handlePopState = (event) => {
@@ -5219,7 +5203,7 @@
             {success && <div className="success-box mx-6 mt-4">{success}</div>}
 
             <div className="px-6 mt-4">
-              <CoachInsightCard coach={aiCoach} status={aiCoachStatus} compact />
+              <PaidCoachCard compact />
             </div>
 
             {/* Week selector */}
@@ -6296,7 +6280,7 @@
             </div>
 
             <div className="p-6">
-            <CoachInsightCard coach={aiCoach} status={aiCoachStatus} />
+            <PaidCoachCard />
             {activeTab === 'workouts' && (<>
               {/* Stats Cards */}
               <MotionSection delay={50} className="grid grid-cols-2 gap-4 mb-6">
